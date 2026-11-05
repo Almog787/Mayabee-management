@@ -53,6 +53,45 @@ const DEFAULT_PLANNER_DATA = {
   maintenanceAndSafety: 500, // תחזוקה שוטפת, בדיקת בטיחות מתקנים ואגרות
 };
 
+/**
+ * Custom Styled Slider Component for Touch-First Data Entry
+ */
+const MacroSlider: React.FC<{
+  label: string;
+  value: number;
+  onChange: (val: number) => void;
+  min: number;
+  max: number;
+  step?: number;
+  prefix?: string;
+  suffix?: string;
+  showInput?: boolean;
+}> = ({ label, value, onChange, min, max, step = 1, prefix = '', suffix = '', showInput = true }) => {
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-between items-baseline">
+        <label className="text-[#51443c] font-black text-xs uppercase tracking-wide">{label}</label>
+        <div className="flex items-center gap-1 font-mono font-black text-[#7a4b29] text-base">
+          <span>{prefix}</span>
+          <span>{value.toLocaleString()}</span>
+          <span className="text-[10px] opacity-70">{suffix}</span>
+        </div>
+      </div>
+      <div className="flex items-center gap-4">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(Number(e.target.value))}
+          className="flex-1 h-2 bg-[#d6c3b8]/40 rounded-full appearance-none cursor-pointer accent-[#7a4b29] touch-none"
+        />
+      </div>
+    </div>
+  );
+};
+
 export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ settings }) => {
   const [resetSuccessMessage, setResetSuccessMessage] = useState<boolean>(false);
 
@@ -595,61 +634,44 @@ https://almog787.github.io/Mayabee-management/`;
               <h4>1. ילדים ושכר לימוד</h4>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">כמות ילדים במעון:</label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="number"
-                    min="0"
-                    max="60"
-                    inputMode="numeric"
-                    value={childrenCount === 0 ? '' : childrenCount}
-                    placeholder="כמות ילדים..."
-                    onChange={(e) => updateField('childrenCount', e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)))}
-                    className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
-                  />
-                  <span className="text-[#51443c] font-black text-sm">ילדים</span>
-                </div>
-              </div>
+            <div className="space-y-6">
+              <MacroSlider
+                label="כמות ילדים במעון:"
+                value={childrenCount}
+                onChange={(val) => updateField('childrenCount', val)}
+                min={0}
+                max={50}
+                suffix="ילדים"
+              />
 
-              <div>
-                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">שכר לימוד חודשי (₪):</label>
-                <input
-                  type="number"
-                  step="50"
-                  inputMode="numeric"
-                  value={tuitionPerChild === 0 ? '' : tuitionPerChild}
-                  placeholder="₪ שכר לימוד..."
-                  onChange={(e) => updateField('tuitionPerChild', e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)))}
-                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
-                />
-              </div>
+              <MacroSlider
+                label="שכר לימוד חודשי (₪):"
+                value={tuitionPerChild}
+                onChange={(val) => updateField('tuitionPerChild', val)}
+                min={0}
+                max={6000}
+                step={50}
+                prefix="₪"
+              />
 
-              <div>
-                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">ילדים בצהרון / תוספת:</label>
-                <input
-                  type="number"
-                  min="0"
-                  max={childrenCount}
-                  inputMode="numeric"
-                  value={afternoonCareChildren === 0 ? '' : afternoonCareChildren}
-                  onChange={(e) => updateField('afternoonCareChildren', e.target.value === '' ? 0 : Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
-                />
-              </div>
+              <MacroSlider
+                label="ילדים בצהרון / תוספת:"
+                value={afternoonCareChildren}
+                onChange={(val) => updateField('afternoonCareChildren', val)}
+                min={0}
+                max={Math.max(10, childrenCount)}
+                suffix="ילדים"
+              />
 
-              <div>
-                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">מחיר צהרון לילד (₪):</label>
-                <input
-                  type="number"
-                  step="50"
-                  inputMode="numeric"
-                  value={afternoonCareFee === 0 ? '' : afternoonCareFee}
-                  onChange={(e) => updateField('afternoonCareFee', e.target.value === '' ? 0 : Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
-                />
-              </div>
+              <MacroSlider
+                label="מחיר צהרון לילד (₪):"
+                value={afternoonCareFee}
+                onChange={(val) => updateField('afternoonCareFee', val)}
+                min={0}
+                max={1500}
+                step={50}
+                prefix="₪"
+              />
             </div>
           </div>
 
@@ -660,82 +682,69 @@ https://almog787.github.io/Mayabee-management/`;
               <h4>2. שכירות ותפעול</h4>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">שכירות וארנונה (₪):</label>
-                <input
-                  type="number"
-                  step="100"
-                  inputMode="numeric"
-                  value={rentAndTax === 0 ? '' : rentAndTax}
-                  onChange={(e) => updateField('rentAndTax', e.target.value === '' ? 0 : Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
-                />
-              </div>
+            <div className="space-y-6">
+              <MacroSlider
+                label="שכירות וארנונה (₪):"
+                value={rentAndTax}
+                onChange={(val) => updateField('rentAndTax', val)}
+                min={0}
+                max={15000}
+                step={100}
+                prefix="₪"
+              />
 
-              <div>
-                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">ביטוח מעון חודשי (₪):</label>
-                <input
-                  type="number"
-                  step="50"
-                  inputMode="numeric"
-                  value={insuranceCost === 0 ? '' : insuranceCost}
-                  onChange={(e) => updateField('insuranceCost', e.target.value === '' ? 0 : Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
-                />
-              </div>
+              <MacroSlider
+                label="ביטוח מעון חודשי (₪):"
+                value={insuranceCost}
+                onChange={(val) => updateField('insuranceCost', val)}
+                min={0}
+                max={3000}
+                step={50}
+                prefix="₪"
+              />
 
-              <div>
-                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">תקציב מזון לילד (₪):</label>
-                <input
-                  type="number"
-                  step="10"
-                  inputMode="numeric"
-                  value={foodPerChild === 0 ? '' : foodPerChild}
-                  onChange={(e) => updateField('foodPerChild', e.target.value === '' ? 0 : Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
-                />
-              </div>
+              <MacroSlider
+                label="תקציב מזון לילד (₪):"
+                value={foodPerChild}
+                onChange={(val) => updateField('foodPerChild', val)}
+                min={0}
+                max={800}
+                step={10}
+                prefix="₪"
+              />
 
-              <div>
-                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">רו"ח וחשבונות (₪):</label>
-                <input
-                  type="number"
-                  step="100"
-                  inputMode="numeric"
-                  value={(accountantCost + utilitiesCost) === 0 ? '' : (accountantCost + utilitiesCost)}
-                  onChange={(e) => {
-                    const total = e.target.value === '' ? 0 : Number(e.target.value);
-                    updateField('accountantCost', Math.min(650, total));
-                    updateField('utilitiesCost', Math.max(0, total - 650));
-                  }}
-                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
-                />
-              </div>
+              <MacroSlider
+                label='רו"ח וחשבונות (₪):'
+                value={accountantCost + utilitiesCost}
+                onChange={(val) => {
+                  updateField('accountantCost', Math.min(650, val));
+                  updateField('utilitiesCost', Math.max(0, val - 650));
+                }}
+                min={0}
+                max={5000}
+                step={100}
+                prefix="₪"
+              />
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[#51443c] font-black text-[10px] mb-1.5 uppercase tracking-tight">חוגים (₪):</label>
-                  <input
-                    type="number"
-                    step="100"
-                    inputMode="numeric"
-                    value={enrichmentClassesCost === 0 ? '' : enrichmentClassesCost}
-                    onChange={(e) => updateField('enrichmentClassesCost', e.target.value === '' ? 0 : Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-base text-[#5f3414] focus:border-[#7a4b29] outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[#51443c] font-black text-[10px] mb-1.5 uppercase tracking-tight">תחזוקה (₪):</label>
-                  <input
-                    type="number"
-                    step="50"
-                    inputMode="numeric"
-                    value={maintenanceAndSafety === 0 ? '' : maintenanceAndSafety}
-                    onChange={(e) => updateField('maintenanceAndSafety', e.target.value === '' ? 0 : Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-base text-[#5f3414] focus:border-[#7a4b29] outline-none"
-                  />
-                </div>
+              <div className="grid grid-cols-1 gap-6">
+                <MacroSlider
+                  label="חוגי העשרה (₪):"
+                  value={enrichmentClassesCost || 0}
+                  onChange={(val) => updateField('enrichmentClassesCost', val)}
+                  min={0}
+                  max={4000}
+                  step={100}
+                  prefix="₪"
+                />
+                <MacroSlider
+                  label="תחזוקה ובטיחות (₪):"
+                  value={maintenanceAndSafety || 0}
+                  onChange={(val) => updateField('maintenanceAndSafety', val)}
+                  min={0}
+                  max={3000}
+                  step={50}
+                  prefix="₪"
+                />
               </div>
             </div>
           </div>
@@ -747,59 +756,43 @@ https://almog787.github.io/Mayabee-management/`;
               <h4>3. צוות ושכר עבודה</h4>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">כמות מטפלות:</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="15"
-                  inputMode="numeric"
-                  value={staffCount === 0 ? '' : staffCount}
-                  onChange={(e) => updateField('staffCount', e.target.value === '' ? 0 : Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
-                />
-              </div>
+            <div className="space-y-6">
+              <MacroSlider
+                label="כמות מטפלות:"
+                value={staffCount}
+                onChange={(val) => updateField('staffCount', val)}
+                min={0}
+                max={15}
+                suffix="עובדות"
+              />
 
-              <div>
-                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">שכר שעתי ברוטו (₪):</label>
-                <input
-                  type="number"
-                  step="1"
-                  inputMode="numeric"
-                  value={avgStaffHourlyRate === 0 ? '' : avgStaffHourlyRate}
-                  onChange={(e) => updateField('avgStaffHourlyRate', e.target.value === '' ? 0 : Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
-                />
-              </div>
+              <MacroSlider
+                label="שכר שעתי ברוטו (₪):"
+                value={avgStaffHourlyRate}
+                onChange={(val) => updateField('avgStaffHourlyRate', val)}
+                min={30}
+                max={150}
+                prefix="₪"
+              />
 
-              <div>
-                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">עלות סוציאלית (%):</label>
-                <input
-                  type="number"
-                  step="1"
-                  min="0"
-                  max="40"
-                  inputMode="numeric"
-                  value={socialOverheadPercent === 0 ? '' : socialOverheadPercent}
-                  onChange={(e) => updateField('socialOverheadPercent', e.target.value === '' ? 0 : Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
-                  title="פנסיה, פיצויים, ביטוח לאומי מעסיק, הבראה, חופשה ונסיעות"
-                />
-                <span className="text-[10px] text-slate-500 mt-1.5 block font-bold leading-tight">פנסיה, פיצויים, הבראה, חופשה ונסיעות</span>
-              </div>
+              <MacroSlider
+                label="עלות סוציאלית (%):"
+                value={socialOverheadPercent}
+                onChange={(val) => updateField('socialOverheadPercent', val)}
+                min={0}
+                max={40}
+                suffix="%"
+              />
 
-              <div>
-                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">שעות עבודה ליום:</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  inputMode="decimal"
-                  value={dailyHoursPerStaff === 0 ? '' : dailyHoursPerStaff}
-                  onChange={(e) => updateField('dailyHoursPerStaff', e.target.value === '' ? 0 : Number(e.target.value))}
-                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
-                />
-              </div>
+              <MacroSlider
+                label="שעות עבודה ליום:"
+                value={dailyHoursPerStaff}
+                onChange={(val) => updateField('dailyHoursPerStaff', val)}
+                min={0}
+                max={12}
+                step={0.5}
+                suffix="שעות"
+              />
 
               <div className="pt-2">
                 <div className="p-4 bg-white rounded-2xl border-2 border-[#7a4b29]/10 text-center shadow-inner">
