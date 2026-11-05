@@ -17,6 +17,8 @@ import {
   ChevronDown,
   ChevronUp,
   RotateCcw,
+  Share2,
+  MessageCircle,
 } from 'lucide-react';
 import { DaycareSettings } from '../../types';
 import { exportToGoogleSheetsXlsx } from '../../lib/googleSheetsExporter';
@@ -224,6 +226,40 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
     });
   };
 
+  // WhatsApp formatted report share
+  const handleShareWhatsApp = () => {
+    const bTypeLabel =
+      businessType === 'OSEK_PATUR' ? 'עוסק פטור' : businessType === 'OSEK_MURSHE' ? 'עוסק מורשה' : 'חברה בע"מ';
+
+    const text = `📊 *סיכום תכנון מאזן חודשי - הבית של מאיה*
+📅 *חודש יעד:* ${monthLabel}
+💼 *סוג עסק:* ${bTypeLabel}
+
+🔹 *נתוני יסוד שהוזנו:*
+• כמות ילדים במעון: ${childrenCount}
+• שכר לימוד חודשי: ₪${tuitionPerChild.toLocaleString()}
+• צהרון: ${afternoonCareChildren} ילדים (₪${afternoonCareFee}/ילד)
+
+💰 *הכנסות חודשיות צפויות:* ₪${totalIncome.toLocaleString()}
+
+🔻 *הוצאות חודשיות צפויות:* ₪${Math.round(totalExpenses).toLocaleString()}
+• שכירות וארנונה: ₪${rentAndTax.toLocaleString()}
+• ביטוח מעון: ₪${insuranceCost.toLocaleString()}
+• חבות שכר צוות (${staffCount} עובדות): ₪${Math.round(staffPayrollTotal).toLocaleString()}
+• מזון וציוד היגיינה: ₪${variableFoodSuppliesTotal.toLocaleString()}
+• רו"ח ותפעול: ₪${(accountantCost + utilitiesCost).toLocaleString()}
+
+🟢 *רווח נקי לפני מס:* ₪${Math.round(taxEstimate.preTaxNetProfit).toLocaleString()}
+⚖️ *אומדן מיסים וביטוח לאומי:* ₪${taxEstimate.totalTaxLiability.toLocaleString()}
+✨ *רווח נטו בכיס (אחרי מס):* ₪${Math.round(taxEstimate.postTaxNetProfit).toLocaleString()}
+
+🔗 *פתח ועדכן במחשבון:*
+https://almog787.github.io/Mayabee-management/`;
+
+    const encoded = encodeURIComponent(text);
+    window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+  };
+
   return (
     <div className="space-[#1b1c1a] space-y-6 max-w-7xl mx-auto">
       {/* Executive Clean Header */}
@@ -243,18 +279,27 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
           </p>
         </div>
 
-        {/* Action button & Month Picker */}
-        <div className="relative z-10 flex flex-col sm:flex-row md:flex-col items-start md:items-end gap-3 flex-shrink-0">
+        {/* Action buttons & Month Picker */}
+        <div className="relative z-10 flex flex-col sm:flex-row md:flex-col items-start md:items-end gap-2.5 flex-shrink-0">
+          <button
+            onClick={handleShareWhatsApp}
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black px-4 py-2.5 rounded-2xl shadow-md transition text-xs sm:text-sm cursor-pointer border border-emerald-500 active:scale-95 w-full sm:w-auto justify-center"
+            title="שתף הודעה מעוצבת בווטסאפ עם תוצאות החישוב והנתונים"
+          >
+            <MessageCircle className="w-4 h-4 text-emerald-100" />
+            <span>שתף תוצאות בווטסאפ 💬</span>
+          </button>
+
           <button
             onClick={handleExportGoogleSheets}
-            className="flex items-center gap-2 bg-[#ffdeab] hover:bg-white text-[#5f3414] font-black px-4 py-2.5 rounded-2xl shadow-md transition text-xs sm:text-sm cursor-pointer border border-[#ffdeab] active:scale-95"
+            className="flex items-center gap-2 bg-[#ffdeab] hover:bg-white text-[#5f3414] font-black px-4 py-2.5 rounded-2xl shadow-md transition text-xs sm:text-sm cursor-pointer border border-[#ffdeab] active:scale-95 w-full sm:w-auto justify-center"
             title="הורד קובץ גוגל שייטס / אקסל חכם מעוצב עם נוסחאות אוטומטיות"
           >
             <FileSpreadsheet className="w-4 h-4 text-[#7a4b29]" />
-            <span>ייצא לגוגל שייטס חכם (עם נוסחאות) 📊</span>
+            <span>ייצא לגוגל שייטס חכם 📊</span>
           </button>
 
-          <div className="bg-white/10 backdrop-blur px-3 py-2 rounded-2xl border border-white/20 text-left flex items-center gap-2">
+          <div className="bg-white/10 backdrop-blur px-3 py-2 rounded-2xl border border-white/20 text-left flex items-center gap-2 w-full sm:w-auto justify-between">
             <span className="text-[11px] text-[#ffdeab] font-bold">חודש יעד:</span>
             <input
               type="month"
