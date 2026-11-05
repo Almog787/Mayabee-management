@@ -136,6 +136,9 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
     return date.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
   }, [selectedMonth]);
 
+  // Data Entry Check: Hide scary expenses & deficits until Rotem/Maya input initial data
+  const hasEnteredData = childrenCount > 0 && tuitionPerChild > 0;
+
   // LIVE CALCULATIONS
   // Income
   const baseTuitionTotal = useMemo(() => childrenCount * tuitionPerChild, [childrenCount, tuitionPerChild]);
@@ -159,16 +162,32 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
   );
   const fixedExpensesTotal =
     rentAndTax + insuranceCost + accountantCost + utilitiesCost + (enrichmentClassesCost || 0) + (maintenanceAndSafety || 0);
-  const totalExpenses = staffPayrollTotal + variableFoodSuppliesTotal + fixedExpensesTotal;
+  const actualTotalExpenses = staffPayrollTotal + variableFoodSuppliesTotal + fixedExpensesTotal;
+  const displayTotalExpenses = hasEnteredData ? actualTotalExpenses : 0;
 
   // Net Balance & Pre-Tax / Post-Tax Calculation
-  const netBalance = totalIncome - totalExpenses;
-  const profitMarginPercent = totalIncome > 0 ? (netBalance / totalIncome) * 100 : 0;
+  const netBalance = hasEnteredData ? totalIncome - actualTotalExpenses : 0;
+  const profitMarginPercent = hasEnteredData && totalIncome > 0 ? (netBalance / totalIncome) * 100 : 0;
 
   // Israeli Tax Estimate Calculation
   const taxEstimate: EstimatedTaxResult = useMemo(() => {
-    return calculateIsraeliTaxEstimate(totalIncome, totalExpenses, businessType);
-  }, [totalIncome, totalExpenses, businessType]);
+    if (!hasEnteredData) {
+      return {
+        businessType,
+        grossIncome: 0,
+        grossExpenses: 0,
+        preTaxNetProfit: 0,
+        postTaxNetProfit: 0,
+        totalTaxLiability: 0,
+        incomeTaxAmount: 0,
+        nationalInsuranceAmount: 0,
+        netVatAmount: 0,
+        effectiveTaxRatePercent: 0,
+        explanationSummary: '💡 הזן כמות ילדים ושכר לימוד בטופס למטה לקבלת ניתוח מס ורווח נטו שנשאר בכיס.',
+      };
+    }
+    return calculateIsraeliTaxEstimate(totalIncome, actualTotalExpenses, businessType);
+  }, [hasEnteredData, totalIncome, actualTotalExpenses, businessType]);
 
   // Export to Google Sheets
   const handleExportGoogleSheets = () => {
@@ -242,7 +261,7 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
 
 💰 *הכנסות חודשיות צפויות:* ₪${totalIncome.toLocaleString()}
 
-🔻 *הוצאות חודשיות צפויות:* ₪${Math.round(totalExpenses).toLocaleString()}
+🔻 *הוצאות חודשיות צפויות:* ₪${Math.round(displayTotalExpenses).toLocaleString()}
 • שכירות וארנונה: ₪${rentAndTax.toLocaleString()}
 • ביטוח מעון: ₪${insuranceCost.toLocaleString()}
 • חבות שכר צוות (${staffCount} עובדות): ₪${Math.round(staffPayrollTotal).toLocaleString()}
@@ -348,34 +367,44 @@ https://almog787.github.io/Mayabee-management/`;
         <div className="bg-white p-6 rounded-3xl border border-[#e4e2de] shadow-2xs space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#5f3414] uppercase tracking-wide">הוצאות חודשיות צפויות</span>
-            <div className="w-9 h-9 rounded-2xl bg-rose-100 text-rose-800 flex items-center justify-center">
+            <div className={`w-9 h-9 rounded-2xl flex items-center justify-center ${hasEnteredData ? 'bg-rose-100 text-rose-800' : 'bg-gray-100 text-gray-400'}`}>
               <ArrowUpRight className="w-5 h-5" />
             </div>
           </div>
 
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl sm:text-4xl font-black text-rose-700 font-mono tabular-nums">
-              ₪{Math.round(totalExpenses).toLocaleString()}
+            <span className={`text-3xl sm:text-4xl font-black font-mono tabular-nums ${hasEnteredData ? 'text-rose-700' : 'text-gray-300'}`}>
+              ₪{Math.round(displayTotalExpenses).toLocaleString()}
             </span>
-            <span className="text-xs text-[#51443c]">(תפעול + שכר)</span>
+            <span className="text-xs text-[#51443c]">{hasEnteredData ? '(תפעול + שכר)' : '(ממתין להזנת נתונים)'}</span>
           </div>
 
           <div className="text-xs text-[#51443c] pt-3 border-t border-[#efeeea] space-y-1">
-            <div className="flex justify-between">
-              <span>חבות שכר צוות ({staffCount} עובדות):</span>
-              <strong className="font-mono text-rose-700">₪{Math.round(staffPayrollTotal).toLocaleString()}</strong>
-            </div>
-            <div className="flex justify-between">
-              <span>שכירות, ביטוח ותפעול:</span>
-              <strong className="font-mono text-[#5f3414]">₪{(fixedExpensesTotal + variableFoodSuppliesTotal).toLocaleString()}</strong>
-            </div>
+            {hasEnteredData ? (
+              <>
+                <div className="flex justify-between">
+                  <span>חבות שכר צוות ({staffCount} עובדות):</span>
+                  <strong className="font-mono text-rose-700">₪{Math.round(staffPayrollTotal).toLocaleString()}</strong>
+                </div>
+                <div className="flex justify-between">
+                  <span>שכירות, ביטוח ותפעול:</span>
+                  <strong className="font-mono text-[#5f3414]">₪{(fixedExpensesTotal + variableFoodSuppliesTotal).toLocaleString()}</strong>
+                </div>
+              </>
+            ) : (
+              <p className="text-xs text-amber-800 bg-amber-50/80 p-2 rounded-xl border border-amber-200/60 font-medium">
+                💡 הזן כמות ילדים ושכר לימוד בטופס למטה לצפייה בניתוח הוצאות ורווח.
+              </p>
+            )}
           </div>
         </div>
 
         {/* Expected Net Balance (Surplus/Deficit) Card */}
         <div
           className={`p-6 rounded-3xl border shadow-2xs space-y-3 transition ${
-            netBalance >= 0
+            !hasEnteredData
+              ? 'bg-[#fffdfa] border-[#e4e2de]'
+              : netBalance >= 0
               ? 'bg-[#fffdfa] border-[#ffdeab]'
               : 'bg-rose-50/90 border-rose-300'
           }`}
@@ -390,13 +419,17 @@ https://almog787.github.io/Mayabee-management/`;
           <div className="flex items-baseline gap-2">
             <span
               className={`text-3xl sm:text-4xl font-black font-mono tabular-nums ${
-                netBalance >= 0 ? 'text-[#7a4b29]' : 'text-rose-700'
+                !hasEnteredData
+                  ? 'text-gray-300'
+                  : netBalance >= 0
+                  ? 'text-[#7a4b29]'
+                  : 'text-rose-700'
               }`}
             >
               ₪{Math.round(netBalance).toLocaleString()}
             </span>
             <span className="text-xs font-bold text-[#5f3414]">
-              {netBalance >= 0 ? 'לפני מס ✓' : 'גרעון במאזן!'}
+              {!hasEnteredData ? 'ממתין להזנה 💡' : netBalance >= 0 ? 'לפני מס ✓' : 'גרעון במאזן!'}
             </span>
           </div>
 
@@ -407,8 +440,8 @@ https://almog787.github.io/Mayabee-management/`;
             </div>
             <div className="flex justify-between">
               <span>סטטוס יציבות:</span>
-              <strong className={netBalance >= 0 ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'}>
-                {netBalance >= 10000 ? 'איתן ומאוזן מאוד 🟢' : netBalance >= 0 ? 'מאוזן 🟡' : 'דרוש צמצום הוצאות 🔴'}
+              <strong className={!hasEnteredData ? 'text-gray-400 font-bold' : netBalance >= 10000 ? 'text-emerald-700 font-bold' : netBalance >= 0 ? 'text-amber-700 font-bold' : 'text-rose-700 font-bold'}>
+                {!hasEnteredData ? 'ממתין להזנת נתונים ⚪' : netBalance >= 10000 ? 'איתן ומאוזן מאוד 🟢' : netBalance >= 0 ? 'מאוזן 🟡' : 'דרוש צמצום הוצאות 🔴'}
               </strong>
             </div>
           </div>
@@ -474,7 +507,7 @@ https://almog787.github.io/Mayabee-management/`;
               ₪{Math.round(taxEstimate.preTaxNetProfit).toLocaleString()}
             </span>
             <span className="text-[11px] text-[#51443c] block">
-              הכנסות (₪{totalIncome.toLocaleString()}) פחות הוצאות (₪{Math.round(totalExpenses).toLocaleString()})
+              הכנסות (₪{totalIncome.toLocaleString()}) פחות הוצאות (₪{Math.round(displayTotalExpenses).toLocaleString()})
             </span>
           </div>
 
@@ -801,7 +834,7 @@ https://almog787.github.io/Mayabee-management/`;
                 <li>• מזון וציוד: ₪{variableFoodSuppliesTotal.toLocaleString()}</li>
                 <li>• רו"ח ותחשובת: ₪{(accountantCost + utilitiesCost).toLocaleString()}</li>
                 <li className="font-bold text-rose-700 pt-1 border-t border-[#e4e2de]">
-                  סה"כ הוצאות: ₪{Math.round(totalExpenses).toLocaleString()}
+                  סה"כ הוצאות: ₪{Math.round(displayTotalExpenses).toLocaleString()}
                 </li>
               </ul>
             </div>
