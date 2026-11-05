@@ -664,7 +664,7 @@ https://almog787.github.io/Mayabee-management/`;
               />
 
               <MacroSlider
-                label="מחיר צהרון לילד (₪):"
+                label="הוצאות שונות (₪):"
                 value={afternoonCareFee}
                 onChange={(val) => updateField('afternoonCareFee', val)}
                 min={0}
