@@ -633,8 +633,8 @@ https://almog787.github.io/Mayabee-management/`;
                   min="0"
                   max={childrenCount}
                   inputMode="numeric"
-                  value={afternoonCareChildren}
-                  onChange={(e) => updateField('afternoonCareChildren', Number(e.target.value))}
+                  value={afternoonCareChildren === 0 ? '' : afternoonCareChildren}
+                  onChange={(e) => updateField('afternoonCareChildren', e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
@@ -645,8 +645,8 @@ https://almog787.github.io/Mayabee-management/`;
                   type="number"
                   step="50"
                   inputMode="numeric"
-                  value={afternoonCareFee}
-                  onChange={(e) => updateField('afternoonCareFee', Number(e.target.value))}
+                  value={afternoonCareFee === 0 ? '' : afternoonCareFee}
+                  onChange={(e) => updateField('afternoonCareFee', e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
@@ -667,8 +667,8 @@ https://almog787.github.io/Mayabee-management/`;
                   type="number"
                   step="100"
                   inputMode="numeric"
-                  value={rentAndTax}
-                  onChange={(e) => updateField('rentAndTax', Number(e.target.value))}
+                  value={rentAndTax === 0 ? '' : rentAndTax}
+                  onChange={(e) => updateField('rentAndTax', e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
@@ -679,8 +679,8 @@ https://almog787.github.io/Mayabee-management/`;
                   type="number"
                   step="50"
                   inputMode="numeric"
-                  value={insuranceCost}
-                  onChange={(e) => updateField('insuranceCost', Number(e.target.value))}
+                  value={insuranceCost === 0 ? '' : insuranceCost}
+                  onChange={(e) => updateField('insuranceCost', e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
@@ -691,8 +691,8 @@ https://almog787.github.io/Mayabee-management/`;
                   type="number"
                   step="10"
                   inputMode="numeric"
-                  value={foodPerChild}
-                  onChange={(e) => updateField('foodPerChild', Number(e.target.value))}
+                  value={foodPerChild === 0 ? '' : foodPerChild}
+                  onChange={(e) => updateField('foodPerChild', e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
@@ -703,10 +703,10 @@ https://almog787.github.io/Mayabee-management/`;
                   type="number"
                   step="100"
                   inputMode="numeric"
-                  value={accountantCost + utilitiesCost}
+                  value={(accountantCost + utilitiesCost) === 0 ? '' : (accountantCost + utilitiesCost)}
                   onChange={(e) => {
-                    const total = Number(e.target.value);
-                    updateField('accountantCost', 650);
+                    const total = e.target.value === '' ? 0 : Number(e.target.value);
+                    updateField('accountantCost', Math.min(650, total));
                     updateField('utilitiesCost', Math.max(0, total - 650));
                   }}
                   className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
@@ -720,8 +720,8 @@ https://almog787.github.io/Mayabee-management/`;
                     type="number"
                     step="100"
                     inputMode="numeric"
-                    value={enrichmentClassesCost || 1000}
-                    onChange={(e) => updateField('enrichmentClassesCost', Number(e.target.value))}
+                    value={enrichmentClassesCost === 0 ? '' : enrichmentClassesCost}
+                    onChange={(e) => updateField('enrichmentClassesCost', e.target.value === '' ? 0 : Number(e.target.value))}
                     className="w-full px-3 py-2 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-base text-[#5f3414] focus:border-[#7a4b29] outline-none"
                   />
                 </div>
@@ -731,8 +731,8 @@ https://almog787.github.io/Mayabee-management/`;
                     type="number"
                     step="50"
                     inputMode="numeric"
-                    value={maintenanceAndSafety || 500}
-                    onChange={(e) => updateField('maintenanceAndSafety', Number(e.target.value))}
+                    value={maintenanceAndSafety === 0 ? '' : maintenanceAndSafety}
+                    onChange={(e) => updateField('maintenanceAndSafety', e.target.value === '' ? 0 : Number(e.target.value))}
                     className="w-full px-3 py-2 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-base text-[#5f3414] focus:border-[#7a4b29] outline-none"
                   />
                 </div>
@@ -755,8 +755,8 @@ https://almog787.github.io/Mayabee-management/`;
                   min="1"
                   max="15"
                   inputMode="numeric"
-                  value={staffCount}
-                  onChange={(e) => updateField('staffCount', Math.max(1, Number(e.target.value)))}
+                  value={staffCount === 0 ? '' : staffCount}
+                  onChange={(e) => updateField('staffCount', e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
@@ -767,8 +767,8 @@ https://almog787.github.io/Mayabee-management/`;
                   type="number"
                   step="1"
                   inputMode="numeric"
-                  value={avgStaffHourlyRate}
-                  onChange={(e) => updateField('avgStaffHourlyRate', Number(e.target.value))}
+                  value={avgStaffHourlyRate === 0 ? '' : avgStaffHourlyRate}
+                  onChange={(e) => updateField('avgStaffHourlyRate', e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
@@ -781,8 +781,8 @@ https://almog787.github.io/Mayabee-management/`;
                   min="0"
                   max="40"
                   inputMode="numeric"
-                  value={socialOverheadPercent || 20}
-                  onChange={(e) => updateField('socialOverheadPercent', Number(e.target.value))}
+                  value={socialOverheadPercent === 0 ? '' : socialOverheadPercent}
+                  onChange={(e) => updateField('socialOverheadPercent', e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                   title="פנסיה, פיצויים, ביטוח לאומי מעסיק, הבראה, חופשה ונסיעות"
                 />
@@ -795,8 +795,8 @@ https://almog787.github.io/Mayabee-management/`;
                   type="number"
                   step="0.5"
                   inputMode="decimal"
-                  value={dailyHoursPerStaff}
-                  onChange={(e) => updateField('dailyHoursPerStaff', Number(e.target.value))}
+                  value={dailyHoursPerStaff === 0 ? '' : dailyHoursPerStaff}
+                  onChange={(e) => updateField('dailyHoursPerStaff', e.target.value === '' ? 0 : Number(e.target.value))}
                   className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
