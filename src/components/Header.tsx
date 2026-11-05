@@ -71,11 +71,11 @@ export const Header: React.FC<HeaderProps> = ({
                   הבית של מאיה
                 </h1>
                 <span className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-bold rounded-md bg-[#ffdeab] text-[#5f3414] border border-[#f9b98e]/50">
-                  פורטל ניהול ובקרה
+                  מחשבון מאזן חודשי חכם
                 </span>
               </div>
               <p className="text-xs text-[#51443c] font-medium flex items-center gap-1.5">
-                <span>בהנהלת רותם עירון • אריאל</span>
+                <span>מערכת חיזוי ותכנון מאזן תציבי</span>
                 <span className="hidden md:inline text-[#d6c3b8]">•</span>
                 <span className="hidden md:flex items-center gap-1 text-[#7a4b29]/80">
                   <Calendar className="w-3 h-3 text-[#d97706]" />

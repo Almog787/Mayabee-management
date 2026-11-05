@@ -1,7 +1,7 @@
 /**
  * ==============================================================================
  * 🐝 הבית של מאיה - בהנהלת רותם עירון | מערכת ניהול מעון וצהרון באריאל
- * Google Apps Script: מנוע אוטומציה, דשבורד מנהלת, בדיקת שגיאות ו-Web App API
+ * Google Apps Script: מנוע אוטומציה, דשבורד מנהלת, כפתור סנכרון וכפתור כיבוי סנכרון
  * ==============================================================================
  */
 
@@ -29,25 +29,34 @@ var BRAND = {
  */
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
+  var syncStatus = isSyncEnabled() ? "פעיל ✅" : "מושבת ⏸️";
+  
   ui.createMenu("🐝 הבית של מאיה")
     .addItem("📊 פתח דשבורד מנהלת (Sidebar UI)", "showDashboardSidebar")
+    .addSeparator()
+    .addItem("🔄 סנכרן כעת את האתר עם המידע בגליון (Sync Now)", "syncWebsiteWithSheetData")
+    .addItem("⏸️ כפתור כיבוי / הפעלת סנכרון מהגליון (מצב: " + syncStatus + ")", "toggleSyncFromSheet")
     .addSeparator()
     .addItem("🚀 אתחול ועיצוב כל הטבלאות מחדש (Auto Setup)", "setupMayabeeDatabase")
     .addItem("🔍 בדיקת תקינות ושגיאות במאגר (Health Check)", "runIntegrityAndErrorCheck")
     .addSeparator()
+    .addItem("🌐 הגדרת כתובת האתר לסנכרון ישיר", "promptSetWebsiteUrl")
     .addItem("📋 פתיחת יומן נוכחות להיום", "openTodayAttendance")
     .addItem("💡 אודות המערכת", "showAboutDialog")
     .addToUi();
 }
 
 /**
- * 🚀 פונקציית הקסם: בונה ומעצבת את כל מסד הנתונים והטבלאות בלחיצה אחת!
+ * 🚀 פונקציית הקסם: בונה ומעצבת את כל מסד הנתונים והטבלאות בלחיצה אחת אוטומטית!
  */
 function setupMayabeeDatabase() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var ui = SpreadsheetApp.getUi();
   
-  // 1. יצירת לשונית דשבורד מנהלת
+  // הגדרת ברירת מחדל: סנכרון פעיל
+  setSyncEnabled(true);
+  
+  // 1. יצירת לשונית דשבורד מנהלת עם כרטיסי KPI ומצב סנכרון
   setupExecutiveDashboardSheet(ss);
   
   // 2. יצירת לשונית ילדים ופדגוגיה
@@ -68,11 +77,14 @@ function setupMayabeeDatabase() {
   // 7. יצירת לשונית הגדרות מערכת
   setupSettingsSheet(ss);
   
-  // הצגת הודעת הצלחה למשתמש
   if (ui) {
     ui.alert(
-      "🎉 אתחול מסד הנתונים הושלם בהצלחה!",
-      "כל 7 הלשוניות של 'הבית של מאיה' נוצרו, עוצבו וסודרו עם כותרות, נוסחאות ובדיקות תקינות.\\n\\nכעת ניתן להשתמש בסרגל הצד (Sidebar UI) או לסנכרן ישירות מהאתר.",
+      "🎉 אתחול מסד הנתונים והדשבורד הושלם אוטומטית!",
+      "כל 7 הלשוניות של 'הבית של מאיה' נוצרו ועוצבו בהצלחה!\\n\\n" +
+      "✅ דשבורד מנהלת ראשי עם כרטיסי KPI ומדדי פיקוח\\n" +
+      "✅ כפתור סנכרון מול האתר מוכן לשימוש\\n" +
+      "✅ כפתור כיבוי/הפעלת סנכרון מוכן לשימוש\\n" +
+      "✅ בדיקות חוק המזומן (6,000 ₪) ותוקף החייאה פעילות",
       ui.ButtonSet.OK
     );
   }
@@ -98,12 +110,18 @@ function setupExecutiveDashboardSheet(ss) {
         .setHorizontalAlignment("center")
         .setVerticalAlignment("middle");
   
-  // כרטיסי KPI ראשיים (שורות 4-7)
+  // באנר סטטוס סנכרון חי (שורה 3)
+  sheet.getRange("B3:H3").merge();
+  var syncBanner = sheet.getRange("B3");
+  var isEnabled = isSyncEnabled();
+  updateDashboardSyncBanner(sheet, isEnabled);
+  
+  // כרטיסי KPI ראשיים (שורות 5-7)
   var kpiCards = [
-    { cell: "B4", label: "👶 ילדים רשומים במעון", formula: "=COUNTA('👶 ילדים'!A2:A)", note: "תפוסה נוכחית", bg: BRAND.colors.honeyBg, color: BRAND.colors.darkBrown },
-    { cell: "D4", label: "📅 נוכחים היום במעון", formula: "=COUNTIF('📅 נוכחות'!E2:E, \"נוכח\")", note: "מתוך כלל הילדים", bg: "#dcfce7", color: "#166534" },
-    { cell: "F4", label: "💰 הכנסות שנתיות (2026)", formula: "=SUMIF('💰 כספים'!C2:C, \"הכנסה\", '💰 כספים'!G2:G)", note: "תקרת עוסק פטור: ₪122,000", bg: "#fef3c7", color: "#92400e" },
-    { cell: "H4", label: "👩‍🏫 צוות פעיל במשמרת", formula: "=COUNTA('👩‍🏫 צוות'!A2:A)", note: "תקינת יחס מטפלת-ילד", bg: "#f3e8ff", color: "#6b21a8" }
+    { cell: "B5", label: "👶 ילדים רשומים במעון", formula: "=COUNTA('👶 ילדים'!A2:A)", note: "תפוסה נוכחית", bg: BRAND.colors.honeyBg, color: BRAND.colors.darkBrown },
+    { cell: "D5", label: "📅 נוכחים היום במעון", formula: "=COUNTIF('📅 נוכחות'!E2:E, \"נוכח\")", note: "מתוך כלל הילדים", bg: "#dcfce7", color: "#166534" },
+    { cell: "F5", label: "💰 הכנסות שנתיות (2026)", formula: "=SUMIF('💰 כספים'!C2:C, \"הכנסה\", '💰 כספים'!G2:G)", note: "תקרת עוסק פטור: ₪122,000", bg: "#fef3c7", color: "#92400e" },
+    { cell: "H5", label: "👩‍🏫 צוות פעיל במשמרת", formula: "=COUNTA('👩‍🏫 צוות'!A2:A)", note: "תקינת יחס מטפלת-ילד", bg: "#f3e8ff", color: "#6b21a8" }
   ];
   
   kpiCards.forEach(function(kpi) {
@@ -119,7 +137,7 @@ function setupExecutiveDashboardSheet(ss) {
     sheet.getRange(range.getRow(), range.getColumn(), 3, 1).setBorder(true, true, true, true, false, false, "#cbd5e1", SpreadsheetApp.BorderStyle.SOLID);
   });
   
-  // מד יחס תקינת מטפלות (Regulatory Ratio Check)
+  // מד יחס תקינת מטפלות (חוק הפיקוח)
   sheet.getRange("B9:D9").merge().setValue("🛡️ בקרת תקינת מטפלת-ילד (חוק הפיקוח תשע\"ט)").setBackground(BRAND.colors.darkBrown).setFontColor("#ffffff").setFontWeight("bold").setFontSize(11).setHorizontalAlignment("center");
   sheet.getRange("B10:C10").merge().setValue("יחס נדרש לפי חוק (תינוקות/פעוטות/בוגרים):").setFontWeight("bold");
   sheet.getRange("D10").setValue("1:6 תינוקות | 1:9 פעוטות | 1:12 גנים");
@@ -132,8 +150,19 @@ function setupExecutiveDashboardSheet(ss) {
   sheet.getRange("F10:G10").merge().setValue("מגבלת מזומן לעסקה (חוק המזומן):").setFontWeight("bold");
   sheet.getRange("H10").setValue("עד 6,000 ₪ בלבד").setFontColor(BRAND.colors.alertRed).setFontWeight("bold");
   sheet.getRange("F11:G11").merge().setValue("יתרת הכנסה עד תקרת עוסק פטור:");
-  sheet.getRange("H11").setFormula("=122000 - F5").setFontWeight("bold");
+  sheet.getRange("H11").setFormula("=122000 - F6").setFontWeight("bold");
   sheet.getRange("F9:H11").setBorder(true, true, true, true, true, true, "#cbd5e1", SpreadsheetApp.BorderStyle.SOLID);
+
+  // הדרכה מהירה למנהלת לגבי פעולות וסנכרון
+  sheet.getRange("B13:H14").merge();
+  var tipCell = sheet.getRange("B13");
+  tipCell.setValue("💡 פעולות מהירות למנהלת: לפתיחת סרגל הניהול, סינכרון מיידי עם האתר, או כיבוי זמני של הסנכרון מהטבלה - השתמשי בתפריט '🐝 הבית של מאיה' בראש העמוד.")
+         .setBackground("#f8fafc")
+         .setFontColor("#334155")
+         .setFontSize(10)
+         .setHorizontalAlignment("center")
+         .setVerticalAlignment("middle");
+  sheet.getRange("B13:H14").setBorder(true, true, true, true, false, false, "#cbd5e1", SpreadsheetApp.BorderStyle.DASHED);
   
   sheet.autoResizeColumns(1, 10);
   sheet.setColumnWidth(1, 40);
@@ -144,6 +173,163 @@ function setupExecutiveDashboardSheet(ss) {
   sheet.setColumnWidth(6, 180);
   sheet.setColumnWidth(7, 40);
   sheet.setColumnWidth(8, 160);
+}
+
+/**
+ * עדכון הבאנר הוויזואלי של מצב הסנכרון בדשבורד
+ */
+function updateDashboardSyncBanner(sheet, isEnabled) {
+  if (!sheet) {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    sheet = ss.getSheetByName("📊 דשבורד_מנהלת");
+  }
+  if (!sheet) return;
+  
+  var cell = sheet.getRange("B3");
+  if (isEnabled) {
+    cell.setValue("🟢 מצב סנכרון מול האתר: פעיל ומסונכרן דו-כיוונית (לכיבוי: תפריט 'הבית של מאיה' > כפתור כיבוי)")
+        .setBackground("#ecfdf5")
+        .setFontColor("#065f46")
+        .setFontWeight("bold")
+        .setFontSize(10)
+        .setHorizontalAlignment("center");
+  } else {
+    cell.setValue("⏸️ מצב סנכרון מול האתר: מושבת ידנית מכיוון הגליון (עדכונים בגליון לא יישלחו לאתר עד להפעלה מחדש)")
+        .setBackground("#fff1f2")
+        .setFontColor("#9f1239")
+        .setFontWeight("bold")
+        .setFontSize(10)
+        .setHorizontalAlignment("center");
+  }
+}
+
+/**
+ * ==============================================================================
+ * 🔄 כפתור סנכרון וכפתור כיבוי סנכרון (Sync Controls)
+ * ==============================================================================
+ */
+
+/**
+ * כפתור שמכבה / מפעיל את הסנכרון מכיוון הטבלה
+ */
+function toggleSyncFromSheet() {
+  var ui = SpreadsheetApp.getUi();
+  var current = isSyncEnabled();
+  var newState = !current;
+  
+  setSyncEnabled(newState);
+  
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var dashSheet = ss.getSheetByName("📊 דשבורד_מנהלת");
+  updateDashboardSyncBanner(dashSheet, newState);
+  
+  // עדכון לשונית הגדרות
+  var setSheet = ss.getSheetByName("⚙️ הגדרות");
+  if (setSheet) {
+    var val = newState ? "פעיל ✅" : "מושבת ידנית ⏸️";
+    setSheet.getRange("B9").setValue(val);
+  }
+  
+  if (ui) {
+    if (newState) {
+      ui.alert("🟢 הסנכרון הופעל מחדש!", "הסנכרון בין הגליון לאתר הופעל בהצלחה. נתונים מעודכנים יסונכרנו כסדרם.", ui.ButtonSet.OK);
+    } else {
+      ui.alert("⏸️ הסנכרון הושבת בהצלחה!", "הסנכרון מכיוון הגליון כובה זמנית. שינויים שתבצעי בטבלה זו לא יישלחו לאתר עד שתפעילי את הסנכרון מחדש.", ui.ButtonSet.OK);
+    }
+  }
+  
+  return { syncEnabled: newState };
+}
+
+/**
+ * כפתור שמסנכרן את האתר עם המידע בגוגל שיטס
+ */
+function syncWebsiteWithSheetData() {
+  var ui = SpreadsheetApp.getUi();
+  
+  if (!isSyncEnabled()) {
+    if (ui) {
+      ui.alert("⚠️ הסנכרון מושבת כעת", "הסנכרון כבוי מכיוון הטבלה. נא להפעיל תחילה את הסנכרון באמצעות 'כפתור כיבוי / הפעלת סנכרון' בתפריט.", ui.ButtonSet.OK);
+    }
+    return { success: false, error: "Sync is disabled from sheet" };
+  }
+  
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var data = readAllDataFromSheets(ss);
+  
+  // בדיקה אם מוגדר URL של האתר
+  var targetUrl = getWebsiteUrl();
+  
+  if (!targetUrl) {
+    if (ui) {
+      var prompt = ui.prompt(
+        "🌐 הזנת כתובת האתר לסנכרון",
+        "נא להזין את כתובת ה-URL של אתר 'הבית של מאיה' (לדוגמה: https://almog787.github.io/Mayabee/):",
+        ui.ButtonSet.OK_CANCEL
+      );
+      if (prompt.getSelectedButton() === ui.Button.OK) {
+        targetUrl = prompt.getResponseText().trim();
+        if (targetUrl) {
+          setWebsiteUrl(targetUrl);
+        }
+      }
+    }
+  }
+  
+  // רישום חותמת זמן אחרונה
+  PropertiesService.getScriptProperties().setProperty("LAST_SYNC_TIME", new Date().toISOString());
+  
+  if (ui) {
+    ui.alert(
+      "✅ נתוני הגליון מוכנים לסנכרון!",
+      "נאספו " + data.children.length + " ילדים ו-" + data.transactions.length + " תנועות כספיות.\\n\\n" +
+      "הנתונים זמינים כעת למשיכה מיידית (Pull) על ידי האתר.\\n" +
+      "חותמת זמן סנכרון: " + Utilities.formatDate(new Date(), "Asia/Jerusalem", "dd/MM/yyyy HH:mm:ss"),
+      ui.ButtonSet.OK
+    );
+  }
+  
+  return {
+    success: true,
+    childrenCount: data.children.length,
+    transactionsCount: data.transactions.length,
+    timestamp: new Date().toISOString()
+  };
+}
+
+/**
+ * עזרי ניהול מצב סנכרון (Script Properties)
+ */
+function isSyncEnabled() {
+  var prop = PropertiesService.getScriptProperties().getProperty("SYNC_ENABLED");
+  return prop !== "false"; // ברירת מחדל: true
+}
+
+function setSyncEnabled(enabled) {
+  PropertiesService.getScriptProperties().setProperty("SYNC_ENABLED", enabled ? "true" : "false");
+}
+
+function getWebsiteUrl() {
+  return PropertiesService.getScriptProperties().getProperty("WEBSITE_URL") || "";
+}
+
+function setWebsiteUrl(url) {
+  PropertiesService.getScriptProperties().setProperty("WEBSITE_URL", url);
+}
+
+function promptSetWebsiteUrl() {
+  var ui = SpreadsheetApp.getUi();
+  var currentUrl = getWebsiteUrl();
+  var prompt = ui.prompt(
+    "🌐 הגדרת כתובת האתר",
+    "הזן את כתובת האתר של 'הבית של מאיה' (GitHub Pages או דומיין):\n(כתובת נוכחית: " + (currentUrl || "לא הוגדרה") + ")",
+    ui.ButtonSet.OK_CANCEL
+  );
+  if (prompt.getSelectedButton() === ui.Button.OK) {
+    var newUrl = prompt.getResponseText().trim();
+    setWebsiteUrl(newUrl);
+    ui.alert("הכתובת נשמרה בהצלחה!", "כתובת היעד: " + newUrl, ui.ButtonSet.OK);
+  }
 }
 
 /**
@@ -384,16 +570,18 @@ function setupSettingsSheet(ss) {
   sheet.clear();
   sheet.setRightToLeft(true);
   
+  var syncVal = isSyncEnabled() ? "פעיל ✅" : "מושבת ידנית ⏸️";
+  
   var settingsData = [
     ["פרמטר הגדרה", "ערך נוכחי", "הערות והנחיות"],
     ["שם המעון והעסק", "הבית של מאיה", "שם רשמי ברשות המסים"],
     ["מנהלת המעון", "רותם עירון", "מורשית חתימה וניהול פדגוגי"],
-    ["טלפון מנהלת", "052-870-7056", "קו ישיר לוואטסאפ הורים"],
+    ["טלפון מנהלת", "052-870-7056", "קו ישיר למעון"],
     ["כתובת המעון", "אריאל, שומרון", "כולל מרחב מוגן תקני ומאושר"],
     ["סוג עוסק", "עוסק פטור", "תקרת מחזור שנתית 122,000 ₪ לשנת 2026"],
     ["תקרת חוק המזומן", "6000", "קנס מנהלי על עסקת מזומן מעל סכום זה"],
     ["מגבלת תפוסה מרבית", "10", "10 ילדים לפי תקן המעון הנוכחי"],
-    ["סנכרון ענן (Phase 2)", "פעיל דרך Web App API", "סנכרון דו-כיווני Last-Write-Wins"]
+    ["סטטוס סנכרון מהגליון", syncVal, "ניתן לכיבוי/הפעלה מכפתור בתפריט ובסרגל הצד"]
   ];
   
   sheet.getRange(1, 1, settingsData.length, 3).setValues(settingsData);
@@ -471,7 +659,11 @@ function runIntegrityAndErrorCheck() {
  * פתיחת סרגל הצד של המנהלת (Sidebar UI)
  */
 function showDashboardSidebar() {
-  var html = HtmlService.createHtmlOutputFromFile("Sidebar")
+  var template = HtmlService.createTemplateFromFile("Sidebar");
+  template.syncEnabled = isSyncEnabled();
+  template.websiteUrl = getWebsiteUrl();
+  
+  var html = template.evaluate()
     .setTitle("🐝 הבית של מאיה - סרגל ניהול")
     .setWidth(340);
   SpreadsheetApp.getUi().showSidebar(html);
@@ -495,7 +687,7 @@ function showAboutDialog() {
   var ui = SpreadsheetApp.getUi();
   ui.alert(
     "🐝 אודות מערכת 'הבית של מאיה'",
-    "מערכת ניהול מעון, משפחתון וצהרון באריאל\\nבהנהלת רותם עירון | 052-870-7056\\n\\nפותחה בארכיטקטורת Local-First חסינה עם סנכרון דו-כיווני ל-Google Sheets.",
+    "מערכת ניהול מעון, משפחתון וצהרון באריאל\\nבהנהלת רותם עירון | 052-870-7056\\n\\nמערכת אוטומטית מסונכרנת ל-Google Sheets עם בקרת סנכרון מלאה.",
     ui.ButtonSet.OK
   );
 }
@@ -503,7 +695,6 @@ function showAboutDialog() {
 /**
  * ==============================================================================
  * 🌐 REST Web App API Endpoints (doGet & doPost)
- * חיבור דו-כיווני ישיר בין אתר React ל-Google Sheets ללא צורך בשרת מתווך
  * ==============================================================================
  */
 
@@ -517,6 +708,7 @@ function doGet(e) {
       status: "ok",
       daycare: BRAND.name,
       director: BRAND.director,
+      syncEnabled: isSyncEnabled(),
       timestamp: new Date().toISOString()
     })).setMimeType(ContentService.MimeType.JSON);
   }
@@ -525,7 +717,15 @@ function doGet(e) {
     var result = readAllDataFromSheets(ss);
     return ContentService.createTextOutput(JSON.stringify({
       success: true,
+      syncEnabled: isSyncEnabled(),
       data: result
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  if (action === "getSyncStatus") {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      syncEnabled: isSyncEnabled()
     })).setMimeType(ContentService.MimeType.JSON);
   }
 
@@ -551,6 +751,23 @@ function doPost(e) {
   }
 
   var action = postData.action || "sync";
+
+  if (action === "toggleSync") {
+    var newState = toggleSyncFromSheet().syncEnabled;
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      syncEnabled: newState
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // בדיקה אם הסנכרון מושבת מכיוון הטבלה
+  if (!isSyncEnabled()) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      syncDisabled: true,
+      message: "הסנכרון מהגליון כבוי כעת על ידי המנהלת. ניתן להפעילו מחדש מתפריט 'הבית של מאיה' בגוגל שיטס."
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
 
   if (action === "sync") {
     var writeResult = writeAllDataToSheets(ss, postData.payload || {});

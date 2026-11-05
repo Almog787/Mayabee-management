@@ -16,8 +16,11 @@ import { StaffModule } from './components/modules/StaffModule';
 import { LogisticsModule } from './components/modules/LogisticsModule';
 import { AiAdvisorModule } from './components/modules/AiAdvisorModule';
 import { BackupSyncModule } from './components/modules/BackupSyncModule';
+import { QuickMasterPlannerModule } from './components/modules/QuickMasterPlannerModule';
+import { MonthlyBalancePlannerModule } from './components/modules/MonthlyBalancePlannerModule';
 import { FinancialTransaction } from './types';
 import {
+  TrendingUp,
   LayoutDashboard,
   Baby,
   UserCheck,
@@ -71,7 +74,7 @@ export default function App() {
     refreshData,
   } = useDaycareData();
 
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [activeTab, setActiveTab] = useState<string>('master-planner');
   const [selectedReceiptTx, setSelectedReceiptTx] = useState<FinancialTransaction | null>(null);
 
   if (loading) {
@@ -87,6 +90,20 @@ export default function App() {
   }
 
   const navItems = [
+    {
+      id: 'master-planner',
+      label: 'מחשבון מאזן מהיר 📊',
+      icon: TrendingUp,
+      badge: 'דף ראשון',
+      badgeColor: 'bg-[#ffdeab] text-[#5f3414] font-bold',
+    },
+    {
+      id: 'planner',
+      label: 'תכנון מאזן ומידע חסר 📊',
+      icon: TrendingUp,
+      badge: 'גלאי פערים',
+      badgeColor: 'bg-[#ffdeab] text-[#5f3414] font-bold',
+    },
     {
       id: 'dashboard',
       label: 'דשבורד ראשי 🐝',
@@ -201,6 +218,28 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {activeTab === 'master-planner' && (
+          <QuickMasterPlannerModule
+            settings={settings}
+            onUpdateSettings={updateSettings}
+          />
+        )}
+
+        {activeTab === 'planner' && (
+          <MonthlyBalancePlannerModule
+            children={children}
+            transactions={transactions}
+            staff={staff}
+            shifts={shifts}
+            settings={settings}
+            taxStatus={taxStatus}
+            onAddTransaction={addTransaction}
+            onUpdateChild={updateChild}
+            onUpdateSettings={updateSettings}
+            onNavigateTab={setActiveTab}
+          />
+        )}
+
         {activeTab === 'dashboard' && (
           <DashboardModule
             children={children}

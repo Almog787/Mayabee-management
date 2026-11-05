@@ -134,6 +134,14 @@ export const DashboardModule: React.FC<DashboardModuleProps> = ({
 
           <div className="flex flex-wrap items-center gap-2">
             <button
+              onClick={() => onNavigateTab('planner')}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#ffdeab] text-[#5f3414] hover:bg-white text-xs font-bold border border-[#ffdeab] transition cursor-pointer shadow-xs"
+            >
+              <TrendingUp className="w-3.5 h-3.5 text-[#7a4b29]" />
+              <span>תכנון מאזן ומידע חסר 📊</span>
+            </button>
+
+            <button
               onClick={() => onNavigateTab('finance')}
               className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-[#ffdeab] text-xs font-bold border border-[#ffdeab]/30 transition cursor-pointer"
             >
