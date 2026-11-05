@@ -1,0 +1,6 @@
+{
+  "name": "קטנטנים - מערכת מודולרית לניהול מעון ילדים",
+  "description": "מערכת ניהול מעון ילדים בגישת Local-First: רישום ילדים, יומן נוכחות, כספים ומיסוי ישראלי, כוח אדם ותקינה, בטיחות ואלרגיות, סנכרון ו-PWA.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

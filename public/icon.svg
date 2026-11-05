@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgHoney" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fffbeb" />
+      <stop offset="50%" stop-color="#fef3c7" />
+      <stop offset="100%" stop-color="#fde68a" />
+    </linearGradient>
+    <linearGradient id="woodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8a532d" />
+      <stop offset="100%" stop-color="#5f3414" />
+    </linearGradient>
+    <linearGradient id="beeGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#d97706" />
+    </linearGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#5f3414" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Background rounded card -->
+  <rect width="512" height="512" rx="110" fill="url(#bgHoney)" stroke="#fcd34d" stroke-width="8"/>
+
+  <!-- Honeycomb pattern in background -->
+  <g stroke="#f59e0b" stroke-width="3" fill="none" opacity="0.35">
+    <polygon points="120,70 150,52 180,70 180,105 150,122 120,105" />
+    <polygon points="180,105 210,87 240,105 240,140 210,157 180,140" />
+    <polygon points="340,70 370,52 400,70 400,105 370,122 340,105" />
+    <polygon points="280,105 310,87 340,105 340,140 310,157 280,140" />
+  </g>
+
+  <!-- House Silhouette (הבית של מאיה) -->
+  <g filter="url(#softShadow)" transform="translate(0, 20)">
+    <!-- Roof -->
+    <path d="M 140 250 L 256 140 L 372 250" fill="none" stroke="url(#woodGrad)" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- House Body -->
+    <rect x="168" y="240" width="176" height="160" rx="24" fill="#ffffff" stroke="#e5d7c3" stroke-width="6"/>
+
+    <!-- Heart in Door -->
+    <path d="M 256 325 C 248 310 230 314 230 330 C 230 346 256 362 256 362 C 256 362 282 346 282 330 C 282 314 264 310 256 325 Z" fill="#ea580c"/>
+
+    <!-- Cute Honey Bee Flying above (MayaBee) -->
+    <g transform="translate(256, 175)">
+      <!-- Wings -->
+      <ellipse cx="-16" cy="-28" rx="20" ry="14" fill="#e0f2fe" stroke="#38bdf8" stroke-width="3" transform="rotate(-30, -16, -28)" opacity="0.9"/>
+      <ellipse cx="16" cy="-28" rx="20" ry="14" fill="#e0f2fe" stroke="#38bdf8" stroke-width="3" transform="rotate(30, 16, -28)" opacity="0.9"/>
+
+      <!-- Bee Body -->
+      <ellipse cx="0" cy="0" rx="36" ry="26" fill="url(#beeGold)" stroke="#78350f" stroke-width="4"/>
+
+      <!-- Stripes -->
+      <path d="M -10 -24 L -10 24 M 8 -25 L 8 25" stroke="#451a03" stroke-width="6" stroke-linecap="round"/>
+
+      <!-- Stinger -->
+      <path d="M -36 0 L -46 0" stroke="#78350f" stroke-width="5" stroke-linecap="round"/>
+
+      <!-- Friendly Eye & Smile -->
+      <circle cx="18" cy="-5" r="4.5" fill="#1e1b4b"/>
+      <circle cx="20" cy="-7" r="1.5" fill="#ffffff"/>
+      <path d="M 12 6 Q 20 15 28 6" fill="none" stroke="#78350f" stroke-width="3.5" stroke-linecap="round"/>
+
+      <!-- Cheeks -->
+      <circle cx="15" cy="4" r="4" fill="#f43f5e" opacity="0.6"/>
+
+      <!-- Antennas -->
+      <path d="M 22 -20 Q 30 -34 38 -30" fill="none" stroke="#78350f" stroke-width="3.5" stroke-linecap="round"/>
+      <circle cx="38" cy="-30" r="3.5" fill="#78350f"/>
+    </g>
+  </g>
+</svg>

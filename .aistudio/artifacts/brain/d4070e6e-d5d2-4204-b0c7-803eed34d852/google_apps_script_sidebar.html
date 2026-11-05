@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #fbf9f5; color: #1b1c1a; }
+    .honey-header { background: linear-gradient(135deg, #7a4b29, #5f3414); color: white; }
+    .honey-btn { background-color: #7a4b29; color: white; transition: all 0.2s; }
+    .honey-btn:hover { background-color: #5f3414; }
+  </style>
+</head>
+<body class="p-4 space-y-4 text-right">
+  <!-- Header -->
+  <div class="honey-header p-4 rounded-2xl shadow-md">
+    <div class="flex items-center justify-between">
+      <span class="text-2xl">🐝</span>
+      <h2 class="text-base font-bold text-white">הבית של מאיה</h2>
+    </div>
+    <p class="text-xs text-yellow-200 mt-1">בהנהלת רותם עירון • אריאל</p>
+    <div class="mt-2 text-xs bg-white bg-opacity-20 rounded-lg p-2 flex justify-between">
+      <span>מערכת ניהול ובקרה</span>
+      <span>מעון וצהרון</span>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-3">
+    <h3 class="text-xs font-bold text-gray-700">פעולות מהירות בגליון:</h3>
+    <button onclick="google.script.run.setupMayabeeDatabase()" class="w-full py-2 px-3 text-xs font-bold honey-btn rounded-xl shadow-sm flex items-center justify-center gap-2">
+      <span>🚀 רענון ועיצוב הטבלאות (Setup)</span>
+    </button>
+    <button onclick="google.script.run.runIntegrityAndErrorCheck()" class="w-full py-2 px-3 text-xs font-bold bg-yellow-100 text-yellow-900 border border-yellow-300 rounded-xl hover:bg-yellow-200 flex items-center justify-center gap-2">
+      <span>🔍 בדיקת תקינות ושגיאות במאגר</span>
+    </button>
+    <button onclick="google.script.run.openTodayAttendance()" class="w-full py-2 px-3 text-xs font-bold bg-green-50 text-green-800 border border-green-200 rounded-xl hover:bg-green-100 flex items-center justify-center gap-2">
+      <span>📋 פתח יומן נוכחות להיום</span>
+    </button>
+  </div>
+
+  <!-- Real-Time Metrics Tile -->
+  <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm space-y-2 text-xs">
+    <h4 class="font-bold text-gray-800">תקנים וחוקי מעונות:</h4>
+    <div class="space-y-1 text-gray-600">
+      <div class="flex justify-between py-1 border-b border-gray-100">
+        <span>חוק המזומן:</span>
+        <span class="font-bold text-green-700">עד 6,000 ₪ בלבד</span>
+      </div>
+      <div class="flex justify-between py-1 border-b border-gray-100">
+        <span>עוסק פטור 2026:</span>
+        <span class="font-bold text-yellow-800">עד 122,000 ₪</span>
+      </div>
+      <div class="flex justify-between py-1 border-b border-gray-100">
+        <span>יחס מטפלת-ילד:</span>
+        <span class="font-bold">1:6 / 1:9 / 1:12</span>
+      </div>
+      <div class="flex justify-between py-1">
+        <span>קורס עזרה ראשונה:</span>
+        <span class="font-bold text-purple-700">חידוש כל שנתיים</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sync status -->
+  <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-center text-xs text-yellow-900">
+    <p class="font-bold">סנכרון ענן פעיל (Phase 2)</p>
+    <p class="text-gray-500 text-[10px] mt-0.5">כל שינוי באתר או בשיטס מסונכרן דו-כיוונית</p>
+  </div>
+</body>
+</html>
