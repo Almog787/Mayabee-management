@@ -282,49 +282,49 @@ https://almog787.github.io/Mayabee-management/`;
   return (
     <div className="space-[#1b1c1a] space-y-6 max-w-7xl mx-auto">
       {/* Executive Clean Header */}
-      <div className="bg-gradient-to-l from-[#7a4b29] via-[#8c532d] to-[#451a03] rounded-3xl p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden border border-[#d6c3b8]/30">
-        <div className="space-y-2 max-w-2xl relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ffdeab]/20 border border-[#ffdeab]/30 text-[#ffdeab] text-xs font-bold">
-            <TrendingUp className="w-3.5 h-3.5 text-[#ffdeab]" />
-            <span>דשבורד תכנון מאזן נקי ומהיר • הבית של מאיה (רותם)</span>
+      <div className="bg-gradient-to-l from-[#7a4b29] via-[#8c532d] to-[#451a03] rounded-3xl p-6 sm:p-10 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden border border-[#d6c3b8]/30">
+        <div className="space-y-3 max-w-2xl relative z-10 text-right">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-[#ffdeab] text-xs font-black tracking-wide uppercase">
+            <TrendingUp className="w-3.5 h-3.5" />
+            <span>דשבורד תכנון מאזן • הבית של מאיה</span>
           </div>
 
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white font-heading">
+          <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white font-heading leading-tight">
             מתכנן מאזן חודשי צפוי 📊
           </h2>
 
-          <p className="text-xs sm:text-sm text-[#ffedd5]/90 leading-relaxed font-sans">
-            הזן בקלות את הנתונים העיקריים (כמות ילדים, שכירות, ביטוח ושכר עובדים) וקבל תוצאה מיידית של רווח נקי ויציבות תקציבית לחודש <strong>{monthLabel}</strong>.
+          <p className="text-sm sm:text-base text-[#ffedd5]/90 leading-relaxed font-medium">
+            הזן נתונים עיקריים וקבל תחזית רווח נקי ויציבות תקציבית לחודש <strong className="text-white underline decoration-[#ffdeab]/40 underline-offset-4">{monthLabel}</strong>.
           </p>
         </div>
 
         {/* Action buttons & Month Picker */}
-        <div className="relative z-10 flex flex-col sm:flex-row md:flex-col items-start md:items-end gap-2.5 flex-shrink-0">
+        <div className="relative z-10 flex flex-col sm:flex-row md:flex-col items-stretch sm:items-center md:items-end gap-3 flex-shrink-0 min-w-[220px]">
           <button
             onClick={handleShareWhatsApp}
-            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black px-4 py-2.5 rounded-2xl shadow-md transition text-xs sm:text-sm cursor-pointer border border-emerald-500 active:scale-95 w-full sm:w-auto justify-center"
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-black px-5 py-3 rounded-2xl shadow-lg transition-all text-sm sm:text-base cursor-pointer border border-emerald-500 active:scale-95 justify-center"
             title="שתף הודעה מעוצבת בווטסאפ עם תוצאות החישוב והנתונים"
           >
-            <MessageCircle className="w-4 h-4 text-emerald-100" />
+            <MessageCircle className="w-5 h-5 text-emerald-100" />
             <span>שתף תוצאות בווטסאפ 💬</span>
           </button>
 
           <button
             onClick={handleExportGoogleSheets}
-            className="flex items-center gap-2 bg-[#ffdeab] hover:bg-white text-[#5f3414] font-black px-4 py-2.5 rounded-2xl shadow-md transition text-xs sm:text-sm cursor-pointer border border-[#ffdeab] active:scale-95 w-full sm:w-auto justify-center"
+            className="flex items-center gap-2 bg-[#ffdeab] hover:bg-white text-[#5f3414] font-black px-5 py-3 rounded-2xl shadow-lg transition-all text-sm sm:text-base cursor-pointer border border-[#ffdeab] active:scale-95 justify-center"
             title="הורד קובץ גוגל שייטס / אקסל חכם מעוצב עם נוסחאות אוטומטיות"
           >
-            <FileSpreadsheet className="w-4 h-4 text-[#7a4b29]" />
+            <FileSpreadsheet className="w-5 h-5 text-[#7a4b29]" />
             <span>ייצא לגוגל שייטס חכם 📊</span>
           </button>
 
-          <div className="bg-white/10 backdrop-blur px-3 py-2 rounded-2xl border border-white/20 text-left flex items-center gap-2 w-full sm:w-auto justify-between">
-            <span className="text-[11px] text-[#ffdeab] font-bold">חודש יעד:</span>
+          <div className="bg-white/15 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/30 flex items-center justify-between sm:justify-start gap-3">
+            <span className="text-xs text-[#ffdeab] font-black tracking-wide">חודש יעד:</span>
             <input
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="bg-white text-[#5f3414] font-bold text-xs px-2.5 py-1 rounded-xl outline-none font-mono cursor-pointer"
+              className="bg-white text-[#5f3414] font-bold text-sm px-3 py-1.5 rounded-xl outline-none font-mono cursor-pointer shadow-inner"
             />
           </div>
         </div>
@@ -334,66 +334,66 @@ https://almog787.github.io/Mayabee-management/`;
       </div>
 
       {/* LIVE MASTER KPI DASHBOARD (תצוגה ראשית חדה וברורה) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Expected Income Card */}
-        <div className="bg-white p-6 rounded-3xl border border-[#e4e2de] shadow-2xs space-y-3">
+        <div className="bg-white p-7 rounded-[32px] border border-[#e4e2de] shadow-sm space-y-4 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#5f3414] uppercase tracking-wide">הכנסות חודשיות צפויות</span>
-            <div className="w-9 h-9 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
-              <ArrowDownLeft className="w-5 h-5" />
+            <span className="text-[11px] font-black text-[#7a4b29] uppercase tracking-widest bg-[#faf8f5] px-2.5 py-1 rounded-lg">הכנסות חודשיות</span>
+            <div className="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center shadow-inner">
+              <ArrowDownLeft className="w-6 h-6" />
             </div>
           </div>
 
-          <div className="flex items-baseline gap-2">
-            <span className="text-3xl sm:text-4xl font-black text-emerald-700 font-mono tabular-nums">
+          <div className="flex flex-col gap-1">
+            <span className="text-4xl sm:text-5xl font-black text-emerald-800 font-mono tabular-nums leading-none">
               ₪{totalIncome.toLocaleString()}
             </span>
-            <span className="text-xs text-[#51443c]">({childrenCount} ילדים במעון)</span>
+            <span className="text-xs font-bold text-[#51443c] opacity-75">({childrenCount} ילדים במעון)</span>
           </div>
 
-          <div className="text-xs text-[#51443c] pt-3 border-t border-[#efeeea] space-y-1">
-            <div className="flex justify-between">
-              <span>שכ"ל בסיסי ({childrenCount} X ₪{tuitionPerChild.toLocaleString()}):</span>
-              <strong className="font-mono text-[#5f3414]">₪{baseTuitionTotal.toLocaleString()}</strong>
+          <div className="text-sm text-[#51443c] pt-4 border-t border-[#efeeea] space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="font-medium text-slate-500">שכ"ל בסיסי:</span>
+              <strong className="font-mono text-[#5f3414] text-base">₪{baseTuitionTotal.toLocaleString()}</strong>
             </div>
-            <div className="flex justify-between">
-              <span>צהרון ותוספות ({afternoonCareChildren} ילדים):</span>
-              <strong className="font-mono text-[#5f3414]">₪{afternoonCareTotal.toLocaleString()}</strong>
+            <div className="flex justify-between items-center">
+              <span className="font-medium text-slate-500">צהרון ותוספות:</span>
+              <strong className="font-mono text-[#5f3414] text-base">₪{afternoonCareTotal.toLocaleString()}</strong>
             </div>
           </div>
         </div>
 
         {/* Expected Expenses Card */}
-        <div className="bg-white p-6 rounded-3xl border border-[#e4e2de] shadow-2xs space-y-3">
+        <div className="bg-white p-7 rounded-[32px] border border-[#e4e2de] shadow-sm space-y-4 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#5f3414] uppercase tracking-wide">הוצאות חודשיות צפויות</span>
-            <div className={`w-9 h-9 rounded-2xl flex items-center justify-center ${hasEnteredData ? 'bg-rose-100 text-rose-800' : 'bg-gray-100 text-gray-400'}`}>
-              <ArrowUpRight className="w-5 h-5" />
+            <span className="text-[11px] font-black text-[#7a4b29] uppercase tracking-widest bg-[#faf8f5] px-2.5 py-1 rounded-lg">הוצאות חודשיות</span>
+            <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shadow-inner ${hasEnteredData ? 'bg-rose-100 text-rose-800' : 'bg-gray-100 text-gray-400'}`}>
+              <ArrowUpRight className="w-6 h-6" />
             </div>
           </div>
 
-          <div className="flex items-baseline gap-2">
-            <span className={`text-3xl sm:text-4xl font-black font-mono tabular-nums ${hasEnteredData ? 'text-rose-700' : 'text-gray-300'}`}>
+          <div className="flex flex-col gap-1">
+            <span className={`text-4xl sm:text-5xl font-black font-mono tabular-nums leading-none ${hasEnteredData ? 'text-rose-800' : 'text-gray-300'}`}>
               ₪{Math.round(displayTotalExpenses).toLocaleString()}
             </span>
-            <span className="text-xs text-[#51443c]">{hasEnteredData ? '(תפעול + שכר)' : '(ממתין להזנת נתונים)'}</span>
+            <span className="text-xs font-bold text-[#51443c] opacity-75">{hasEnteredData ? '(תפעול + שכר)' : '(ממתין להזנת נתונים)'}</span>
           </div>
 
-          <div className="text-xs text-[#51443c] pt-3 border-t border-[#efeeea] space-y-1">
+          <div className="text-sm text-[#51443c] pt-4 border-t border-[#efeeea] space-y-2">
             {hasEnteredData ? (
               <>
-                <div className="flex justify-between">
-                  <span>חבות שכר צוות ({staffCount} עובדות):</span>
-                  <strong className="font-mono text-rose-700">₪{Math.round(staffPayrollTotal).toLocaleString()}</strong>
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-slate-500">שכר צוות:</span>
+                  <strong className="font-mono text-rose-700 text-base">₪{Math.round(staffPayrollTotal).toLocaleString()}</strong>
                 </div>
-                <div className="flex justify-between">
-                  <span>שכירות, ביטוח ותפעול:</span>
-                  <strong className="font-mono text-[#5f3414]">₪{(fixedExpensesTotal + variableFoodSuppliesTotal).toLocaleString()}</strong>
+                <div className="flex justify-between items-center">
+                  <span className="font-medium text-slate-500">תפעול וציוד:</span>
+                  <strong className="font-mono text-[#5f3414] text-base">₪{(fixedExpensesTotal + variableFoodSuppliesTotal).toLocaleString()}</strong>
                 </div>
               </>
             ) : (
-              <p className="text-xs text-amber-800 bg-amber-50/80 p-2 rounded-xl border border-amber-200/60 font-medium">
-                💡 הזן כמות ילדים ושכר לימוד בטופס למטה לצפייה בניתוח הוצאות ורווח.
+              <p className="text-xs text-amber-900 bg-amber-50 p-2.5 rounded-xl border border-amber-200/50 font-bold leading-relaxed">
+                💡 הזן כמות ילדים ושכר לימוד בטופס למטה לצפייה בניתוח הוצאות.
               </p>
             )}
           </div>
@@ -401,47 +401,47 @@ https://almog787.github.io/Mayabee-management/`;
 
         {/* Expected Net Balance (Surplus/Deficit) Card */}
         <div
-          className={`p-6 rounded-3xl border shadow-2xs space-y-3 transition ${
+          className={`p-7 rounded-[32px] border shadow-sm space-y-4 transition-all hover:shadow-md ${
             !hasEnteredData
               ? 'bg-[#fffdfa] border-[#e4e2de]'
               : netBalance >= 0
-              ? 'bg-[#fffdfa] border-[#ffdeab]'
-              : 'bg-rose-50/90 border-rose-300'
+              ? 'bg-[#fffdfa] border-[#ffdeab] ring-4 ring-[#ffdeab]/10'
+              : 'bg-rose-50 border-rose-300 ring-4 ring-rose-500/10'
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#5f3414] uppercase tracking-wide">מאזן חודשי נקי (רווח לפני מס)</span>
-            <div className="w-9 h-9 rounded-2xl bg-[#ffdeab] text-[#7a4b29] flex items-center justify-center">
-              <DollarSign className="w-5 h-5" />
+            <span className="text-[11px] font-black text-[#7a4b29] uppercase tracking-widest bg-[#faf8f5] px-2.5 py-1 rounded-lg">רווח נקי (לפני מס)</span>
+            <div className="w-11 h-11 rounded-2xl bg-[#ffdeab] text-[#7a4b29] flex items-center justify-center shadow-inner">
+              <DollarSign className="w-6 h-6" />
             </div>
           </div>
 
-          <div className="flex items-baseline gap-2">
+          <div className="flex flex-col gap-1">
             <span
-              className={`text-3xl sm:text-4xl font-black font-mono tabular-nums ${
+              className={`text-4xl sm:text-5xl font-black font-mono tabular-nums leading-none ${
                 !hasEnteredData
                   ? 'text-gray-300'
                   : netBalance >= 0
                   ? 'text-[#7a4b29]'
-                  : 'text-rose-700'
+                  : 'text-rose-800'
               }`}
             >
               ₪{Math.round(netBalance).toLocaleString()}
             </span>
-            <span className="text-xs font-bold text-[#5f3414]">
-              {!hasEnteredData ? 'ממתין להזנה 💡' : netBalance >= 0 ? 'לפני מס ✓' : 'גרעון במאזן!'}
+            <span className="text-xs font-black text-[#5f3414]">
+              {!hasEnteredData ? 'ממתין להזנה 💡' : netBalance >= 0 ? 'רווח חיובי ✓' : 'גרעון במאזן! ⚠️'}
             </span>
           </div>
 
-          <div className="text-xs text-[#51443c] pt-3 border-t border-[#efeeea] space-y-1">
-            <div className="flex justify-between">
-              <span>שיעור רווחיות צפוי:</span>
-              <strong className="font-mono text-[#7a4b29]">{profitMarginPercent.toFixed(1)}%</strong>
+          <div className="text-sm text-[#51443c] pt-4 border-t border-[#efeeea] space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="font-medium text-slate-500">שיעור רווחיות:</span>
+              <strong className="font-mono text-[#7a4b29] text-base">{profitMarginPercent.toFixed(1)}%</strong>
             </div>
-            <div className="flex justify-between">
-              <span>סטטוס יציבות:</span>
-              <strong className={!hasEnteredData ? 'text-gray-400 font-bold' : netBalance >= 10000 ? 'text-emerald-700 font-bold' : netBalance >= 0 ? 'text-amber-700 font-bold' : 'text-rose-700 font-bold'}>
-                {!hasEnteredData ? 'ממתין להזנת נתונים ⚪' : netBalance >= 10000 ? 'איתן ומאוזן מאוד 🟢' : netBalance >= 0 ? 'מאוזן 🟡' : 'דרוש צמצום הוצאות 🔴'}
+            <div className="flex justify-between items-center">
+              <span className="font-medium text-slate-500">סטטוס יציבות:</span>
+              <strong className={`text-sm ${!hasEnteredData ? 'text-gray-400' : netBalance >= 10000 ? 'text-emerald-700' : netBalance >= 0 ? 'text-amber-700' : 'text-rose-700'} font-black`}>
+                {!hasEnteredData ? 'ממתין ⚪' : netBalance >= 10000 ? 'איתן מאוד 🟢' : netBalance >= 0 ? 'מאוזן 🟡' : 'דרוש צמצום 🔴'}
               </strong>
             </div>
           </div>
@@ -499,40 +499,40 @@ https://almog787.github.io/Mayabee-management/`;
         </div>
 
         {/* Side-by-Side Pre-Tax vs Post-Tax Comparison Box */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Box 1: Pre-Tax Surplus */}
-          <div className="p-4 rounded-2xl bg-[#faf8f5] border border-[#e4e2de] space-y-2">
-            <span className="text-[11px] font-bold text-[#51443c] block">1. רווח נקי לפני מס (ברוטו)</span>
-            <span className="text-2xl font-black font-mono text-[#5f3414] block tabular-nums">
+          <div className="p-5 rounded-2xl bg-[#faf8f5] border border-[#e4e2de] space-y-2.5">
+            <span className="text-[11px] font-black text-[#51443c] block uppercase tracking-wide">1. רווח נקי לפני מס</span>
+            <span className="text-3xl font-black font-mono text-[#5f3414] block tabular-nums">
               ₪{Math.round(taxEstimate.preTaxNetProfit).toLocaleString()}
             </span>
-            <span className="text-[11px] text-[#51443c] block">
+            <p className="text-[10px] font-bold text-slate-500 leading-tight">
               הכנסות (₪{totalIncome.toLocaleString()}) פחות הוצאות (₪{Math.round(displayTotalExpenses).toLocaleString()})
-            </span>
+            </p>
           </div>
 
           {/* Box 2: Estimated Tax & National Insurance */}
-          <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-300 space-y-2">
+          <div className="p-5 rounded-2xl bg-amber-50 border border-amber-300 space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-[11px] font-bold text-amber-900 block">2. חבות מס וביטוח לאומי</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-200 text-amber-950 font-bold">
+              <span className="text-[11px] font-black text-amber-900 block uppercase tracking-wide">2. מיסים וביטוח לאומי</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-200 text-amber-950 font-black">
                 {taxEstimate.effectiveTaxRatePercent}% מס אפקטיבי
               </span>
             </div>
-            <span className="text-2xl font-black font-mono text-amber-800 block tabular-nums">
+            <span className="text-3xl font-black font-mono text-amber-800 block tabular-nums">
               -₪{taxEstimate.totalTaxLiability.toLocaleString()}
             </span>
-            <div className="text-[11px] text-amber-900 space-y-0.5 border-t border-amber-200/80 pt-1.5">
+            <div className="text-[11px] font-medium text-amber-900 space-y-1.5 border-t border-amber-200 pt-2">
               <div className="flex justify-between">
-                <span>מס הכנסה משוער:</span>
+                <span>מס הכנסה:</span>
                 <strong className="font-mono">₪{taxEstimate.incomeTaxAmount.toLocaleString()}</strong>
               </div>
               <div className="flex justify-between">
-                <span>ביטוח לאומי ובריאות:</span>
+                <span>ביטוח לאומי:</span>
                 <strong className="font-mono">₪{taxEstimate.nationalInsuranceAmount.toLocaleString()}</strong>
               </div>
               {taxEstimate.netVatAmount > 0 && (
-                <div className="flex justify-between text-amber-800">
+                <div className="flex justify-between text-amber-800 font-bold">
                   <span>מע"מ נטו (17%):</span>
                   <strong className="font-mono">₪{taxEstimate.netVatAmount.toLocaleString()}</strong>
                 </div>
@@ -541,14 +541,14 @@ https://almog787.github.io/Mayabee-management/`;
           </div>
 
           {/* Box 3: Post-Tax Net Profit (בכיס אחרי מס) */}
-          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 space-y-2">
-            <span className="text-[11px] font-bold text-emerald-900 block">3. רווח נטו נשאר בכיס (אחרי מס)</span>
-            <span className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 block tabular-nums">
+          <div className="p-5 rounded-2xl bg-emerald-50 border border-emerald-300 space-y-3 ring-4 ring-emerald-500/5">
+            <span className="text-[11px] font-black text-emerald-900 block uppercase tracking-wide">3. רווח נטו סופי בכיס</span>
+            <span className="text-4xl font-black font-mono text-emerald-700 block tabular-nums">
               ₪{Math.round(taxEstimate.postTaxNetProfit).toLocaleString()}
             </span>
-            <span className="text-[11px] text-emerald-800 block leading-tight">
-              הסכום הנטו הריאלי שנשאר לבעלת המעון בסוף החודש לאחר ניכוי מיסים
-            </span>
+            <p className="text-[10px] font-bold text-emerald-800 leading-relaxed">
+              הסכום הריאלי שנשאר לבעלת המעון לאחר כל תשלומי המיסים החודשיים.
+            </p>
           </div>
         </div>
 
@@ -587,209 +587,224 @@ https://almog787.github.io/Mayabee-management/`;
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {/* GROUP 1: CHILDREN & TUITION */}
-          <div className="bg-[#faf8f5] p-5 rounded-2xl border border-[#e4e2de] space-y-4">
-            <div className="flex items-center gap-2 text-[#5f3414] font-bold text-sm border-b border-[#e4e2de] pb-2">
-              <Users className="w-4 h-4 text-[#7a4b29]" />
+          <div className="bg-[#faf8f5] p-6 rounded-2xl border border-[#e4e2de] space-y-5">
+            <div className="flex items-center gap-2 text-[#5f3414] font-black text-sm border-b border-[#e4e2de] pb-3 uppercase tracking-wider">
+              <Users className="w-5 h-5 text-[#7a4b29]" />
               <h4>1. ילדים ושכר לימוד</h4>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-4">
               <div>
-                <label className="block text-[#51443c] font-bold mb-1">כמות ילדים במעון:</label>
-                <div className="flex items-center gap-2">
+                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">כמות ילדים במעון:</label>
+                <div className="flex items-center gap-3">
                   <input
                     type="number"
                     min="0"
                     max="60"
+                    inputMode="numeric"
                     value={childrenCount === 0 ? '' : childrenCount}
-                    placeholder="הזן כמות ילדים..."
+                    placeholder="כמות ילדים..."
                     onChange={(e) => updateField('childrenCount', e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)))}
-                    className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
+                    className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                   />
-                  <span className="text-[#51443c] font-bold">ילדים</span>
+                  <span className="text-[#51443c] font-black text-sm">ילדים</span>
                 </div>
               </div>
 
               <div>
-                <label className="block text-[#51443c] font-bold mb-1">שכר לימוד חודשי לילד (₪):</label>
+                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">שכר לימוד חודשי (₪):</label>
                 <input
                   type="number"
                   step="50"
+                  inputMode="numeric"
                   value={tuitionPerChild === 0 ? '' : tuitionPerChild}
-                  placeholder="הזן שכר לימוד חודשי..."
+                  placeholder="₪ שכר לימוד..."
                   onChange={(e) => updateField('tuitionPerChild', e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)))}
-                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[#51443c] font-bold mb-1">מספר ילדים בצהרון / תוספת:</label>
+                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">ילדים בצהרון / תוספת:</label>
                 <input
                   type="number"
                   min="0"
                   max={childrenCount}
+                  inputMode="numeric"
                   value={afternoonCareChildren}
                   onChange={(e) => updateField('afternoonCareChildren', Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[#51443c] font-bold mb-1">מחיר צהרון חודשי לילד (₪):</label>
+                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">מחיר צהרון לילד (₪):</label>
                 <input
                   type="number"
                   step="50"
+                  inputMode="numeric"
                   value={afternoonCareFee}
                   onChange={(e) => updateField('afternoonCareFee', Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
             </div>
           </div>
 
           {/* GROUP 2: FIXED EXPENSES & INSURANCE */}
-          <div className="bg-[#faf8f5] p-5 rounded-2xl border border-[#e4e2de] space-y-4">
-            <div className="flex items-center gap-2 text-[#5f3414] font-bold text-sm border-b border-[#e4e2de] pb-2">
-              <Building className="w-4 h-4 text-[#7a4b29]" />
-              <h4>2. שכירות, ביטוח והוצאות תפעול</h4>
+          <div className="bg-[#faf8f5] p-6 rounded-2xl border border-[#e4e2de] space-y-5">
+            <div className="flex items-center gap-2 text-[#5f3414] font-black text-sm border-b border-[#e4e2de] pb-3 uppercase tracking-wider">
+              <Building className="w-5 h-5 text-[#7a4b29]" />
+              <h4>2. שכירות ותפעול</h4>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-4">
               <div>
-                <label className="block text-[#51443c] font-bold mb-1">עלות שכירות וארנונה (₪):</label>
+                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">שכירות וארנונה (₪):</label>
                 <input
                   type="number"
                   step="100"
+                  inputMode="numeric"
                   value={rentAndTax}
                   onChange={(e) => updateField('rentAndTax', Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[#51443c] font-bold mb-1">עלות ביטוח מעון חודשית (₪):</label>
+                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">ביטוח מעון חודשי (₪):</label>
                 <input
                   type="number"
                   step="50"
+                  inputMode="numeric"
                   value={insuranceCost}
                   onChange={(e) => updateField('insuranceCost', Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[#51443c] font-bold mb-1">תקציב מזון חודשי לילד (₪):</label>
+                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">תקציב מזון לילד (₪):</label>
                 <input
                   type="number"
                   step="10"
+                  inputMode="numeric"
                   value={foodPerChild}
                   onChange={(e) => updateField('foodPerChild', Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[#51443c] font-bold mb-1">רואה חשבון + חשמליות/מים (₪):</label>
+                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">רו"ח וחשבונות (₪):</label>
                 <input
                   type="number"
                   step="100"
+                  inputMode="numeric"
                   value={accountantCost + utilitiesCost}
                   onChange={(e) => {
                     const total = Number(e.target.value);
                     updateField('accountantCost', 650);
                     updateField('utilitiesCost', Math.max(0, total - 650));
                   }}
-                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
 
-              <div>
-                <label className="block text-[#51443c] font-bold mb-1">חוגי העשרה חיצוניים (₪):</label>
-                <input
-                  type="number"
-                  step="100"
-                  value={enrichmentClassesCost || 1000}
-                  onChange={(e) => updateField('enrichmentClassesCost', Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[#51443c] font-bold mb-1">תחזוקה שוטפת ובטיחות (₪):</label>
-                <input
-                  type="number"
-                  step="50"
-                  value={maintenanceAndSafety || 500}
-                  onChange={(e) => updateField('maintenanceAndSafety', Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[#51443c] font-black text-[10px] mb-1.5 uppercase tracking-tight">חוגים (₪):</label>
+                  <input
+                    type="number"
+                    step="100"
+                    inputMode="numeric"
+                    value={enrichmentClassesCost || 1000}
+                    onChange={(e) => updateField('enrichmentClassesCost', Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-base text-[#5f3414] focus:border-[#7a4b29] outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#51443c] font-black text-[10px] mb-1.5 uppercase tracking-tight">תחזוקה (₪):</label>
+                  <input
+                    type="number"
+                    step="50"
+                    inputMode="numeric"
+                    value={maintenanceAndSafety || 500}
+                    onChange={(e) => updateField('maintenanceAndSafety', Number(e.target.value))}
+                    className="w-full px-3 py-2 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-base text-[#5f3414] focus:border-[#7a4b29] outline-none"
+                  />
+                </div>
               </div>
             </div>
           </div>
 
           {/* GROUP 3: STAFF & WAGES */}
-          <div className="bg-[#faf8f5] p-5 rounded-2xl border border-[#e4e2de] space-y-4">
-            <div className="flex items-center gap-2 text-[#5f3414] font-bold text-sm border-b border-[#e4e2de] pb-2">
-              <ShieldCheck className="w-4 h-4 text-[#7a4b29]" />
-              <h4>3. צוות ושכר עבודה (כולל תוספת מעסיק)</h4>
+          <div className="bg-[#faf8f5] p-6 rounded-2xl border border-[#e4e2de] space-y-5 shadow-sm">
+            <div className="flex items-center gap-2 text-[#5f3414] font-black text-sm border-b border-[#e4e2de] pb-3 uppercase tracking-wider">
+              <ShieldCheck className="w-5 h-5 text-[#7a4b29]" />
+              <h4>3. צוות ושכר עבודה</h4>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <div className="space-y-4">
               <div>
-                <label className="block text-[#51443c] font-bold mb-1">כמות אנשי צוות / מטפלות:</label>
+                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">כמות מטפלות:</label>
                 <input
                   type="number"
                   min="1"
                   max="15"
+                  inputMode="numeric"
                   value={staffCount}
                   onChange={(e) => updateField('staffCount', Math.max(1, Number(e.target.value)))}
-                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[#51443c] font-bold mb-1">שכר שעתי ברוטו לצוות (₪/שעה):</label>
+                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">שכר שעתי ברוטו (₪):</label>
                 <input
                   type="number"
                   step="1"
+                  inputMode="numeric"
                   value={avgStaffHourlyRate}
                   onChange={(e) => updateField('avgStaffHourlyRate', Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-[#51443c] font-bold mb-1">תוספת עלות מעסיק סוציאלית (%):</label>
+                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">עלות סוציאלית (%):</label>
                 <input
                   type="number"
                   step="1"
                   min="0"
                   max="40"
+                  inputMode="numeric"
                   value={socialOverheadPercent || 20}
                   onChange={(e) => updateField('socialOverheadPercent', Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
-                  title="פנסיה (6.5%), פיצויים (6%), ביטוח לאומי מעסיק, הבראה, חופשה מחלה ונסיעות"
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
+                  title="פנסיה, פיצויים, ביטוח לאומי מעסיק, הבראה, חופשה ונסיעות"
                 />
-                <span className="text-[10px] text-[#51443c] mt-0.5 block">פנסיה, פיצויים, הבראה, חופשה ונסיעות</span>
+                <span className="text-[10px] text-slate-500 mt-1.5 block font-bold leading-tight">פנסיה, פיצויים, הבראה, חופשה ונסיעות</span>
               </div>
 
               <div>
-                <label className="block text-[#51443c] font-bold mb-1">שעות עבודה יומיות לכל עובדת:</label>
+                <label className="block text-[#51443c] font-black text-xs mb-2 uppercase tracking-wide">שעות עבודה ליום:</label>
                 <input
                   type="number"
                   step="0.5"
+                  inputMode="decimal"
                   value={dailyHoursPerStaff}
                   onChange={(e) => updateField('dailyHoursPerStaff', Number(e.target.value))}
-                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
+                  className="w-full px-4 py-3 bg-white rounded-xl border-2 border-[#d6c3b8]/50 font-mono font-black text-lg text-[#5f3414] focus:border-[#7a4b29] focus:ring-4 focus:ring-[#7a4b29]/10 transition-all outline-none"
                 />
               </div>
 
               <div className="pt-2">
-                <div className="p-3 bg-[#f5efe6] rounded-xl border border-[#e4e2de] text-[11px] text-[#51443c]">
-                  <span>עלות מעסיק כוללת (22 ימי עבודה + תוספת סוציאלית): </span>
-                  <strong className="font-mono text-[#7a4b29] font-bold block text-xs mt-0.5">
+                <div className="p-4 bg-white rounded-2xl border-2 border-[#7a4b29]/10 text-center shadow-inner">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">סה"כ חבות שכר</span>
+                  <strong className="font-mono text-[#7a4b29] font-black text-2xl">
                     ₪{Math.round(staffPayrollTotal).toLocaleString()}
                   </strong>
                 </div>
