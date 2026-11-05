@@ -65,24 +65,19 @@ const MacroSlider: React.FC<{
   step?: number;
   prefix?: string;
   suffix?: string;
-}> = ({ label, value, onChange, min, max, step = 1, prefix = '', suffix = '' }) => {
+  showInput?: boolean;
+}> = ({ label, value, onChange, min, max, step = 1, prefix = '', suffix = '', showInput = true }) => {
   return (
     <div className="space-y-3">
-      <div className="flex justify-between items-center gap-4">
-        <label className="text-[#51443c] font-black text-xs uppercase tracking-wide flex-1">{label}</label>
-        <div className="flex items-center gap-2 bg-white rounded-xl border border-[#d6c3b8] px-2 py-1 shadow-inner min-w-[100px] justify-end">
-          {prefix && <span className="text-[10px] font-bold text-[#7a4b29]">{prefix}</span>}
-          <input
-            type="number"
-            value={value === 0 ? '' : value}
-            onChange={(e) => onChange(e.target.value === '' ? 0 : Number(e.target.value))}
-            className="w-16 bg-transparent text-left font-mono font-black text-[#7a4b29] text-sm focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            placeholder="0"
-          />
-          {suffix && <span className="text-[10px] font-bold text-[#a8a29e]">{suffix}</span>}
+      <div className="flex justify-between items-baseline">
+        <label className="text-[#51443c] font-black text-xs uppercase tracking-wide">{label}</label>
+        <div className="flex items-center gap-1 font-mono font-black text-[#7a4b29] text-base">
+          <span>{prefix}</span>
+          <span>{value.toLocaleString()}</span>
+          <span className="text-[10px] opacity-70">{suffix}</span>
         </div>
       </div>
-      <div className="px-1">
+      <div className="flex items-center gap-4">
         <input
           type="range"
           min={min}
@@ -90,7 +85,7 @@ const MacroSlider: React.FC<{
           step={step}
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="w-full h-2 bg-[#d6c3b8]/40 rounded-full appearance-none cursor-pointer accent-[#7a4b29] touch-none"
+          className="flex-1 h-2 bg-[#d6c3b8]/40 rounded-full appearance-none cursor-pointer accent-[#7a4b29] touch-none"
         />
       </div>
     </div>
@@ -632,11 +627,11 @@ https://almog787.github.io/Mayabee-management/`;
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {/* GROUP 1: MAIN OPERATIONAL DATA */}
+          {/* GROUP 1: CHILDREN & TUITION */}
           <div className="bg-[#faf8f5] p-6 rounded-2xl border border-[#e4e2de] space-y-5">
             <div className="flex items-center gap-2 text-[#5f3414] font-black text-sm border-b border-[#e4e2de] pb-3 uppercase tracking-wider">
               <Users className="w-5 h-5 text-[#7a4b29]" />
-              <h4>1. נתוני יסוד (ילדים, שכירות וביטוח)</h4>
+              <h4>1. ילדים ושכר לימוד</h4>
             </div>
 
             <div className="space-y-6">
@@ -660,6 +655,35 @@ https://almog787.github.io/Mayabee-management/`;
               />
 
               <MacroSlider
+                label="ילדים בצהרון / תוספת:"
+                value={afternoonCareChildren}
+                onChange={(val) => updateField('afternoonCareChildren', val)}
+                min={0}
+                max={Math.max(10, childrenCount)}
+                suffix="ילדים"
+              />
+
+              <MacroSlider
+                label="מחיר צהרון לילד (₪):"
+                value={afternoonCareFee}
+                onChange={(val) => updateField('afternoonCareFee', val)}
+                min={0}
+                max={1500}
+                step={50}
+                prefix="₪"
+              />
+            </div>
+          </div>
+
+          {/* GROUP 2: FIXED EXPENSES & INSURANCE */}
+          <div className="bg-[#faf8f5] p-6 rounded-2xl border border-[#e4e2de] space-y-5">
+            <div className="flex items-center gap-2 text-[#5f3414] font-black text-sm border-b border-[#e4e2de] pb-3 uppercase tracking-wider">
+              <Building className="w-5 h-5 text-[#7a4b29]" />
+              <h4>2. שכירות ותפעול</h4>
+            </div>
+
+            <div className="space-y-6">
+              <MacroSlider
                 label="שכירות וארנונה (₪):"
                 value={rentAndTax}
                 onChange={(val) => updateField('rentAndTax', val)}
@@ -678,17 +702,7 @@ https://almog787.github.io/Mayabee-management/`;
                 step={50}
                 prefix="₪"
               />
-            </div>
-          </div>
 
-          {/* GROUP 2: VARIABLE & MISC EXPENSES */}
-          <div className="bg-[#faf8f5] p-6 rounded-2xl border border-[#e4e2de] space-y-5">
-            <div className="flex items-center gap-2 text-[#5f3414] font-black text-sm border-b border-[#e4e2de] pb-3 uppercase tracking-wider">
-              <Building className="w-5 h-5 text-[#7a4b29]" />
-              <h4>2. תפעול והוצאות משתנות</h4>
-            </div>
-
-            <div className="space-y-6">
               <MacroSlider
                 label="תקציב מזון לילד (₪):"
                 value={foodPerChild}
@@ -696,25 +710,6 @@ https://almog787.github.io/Mayabee-management/`;
                 min={0}
                 max={800}
                 step={10}
-                prefix="₪"
-              />
-
-              <MacroSlider
-                label="ימי/ילדי צהרון ותוספות:"
-                value={afternoonCareChildren}
-                onChange={(val) => updateField('afternoonCareChildren', val)}
-                min={0}
-                max={Math.max(10, childrenCount)}
-                suffix="יחידות"
-              />
-
-              <MacroSlider
-                label="מחיר צהרון/תוספות (₪):"
-                value={afternoonCareFee}
-                onChange={(val) => updateField('afternoonCareFee', val)}
-                min={0}
-                max={1500}
-                step={50}
                 prefix="₪"
               />
 
