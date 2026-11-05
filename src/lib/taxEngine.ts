@@ -11,9 +11,120 @@ export interface TaxStatusReport {
   remainingAmount: number;
   status: 'SAFE' | 'WARNING_80' | 'CRITICAL_90' | 'EXCEEDED';
   warningMessage?: string;
-  totalVatCollected: number; // מע"מ עסקאות
-  totalVatDeductible: number; // מע"מ תשומות (הוצאות מוכרות)
-  netVatPayable: number; // לתשלום/החזר מע"מ
+  totalVatCollected: number;
+  totalVatDeductible: number;
+  netVatPayable: number;
+}
+
+export interface EstimatedTaxResult {
+  businessType: 'OSEK_PATUR' | 'OSEK_MURSHE' | 'COMPANY';
+  grossIncome: number;
+  grossExpenses: number;
+  preTaxNetProfit: number; // רווח נקי לפני מס
+  incomeTaxAmount: number; // מס הכנסה משוער
+  nationalInsuranceAmount: number; // ביטוח לאומי ובריאות משוער
+  netVatAmount: number; // מע"מ נטו
+  totalTaxLiability: number; // סה"כ חבות מס
+  postTaxNetProfit: number; // רווח נטו בכיס (אחרי מס)
+  effectiveTaxRatePercent: number; // אחוז מס אפקטיבי
+  explanationSummary: string;
+}
+
+/**
+ * Calculates estimated Israeli Tax (Income tax, National Insurance, VAT, Corporate tax)
+ * and produces side-by-side pre-tax and post-tax results.
+ */
+export function calculateIsraeliTaxEstimate(
+  monthlyIncome: number,
+  monthlyExpenses: number,
+  businessType: 'OSEK_PATUR' | 'OSEK_MURSHE' | 'COMPANY' = 'OSEK_PATUR'
+): EstimatedTaxResult {
+  const preTaxNetProfit = Math.max(0, monthlyIncome - monthlyExpenses);
+  const annualProfit = preTaxNetProfit * 12;
+
+  let incomeTaxAnnual = 0;
+  let nationalInsuranceAnnual = 0;
+  let netVatAnnual = 0;
+  let explanationSummary = '';
+
+  if (businessType === 'OSEK_PATUR') {
+    // 0% VAT
+    // National Insurance (~5.97% on lower tier up to ~₪86,304/yr, ~17.83% above)
+    const lowerTierMax = 86304;
+    if (annualProfit <= lowerTierMax) {
+      nationalInsuranceAnnual = annualProfit * 0.0597;
+    } else {
+      nationalInsuranceAnnual = lowerTierMax * 0.0597 + (annualProfit - lowerTierMax) * 0.1783;
+    }
+
+    // Income tax with 2.25 credit points (~₪6,480 annual credit)
+    const creditPointsDiscount = 6480;
+    let grossIncomeTax = 0;
+    if (annualProfit <= 81480) {
+      grossIncomeTax = annualProfit * 0.10;
+    } else if (annualProfit <= 116760) {
+      grossIncomeTax = 81480 * 0.10 + (annualProfit - 81480) * 0.14;
+    } else if (annualProfit <= 187440) {
+      grossIncomeTax = 81480 * 0.10 + (116760 - 81480) * 0.14 + (annualProfit - 116760) * 0.20;
+    } else {
+      grossIncomeTax = 81480 * 0.10 + (116760 - 81480) * 0.14 + (187440 - 116760) * 0.20 + (annualProfit - 187440) * 0.31;
+    }
+    incomeTaxAnnual = Math.max(0, grossIncomeTax - creditPointsDiscount);
+    explanationSummary = 'עוסק פטור: פטור ממע"מ עד תקרת ₪122,000. חישוב מס הכנסה לפי מדרגות יחיד בניכוי נקודות זיכוי (2.25 נק\') ודמי ביטוח לאומי.';
+  } else if (businessType === 'OSEK_MURSHE') {
+    // Osek Murshe includes VAT deduction & progressive tax
+    netVatAnnual = (monthlyIncome - monthlyExpenses) * 12 * 0.17; // 17% VAT
+    const lowerTierMax = 86304;
+    if (annualProfit <= lowerTierMax) {
+      nationalInsuranceAnnual = annualProfit * 0.0597;
+    } else {
+      nationalInsuranceAnnual = lowerTierMax * 0.0597 + (annualProfit - lowerTierMax) * 0.1783;
+    }
+
+    const creditPointsDiscount = 6480;
+    let grossIncomeTax = 0;
+    if (annualProfit <= 81480) {
+      grossIncomeTax = annualProfit * 0.10;
+    } else if (annualProfit <= 116760) {
+      grossIncomeTax = 81480 * 0.10 + (annualProfit - 81480) * 0.14;
+    } else if (annualProfit <= 187440) {
+      grossIncomeTax = 81480 * 0.10 + (116760 - 81480) * 0.14 + (annualProfit - 116760) * 0.20;
+    } else {
+      grossIncomeTax = 81480 * 0.10 + (116760 - 81480) * 0.14 + (187440 - 116760) * 0.20 + (annualProfit - 187440) * 0.31;
+    }
+    incomeTaxAnnual = Math.max(0, grossIncomeTax - creditPointsDiscount);
+    explanationSummary = 'עוסק מורשה: חבות מע"מ 17% + מדרגות מס הכנסה ליחיד ודמי ביטוח לאומי מלאים.';
+  } else {
+    // Company Ltd (23% Corporate tax + 25% Dividend tax on remaining)
+    const corpTax = annualProfit * 0.23;
+    const remainingForDividend = annualProfit - corpTax;
+    const dividendTax = remainingForDividend * 0.25;
+    incomeTaxAnnual = corpTax + dividendTax;
+    nationalInsuranceAnnual = 0; // Paid via wage if owner takes salary
+    explanationSummary = 'חברה בע"מ: מס חברות קצוב (23%) + מס דיבידנד (25%) בעת משיכת רווחים.';
+  }
+
+  const monthlyIncomeTax = Math.round(incomeTaxAnnual / 12);
+  const monthlyNationalInsurance = Math.round(nationalInsuranceAnnual / 12);
+  const monthlyNetVat = Math.round(netVatAnnual / 12);
+
+  const totalMonthlyTaxLiability = monthlyIncomeTax + monthlyNationalInsurance;
+  const postTaxNetProfit = Math.max(0, preTaxNetProfit - totalMonthlyTaxLiability);
+  const effectiveTaxRatePercent = preTaxNetProfit > 0 ? (totalMonthlyTaxLiability / preTaxNetProfit) * 100 : 0;
+
+  return {
+    businessType,
+    grossIncome: monthlyIncome,
+    grossExpenses: monthlyExpenses,
+    preTaxNetProfit,
+    incomeTaxAmount: monthlyIncomeTax,
+    nationalInsuranceAmount: monthlyNationalInsurance,
+    netVatAmount: monthlyNetVat,
+    totalTaxLiability: totalMonthlyTaxLiability,
+    postTaxNetProfit,
+    effectiveTaxRatePercent: Math.round(effectiveTaxRatePercent * 10) / 10,
+    explanationSummary,
+  };
 }
 
 /**

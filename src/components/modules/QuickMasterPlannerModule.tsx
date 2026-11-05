@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   TrendingUp,
   DollarSign,
@@ -16,40 +16,113 @@ import {
   Layers,
   ChevronDown,
   ChevronUp,
+  RotateCcw,
 } from 'lucide-react';
 import { DaycareSettings } from '../../types';
 import { exportToGoogleSheetsXlsx } from '../../lib/googleSheetsExporter';
+import { calculateIsraeliTaxEstimate, EstimatedTaxResult } from '../../lib/taxEngine';
 
 interface QuickMasterPlannerProps {
   settings: DaycareSettings | null;
   onUpdateSettings?: (updates: Partial<DaycareSettings>) => Promise<void>;
 }
 
+const STORAGE_KEY = 'mayabee_planner_macro_v2';
+
+type BusinessType = 'OSEK_PATUR' | 'OSEK_MURSHE' | 'COMPANY';
+
+const DEFAULT_PLANNER_DATA = {
+  businessType: 'OSEK_PATUR' as BusinessType,
+  childrenCount: 0,
+  tuitionPerChild: 0,
+  afternoonCareFee: 600,
+  afternoonCareChildren: 0,
+  rentAndTax: 3800,
+  insuranceCost: 850,
+  accountantCost: 650,
+  utilitiesCost: 1200,
+  foodPerChild: 280, // ~12.7 ₪ ליום לילד (3 ארוחות ביום: בוקר, צהריים בשרית, מנחה)
+  suppliesPerChild: 80, // חומרי יצירה, חיתולים, מגבונים וחומרי חיטוי לילד
+  staffCount: 2,
+  avgStaffHourlyRate: 45,
+  dailyHoursPerStaff: 8,
+  socialOverheadPercent: 20, // תוספת עלות מעסיק סוציאלית 20% (פנסיה, פיצויים, ביטוח לאומי מעסיק, הבראה, חופשה ונסיעות)
+  enrichmentClassesCost: 1000, // חוגי העשרה חיצוניים (מוזיקה / תנועה)
+  maintenanceAndSafety: 500, // תחזוקה שוטפת, בדיקת בטיחות מתקנים ואגרות
+};
+
 export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ settings }) => {
+  const [resetSuccessMessage, setResetSuccessMessage] = useState<boolean>(false);
+
   // Target Month
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
 
-  // Macro Financial Inputs (Clean & Simple Input Controls)
-  const [childrenCount, setChildrenCount] = useState<number>(24);
-  const [tuitionPerChild, setTuitionPerChild] = useState<number>(4200);
-  const [afternoonCareFee, setAfternoonCareFee] = useState<number>(600);
-  const [afternoonCareChildren, setAfternoonCareChildren] = useState<number>(14);
+  // Load saved state or defaults
+  const [plannerData, setPlannerData] = useState(() => {
+    try {
+      // Clear legacy storage v1 if it contains old 10 / 3300 defaults
+      localStorage.removeItem('mayabee_planner_macro_v1');
 
-  // Expense Inputs
-  const [rentAndTax, setRentAndTax] = useState<number>(3800);
-  const [insuranceCost, setInsuranceCost] = useState<number>(850);
-  const [accountantCost, setAccountantCost] = useState<number>(650);
-  const [utilitiesCost, setUtilitiesCost] = useState<number>(1200);
-  const [foodPerChild, setFoodPerChild] = useState<number>(120);
-  const [suppliesPerChild, setSuppliesPerChild] = useState<number>(45);
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return { ...DEFAULT_PLANNER_DATA, ...parsed };
+      }
+    } catch (e) {
+      console.error('Failed to load saved planner data', e);
+    }
+    return { ...DEFAULT_PLANNER_DATA };
+  });
 
-  // Staff Payroll Inputs
-  const [staffCount, setStaffCount] = useState<number>(4);
-  const [avgStaffHourlyRate, setAvgStaffHourlyRate] = useState<number>(45);
-  const [dailyHoursPerStaff, setDailyHoursPerStaff] = useState<number>(8);
+  // Save to localStorage on change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(plannerData));
+    } catch (e) {
+      console.error('Failed to save planner data', e);
+    }
+  }, [plannerData]);
+
+  // Helper setter
+  const updateField = (field: keyof typeof DEFAULT_PLANNER_DATA, value: any) => {
+    setPlannerData((prev: typeof DEFAULT_PLANNER_DATA) => ({ ...prev, [field]: value }));
+  };
+
+  // Reset function - direct and reliable, updates state and clears localStorage
+  const handleResetDefaults = () => {
+    const freshDefaults = { ...DEFAULT_PLANNER_DATA };
+    setPlannerData(freshDefaults);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(freshDefaults));
+    } catch (e) {
+      console.error('Failed to reset planner storage', e);
+    }
+    setResetSuccessMessage(true);
+    setTimeout(() => setResetSuccessMessage(false), 2500);
+  };
+
+  const {
+    businessType,
+    childrenCount,
+    tuitionPerChild,
+    afternoonCareFee,
+    afternoonCareChildren,
+    rentAndTax,
+    insuranceCost,
+    accountantCost,
+    utilitiesCost,
+    foodPerChild,
+    suppliesPerChild,
+    staffCount,
+    avgStaffHourlyRate,
+    dailyHoursPerStaff,
+    socialOverheadPercent,
+    enrichmentClassesCost,
+    maintenanceAndSafety,
+  } = plannerData;
 
   // Detailed Breakdown Drawer Toggle
   const [showDetailedBreakdown, setShowDetailedBreakdown] = useState<boolean>(false);
@@ -68,20 +141,32 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
   const totalIncome = baseTuitionTotal + afternoonCareTotal;
 
   // Expenses
-  const staffPayrollTotal = useMemo(
+  const baseStaffWages = useMemo(
     () => staffCount * avgStaffHourlyRate * dailyHoursPerStaff * 22,
     [staffCount, avgStaffHourlyRate, dailyHoursPerStaff]
   );
+  const socialOverheadAmount = useMemo(
+    () => baseStaffWages * ((socialOverheadPercent || 20) / 100),
+    [baseStaffWages, socialOverheadPercent]
+  );
+  const staffPayrollTotal = baseStaffWages + socialOverheadAmount;
+
   const variableFoodSuppliesTotal = useMemo(
     () => childrenCount * (foodPerChild + suppliesPerChild),
     [childrenCount, foodPerChild, suppliesPerChild]
   );
-  const fixedExpensesTotal = rentAndTax + insuranceCost + accountantCost + utilitiesCost;
+  const fixedExpensesTotal =
+    rentAndTax + insuranceCost + accountantCost + utilitiesCost + (enrichmentClassesCost || 0) + (maintenanceAndSafety || 0);
   const totalExpenses = staffPayrollTotal + variableFoodSuppliesTotal + fixedExpensesTotal;
 
-  // Net Balance & Margin
+  // Net Balance & Pre-Tax / Post-Tax Calculation
   const netBalance = totalIncome - totalExpenses;
   const profitMarginPercent = totalIncome > 0 ? (netBalance / totalIncome) * 100 : 0;
+
+  // Israeli Tax Estimate Calculation
+  const taxEstimate: EstimatedTaxResult = useMemo(() => {
+    return calculateIsraeliTaxEstimate(totalIncome, totalExpenses, businessType);
+  }, [totalIncome, totalExpenses, businessType]);
 
   // Export to Google Sheets
   const handleExportGoogleSheets = () => {
@@ -251,7 +336,7 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#5f3414] uppercase tracking-wide">מאזן חודשי נקי (רווח נקי)</span>
+            <span className="text-xs font-bold text-[#5f3414] uppercase tracking-wide">מאזן חודשי נקי (רווח לפני מס)</span>
             <div className="w-9 h-9 rounded-2xl bg-[#ffdeab] text-[#7a4b29] flex items-center justify-center">
               <DollarSign className="w-5 h-5" />
             </div>
@@ -266,7 +351,7 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
               ₪{Math.round(netBalance).toLocaleString()}
             </span>
             <span className="text-xs font-bold text-[#5f3414]">
-              {netBalance >= 0 ? 'מאזן חיובי ✓' : 'גרעון במאזן!'}
+              {netBalance >= 0 ? 'לפני מס ✓' : 'גרעון במאזן!'}
             </span>
           </div>
 
@@ -285,18 +370,143 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
         </div>
       </div>
 
+      {/* ISRAELI TAX ESTIMATE & PRE-TAX VS POST-TAX COMPARISON CARD */}
+      <div className="bg-white rounded-3xl border border-[#e4e2de] p-6 sm:p-8 shadow-xs space-y-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#efeeea] pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#d97706]" />
+              <h3 className="font-black text-lg text-[#5f3414] font-heading">
+                מחשבון מס מוערך ברשות המיסים (לפני ואחרי מס)
+              </h3>
+            </div>
+            <p className="text-xs text-[#51443c] mt-0.5">
+              בחר את סוג הישות העסקית ברשות המיסים לקבלת חישוב מדויק של חבות המס והרווח הנטו שנשאר בכיס.
+            </p>
+          </div>
+
+          {/* Business Type Selector Buttons */}
+          <div className="flex items-center gap-1.5 p-1 bg-[#efeeea] rounded-2xl border border-[#e4e2de] text-xs font-bold">
+            <button
+              onClick={() => updateField('businessType', 'OSEK_PATUR')}
+              className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
+                businessType === 'OSEK_PATUR'
+                  ? 'bg-[#7a4b29] text-white shadow-xs'
+                  : 'text-[#5f3414] hover:bg-white/50'
+              }`}
+            >
+              עוסק פטור
+            </button>
+            <button
+              onClick={() => updateField('businessType', 'OSEK_MURSHE')}
+              className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
+                businessType === 'OSEK_MURSHE'
+                  ? 'bg-[#7a4b29] text-white shadow-xs'
+                  : 'text-[#5f3414] hover:bg-white/50'
+              }`}
+            >
+              עוסק מורשה
+            </button>
+            <button
+              onClick={() => updateField('businessType', 'COMPANY')}
+              className={`px-3 py-1.5 rounded-xl transition cursor-pointer ${
+                businessType === 'COMPANY'
+                  ? 'bg-[#7a4b29] text-white shadow-xs'
+                  : 'text-[#5f3414] hover:bg-white/50'
+              }`}
+            >
+              חברה בע"מ
+            </button>
+          </div>
+        </div>
+
+        {/* Side-by-Side Pre-Tax vs Post-Tax Comparison Box */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          {/* Box 1: Pre-Tax Surplus */}
+          <div className="p-4 rounded-2xl bg-[#faf8f5] border border-[#e4e2de] space-y-2">
+            <span className="text-[11px] font-bold text-[#51443c] block">1. רווח נקי לפני מס (ברוטו)</span>
+            <span className="text-2xl font-black font-mono text-[#5f3414] block tabular-nums">
+              ₪{Math.round(taxEstimate.preTaxNetProfit).toLocaleString()}
+            </span>
+            <span className="text-[11px] text-[#51443c] block">
+              הכנסות (₪{totalIncome.toLocaleString()}) פחות הוצאות (₪{Math.round(totalExpenses).toLocaleString()})
+            </span>
+          </div>
+
+          {/* Box 2: Estimated Tax & National Insurance */}
+          <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-300 space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-[11px] font-bold text-amber-900 block">2. חבות מס וביטוח לאומי</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-200 text-amber-950 font-bold">
+                {taxEstimate.effectiveTaxRatePercent}% מס אפקטיבי
+              </span>
+            </div>
+            <span className="text-2xl font-black font-mono text-amber-800 block tabular-nums">
+              -₪{taxEstimate.totalTaxLiability.toLocaleString()}
+            </span>
+            <div className="text-[11px] text-amber-900 space-y-0.5 border-t border-amber-200/80 pt-1.5">
+              <div className="flex justify-between">
+                <span>מס הכנסה משוער:</span>
+                <strong className="font-mono">₪{taxEstimate.incomeTaxAmount.toLocaleString()}</strong>
+              </div>
+              <div className="flex justify-between">
+                <span>ביטוח לאומי ובריאות:</span>
+                <strong className="font-mono">₪{taxEstimate.nationalInsuranceAmount.toLocaleString()}</strong>
+              </div>
+              {taxEstimate.netVatAmount > 0 && (
+                <div className="flex justify-between text-amber-800">
+                  <span>מע"מ נטו (17%):</span>
+                  <strong className="font-mono">₪{taxEstimate.netVatAmount.toLocaleString()}</strong>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Box 3: Post-Tax Net Profit (בכיס אחרי מס) */}
+          <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 space-y-2">
+            <span className="text-[11px] font-bold text-emerald-900 block">3. רווח נטו נשאר בכיס (אחרי מס)</span>
+            <span className="text-2xl sm:text-3xl font-black font-mono text-emerald-700 block tabular-nums">
+              ₪{Math.round(taxEstimate.postTaxNetProfit).toLocaleString()}
+            </span>
+            <span className="text-[11px] text-emerald-800 block leading-tight">
+              הסכום הנטו הריאלי שנשאר לבעלת המעון בסוף החודש לאחר ניכוי מיסים
+            </span>
+          </div>
+        </div>
+
+        {/* Tax Rules Explanation */}
+        <div className="p-3.5 bg-[#fef3c7]/50 rounded-2xl border border-[#fef3c7] text-xs text-[#7a4b29] flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-[#d97706] flex-shrink-0" />
+          <span>{taxEstimate.explanationSummary}</span>
+        </div>
+      </div>
+
       {/* INPUT FORM SECTION (הזנת נתונים נקייה ללא סרבול) */}
       <div className="bg-white rounded-3xl border border-[#e4e2de] p-6 sm:p-8 shadow-xs space-y-6">
-        <div className="flex items-center justify-between border-b border-[#efeeea] pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#efeeea] pb-4">
           <div className="flex items-center gap-2">
             <Sliders className="w-5 h-5 text-[#7a4b29]" />
             <h3 className="font-black text-lg text-[#5f3414] font-heading">
-              טופס הזנת נתונים ראשי (שנה נתונים וצפה בעדכון מיידי במאזן)
+              טופס הזנת נתונים ראשי (הנתונים נשמרים בדפדפן באופן אוטומטי)
             </h3>
           </div>
-          <span className="text-xs text-[#7a4b29] font-bold hidden sm:inline">
-            כל הנתונים ניתנים לשינוי באופן חופשי
-          </span>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            {resetSuccessMessage && (
+              <span className="text-xs font-bold text-emerald-700 animate-fade-in flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                <span>השדות אופסו בהצלחה!</span>
+              </span>
+            )}
+            <button
+              onClick={handleResetDefaults}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#efeeea] hover:bg-[#ffdeab] active:scale-95 text-[#5f3414] text-xs font-bold transition cursor-pointer border border-[#e4e2de]"
+              title="איפוס שדות לערכי ברירת מחדל"
+            >
+              <RotateCcw className={`w-3.5 h-3.5 text-[#7a4b29] ${resetSuccessMessage ? 'rotate-180 transition-transform duration-300' : ''}`} />
+              <span>איפוס שדות</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -313,10 +523,11 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    min="1"
+                    min="0"
                     max="60"
-                    value={childrenCount}
-                    onChange={(e) => setChildrenCount(Math.max(1, Number(e.target.value)))}
+                    value={childrenCount === 0 ? '' : childrenCount}
+                    placeholder="הזן כמות ילדים..."
+                    onChange={(e) => updateField('childrenCount', e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)))}
                     className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
                   />
                   <span className="text-[#51443c] font-bold">ילדים</span>
@@ -328,8 +539,9 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
                 <input
                   type="number"
                   step="50"
-                  value={tuitionPerChild}
-                  onChange={(e) => setTuitionPerChild(Number(e.target.value))}
+                  value={tuitionPerChild === 0 ? '' : tuitionPerChild}
+                  placeholder="הזן שכר לימוד חודשי..."
+                  onChange={(e) => updateField('tuitionPerChild', e.target.value === '' ? 0 : Math.max(0, Number(e.target.value)))}
                   className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
                 />
               </div>
@@ -341,7 +553,7 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
                   min="0"
                   max={childrenCount}
                   value={afternoonCareChildren}
-                  onChange={(e) => setAfternoonCareChildren(Number(e.target.value))}
+                  onChange={(e) => updateField('afternoonCareChildren', Number(e.target.value))}
                   className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
                 />
               </div>
@@ -352,7 +564,7 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
                   type="number"
                   step="50"
                   value={afternoonCareFee}
-                  onChange={(e) => setAfternoonCareFee(Number(e.target.value))}
+                  onChange={(e) => updateField('afternoonCareFee', Number(e.target.value))}
                   className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
                 />
               </div>
@@ -373,7 +585,7 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
                   type="number"
                   step="100"
                   value={rentAndTax}
-                  onChange={(e) => setRentAndTax(Number(e.target.value))}
+                  onChange={(e) => updateField('rentAndTax', Number(e.target.value))}
                   className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
                 />
               </div>
@@ -384,7 +596,7 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
                   type="number"
                   step="50"
                   value={insuranceCost}
-                  onChange={(e) => setInsuranceCost(Number(e.target.value))}
+                  onChange={(e) => updateField('insuranceCost', Number(e.target.value))}
                   className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
                 />
               </div>
@@ -395,7 +607,7 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
                   type="number"
                   step="10"
                   value={foodPerChild}
-                  onChange={(e) => setFoodPerChild(Number(e.target.value))}
+                  onChange={(e) => updateField('foodPerChild', Number(e.target.value))}
                   className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
                 />
               </div>
@@ -408,9 +620,31 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
                   value={accountantCost + utilitiesCost}
                   onChange={(e) => {
                     const total = Number(e.target.value);
-                    setAccountantCost(650);
-                    setUtilitiesCost(Math.max(0, total - 650));
+                    updateField('accountantCost', 650);
+                    updateField('utilitiesCost', Math.max(0, total - 650));
                   }}
+                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#51443c] font-bold mb-1">חוגי העשרה חיצוניים (₪):</label>
+                <input
+                  type="number"
+                  step="100"
+                  value={enrichmentClassesCost || 1000}
+                  onChange={(e) => updateField('enrichmentClassesCost', Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#51443c] font-bold mb-1">תחזוקה שוטפת ובטיחות (₪):</label>
+                <input
+                  type="number"
+                  step="50"
+                  value={maintenanceAndSafety || 500}
+                  onChange={(e) => updateField('maintenanceAndSafety', Number(e.target.value))}
                   className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
                 />
               </div>
@@ -421,7 +655,7 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
           <div className="bg-[#faf8f5] p-5 rounded-2xl border border-[#e4e2de] space-y-4">
             <div className="flex items-center gap-2 text-[#5f3414] font-bold text-sm border-b border-[#e4e2de] pb-2">
               <ShieldCheck className="w-4 h-4 text-[#7a4b29]" />
-              <h4>3. צוות ושכר עבודה</h4>
+              <h4>3. צוות ושכר עבודה (כולל תוספת מעסיק)</h4>
             </div>
 
             <div className="space-y-3 text-xs">
@@ -432,20 +666,35 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
                   min="1"
                   max="15"
                   value={staffCount}
-                  onChange={(e) => setStaffCount(Math.max(1, Number(e.target.value)))}
+                  onChange={(e) => updateField('staffCount', Math.max(1, Number(e.target.value)))}
                   className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
                 />
               </div>
 
               <div>
-                <label className="block text-[#51443c] font-bold mb-1">שכר שעתי ממוצע לצוות (₪/שעה):</label>
+                <label className="block text-[#51443c] font-bold mb-1">שכר שעתי ברוטו לצוות (₪/שעה):</label>
                 <input
                   type="number"
                   step="1"
                   value={avgStaffHourlyRate}
-                  onChange={(e) => setAvgStaffHourlyRate(Number(e.target.value))}
+                  onChange={(e) => updateField('avgStaffHourlyRate', Number(e.target.value))}
                   className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
                 />
+              </div>
+
+              <div>
+                <label className="block text-[#51443c] font-bold mb-1">תוספת עלות מעסיק סוציאלית (%):</label>
+                <input
+                  type="number"
+                  step="1"
+                  min="0"
+                  max="40"
+                  value={socialOverheadPercent || 20}
+                  onChange={(e) => updateField('socialOverheadPercent', Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
+                  title="פנסיה (6.5%), פיצויים (6%), ביטוח לאומי מעסיק, הבראה, חופשה מחלה ונסיעות"
+                />
+                <span className="text-[10px] text-[#51443c] mt-0.5 block">פנסיה, פיצויים, הבראה, חופשה ונסיעות</span>
               </div>
 
               <div>
@@ -454,14 +703,14 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ se
                   type="number"
                   step="0.5"
                   value={dailyHoursPerStaff}
-                  onChange={(e) => setDailyHoursPerStaff(Number(e.target.value))}
+                  onChange={(e) => updateField('dailyHoursPerStaff', Number(e.target.value))}
                   className="w-full px-3 py-2 bg-white rounded-xl border border-[#d6c3b8] font-mono font-bold text-sm focus:outline-[#7a4b29]"
                 />
               </div>
 
               <div className="pt-2">
                 <div className="p-3 bg-[#f5efe6] rounded-xl border border-[#e4e2de] text-[11px] text-[#51443c]">
-                  <span>חבות שכר מחושבת לפי 22 ימי עבודה בחודש: </span>
+                  <span>עלות מעסיק כוללת (22 ימי עבודה + תוספת סוציאלית): </span>
                   <strong className="font-mono text-[#7a4b29] font-bold block text-xs mt-0.5">
                     ₪{Math.round(staffPayrollTotal).toLocaleString()}
                   </strong>

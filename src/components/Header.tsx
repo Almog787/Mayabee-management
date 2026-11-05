@@ -85,53 +85,20 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Quick Real-Time Status Badges (Mayabee Colors) */}
+          {/* Quick Real-Time Status Badges */}
           <div className="hidden lg:flex items-center gap-2.5">
-            {/* Attendance badge */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#efeeea] rounded-xl text-xs font-semibold text-[#5f3414] border border-[#e4e2de]">
-              <Users className="w-3.5 h-3.5 text-[#d97706]" />
-              <span>
-                נוכחים היום: <strong className="text-[#7a4b29]">{presentChildrenCount}</strong>/{activeChildrenCount}
-              </span>
-            </div>
-
-            {/* Staff-to-child Ratio Compliance badge */}
-            <div
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold ${
-                ratioCompliance.isCompliant
-                  ? 'bg-[#ecfdf5] text-[#065f46] border border-[#a7f3d0]'
-                  : 'bg-[#fff1f2] text-[#9f1239] border border-[#fecdd3] animate-pulse'
-              }`}
-              title={ratioCompliance.alertMessage}
-            >
-              {ratioCompliance.isCompliant ? (
-                <ShieldCheck className="w-3.5 h-3.5 text-[#059669]" />
-              ) : (
-                <ShieldAlert className="w-3.5 h-3.5 text-[#e11d48]" />
-              )}
-              <span>
-                תקינת פיקוח: {ratioCompliance.isCompliant ? 'תקינה (100%)' : 'חריגת צוות!'}
-              </span>
-            </div>
-
-            {/* Allergy alert badge if any conflict today */}
-            {allergyConflictsCount > 0 && (
-              <div
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#fff1f2] text-[#9f1239] border border-[#fecdd3] animate-bounce"
-                title={`${allergyConflictsCount} התנגשויות בין אלרגיות ילדים נוכחים לתפריט היום!`}
-              >
-                <AlertTriangle className="w-3.5 h-3.5 text-[#e11d48]" />
-                <span>אלרגיה בארוחה ({allergyConflictsCount})</span>
-              </div>
-            )}
-
             {/* Osek Patur percentage gauge */}
             <div
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#fff9f3] border border-[#ffdcc6] rounded-xl text-xs font-medium text-[#5f3414]"
-              title={`מחזור שנתי: ₪${taxStatus.totalAnnualIncome.toLocaleString()} מתוך ₪${taxStatus.osekPaturCeiling.toLocaleString()}`}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#fff9f3] border border-[#ffdcc6] rounded-xl text-xs font-semibold text-[#5f3414]"
+              title={`מחזור שנתי מצטבר: ₪${taxStatus.totalAnnualIncome.toLocaleString()} מתוך ₪${taxStatus.osekPaturCeiling.toLocaleString()}`}
             >
               <TrendingUp className="w-3.5 h-3.5 text-[#d97706]" />
-              <span>עוסק פטור: <strong>{taxStatus.percentageUsed.toFixed(0)}%</strong></span>
+              <span>תקרת עוסק פטור: <strong className="text-[#7a4b29]">{taxStatus.percentageUsed.toFixed(0)}%</strong></span>
+            </div>
+
+            <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#ecfdf5] border border-[#a7f3d0] rounded-xl text-xs font-bold text-[#065f46]">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#059669]" />
+              <span>סנכרון גוגל שייטס: מחובר ✓</span>
             </div>
           </div>
 
