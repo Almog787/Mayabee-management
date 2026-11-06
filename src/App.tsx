@@ -5,11 +5,12 @@
 
 import React, { useState } from 'react';
 import { useDaycareData } from './hooks/useDaycareData';
-import { Header } from './components/Header';
+import { Header, AppTab } from './components/Header';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
 import { ReceiptModal } from './components/common/ReceiptModal';
 import { QuickMasterPlannerModule } from './components/modules/QuickMasterPlannerModule';
 import { SuggestionsAndAutomationModule } from './components/modules/SuggestionsAndAutomationModule';
+import { BusinessSiteSuggestionsModule } from './components/modules/BusinessSiteSuggestionsModule';
 import { FinancialTransaction } from './types';
 import {
   TrendingUp,
@@ -57,7 +58,7 @@ export default function App() {
     refreshData,
   } = useDaycareData();
 
-  const [activeTab, setActiveTab] = useState<'planner' | 'suggestions'>('planner');
+  const [activeTab, setActiveTab] = useState<AppTab>('planner');
   const [selectedReceiptTx, setSelectedReceiptTx] = useState<FinancialTransaction | null>(null);
 
   if (loading) {
@@ -90,17 +91,27 @@ export default function App() {
         onSelectTab={setActiveTab}
       />
 
-      {/* Main Dedicated Page View */}
+      {/* Main Dedicated Page View (3 Views) */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {activeTab === 'planner' ? (
+        {activeTab === 'planner' && (
           <QuickMasterPlannerModule
             settings={settings}
             onUpdateSettings={updateSettings}
-            onOpenSuggestions={() => setActiveTab('suggestions')}
+            onOpenSuggestions={() => setActiveTab('management-suggestions')}
           />
-        ) : (
+        )}
+
+        {activeTab === 'management-suggestions' && (
           <SuggestionsAndAutomationModule
             onBackToPlanner={() => setActiveTab('planner')}
+            onSwitchToBusinessSuggestions={() => setActiveTab('business-suggestions')}
+          />
+        )}
+
+        {activeTab === 'business-suggestions' && (
+          <BusinessSiteSuggestionsModule
+            onBackToPlanner={() => setActiveTab('planner')}
+            onSwitchToManagementSuggestions={() => setActiveTab('management-suggestions')}
           />
         )}
       </main>

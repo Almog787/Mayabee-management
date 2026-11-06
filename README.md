@@ -1,8 +1,8 @@
 # 🏡 מערכת ניהול מעון ילדים - פורטל ניהול פיננסי, תכנון תקציבי ושותפות
 
-🔗 **קישור ישיר לאתר האפליקציה:**  
-👉 **[https://almog787.github.io/Mayabee-management/](https://almog787.github.io/Mayabee-management/)**
-
+🔗 **קישורים ישירים לאתרים:**  
+👉 **פורטל הניהול והבקרה:** [https://almog787.github.io/Mayabee-management/](https://almog787.github.io/Mayabee-management/)  
+👉 **אתר העסק של הגן (Mayabee):** [https://almog787.github.io/Mayabee/](https://almog787.github.io/Mayabee/)  
 ---
 
 ## 📌 אודות המערכת

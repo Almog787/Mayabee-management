@@ -25,6 +25,7 @@ import {
 
 interface SuggestionsAndAutomationModuleProps {
   onBackToPlanner?: () => void;
+  onSwitchToBusinessSuggestions?: () => void;
 }
 
 // Obfuscated email destination so it NEVER appears in raw plain text on the site
@@ -56,6 +57,7 @@ interface AutomationPreset {
 
 export const SuggestionsAndAutomationModule: React.FC<SuggestionsAndAutomationModuleProps> = ({
   onBackToPlanner,
+  onSwitchToBusinessSuggestions,
 }) => {
   // Form State
   const [suggestionText, setSuggestionText] = useState<string>('');
@@ -341,15 +343,26 @@ export const SuggestionsAndAutomationModule: React.FC<SuggestionsAndAutomationMo
           </div>
         </div>
 
-        {onBackToPlanner && (
-          <button
-            onClick={onBackToPlanner}
-            className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-[#efeeea] hover:bg-[#ffdeab] text-[#5f3414] text-xs font-black transition cursor-pointer border border-[#e4e2de] active:scale-95 self-start sm:self-auto"
-          >
-            <ArrowRight className="w-4 h-4" />
-            <span>חזרה למתכנן המאזן והשותפות</span>
-          </button>
-        )}
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          {onSwitchToBusinessSuggestions && (
+            <button
+              onClick={onSwitchToBusinessSuggestions}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-[#ffdeab]/60 hover:bg-[#ffdeab] text-[#5f3414] text-xs font-black transition cursor-pointer border border-[#ebd7c5] active:scale-95"
+            >
+              <span>🏡 תיבת הצעות לאתר הגן (Mayabee)</span>
+            </button>
+          )}
+
+          {onBackToPlanner && (
+            <button
+              onClick={onBackToPlanner}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-[#efeeea] hover:bg-white text-[#5f3414] text-xs font-black transition cursor-pointer border border-[#e4e2de] active:scale-95"
+            >
+              <ArrowRight className="w-4 h-4" />
+              <span>חזרה למתכנן</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Grid: Form on the Right/Top, Automation Ideas & Tags on the Left */}
