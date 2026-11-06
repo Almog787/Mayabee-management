@@ -1,20 +1,19 @@
 /**
- * Google Apps Script Generator for 'הבית של מאיה' Daycare Management
+ * Google Apps Script Generator for Daycare Management System
  * Fully automated sheet initialization, executive dashboard, sidebar UI,
  * database integrity checks, bidirectional sync button, and sync toggle ON/OFF.
  */
 
 export const APPS_SCRIPT_CODE_GS = `/**
  * ==============================================================================
- * 🐝 הבית של מאיה - בהנהלת רותם עירון | מערכת ניהול מעון וצהרון באריאל
- * Google Apps Script: מנוע אוטומציה, דשבורד מנהלת, כפתור סנכרון וכפתור כיבוי סנכרון
+ * 🐝 מערכת ניהול מעון ילדים | מנוע אוטומציה, דשבורד מנהלת וכפתורי סנכרון
  * ==============================================================================
  */
 
-// הגדרת קבועים וצבעי מותג (Mayabee Honey & Wood Palette)
+// הגדרת קבועים וצבעי מותג
 var BRAND = {
-  name: "הבית של מאיה",
-  director: "רותם עירון",
+  name: "מעון ילדים",
+  director: "הנהלת המעון",
   phone: "052-870-7056",
   address: "אריאל, שומרון",
   colors: {
@@ -37,7 +36,7 @@ function onOpen() {
   var ui = SpreadsheetApp.getUi();
   var syncStatus = isSyncEnabled() ? "פעיל ✅" : "מושבת ⏸️";
   
-  ui.createMenu("🐝 הבית של מאיה")
+  ui.createMenu("🐝 ניהול מעון")
     .addItem("📊 פתח דשבורד מנהלת (Sidebar UI)", "showDashboardSidebar")
     .addSeparator()
     .addItem("🔄 סנכרן כעת את האתר עם המידע בגליון (Sync Now)", "syncWebsiteWithSheetData")
@@ -86,7 +85,7 @@ function setupMayabeeDatabase() {
   if (ui) {
     ui.alert(
       "🎉 אתחול מסד הנתונים והדשבורד הושלם אוטומטית!",
-      "כל 7 הלשוניות של 'הבית של מאיה' נוצרו ועוצבו בהצלחה!\\n\\n" +
+      "כל 7 הלשוניות של 'מעון ילדים' נוצרו ועוצבו בהצלחה!\\n\\n" +
       "✅ דשבורד מנהלת ראשי עם כרטיסי KPI ומדדי פיקוח\\n" +
       "✅ כפתור סנכרון מול האתר מוכן לשימוש\\n" +
       "✅ כפתור כיבוי/הפעלת סנכרון מוכן לשימוש\\n" +
@@ -108,7 +107,7 @@ function setupExecutiveDashboardSheet(ss) {
   // כותרת ראשית מעוצבת
   sheet.getRange("A1:H2").merge();
   var header = sheet.getRange("A1");
-  header.setValue("🐝 הבית של מאיה - דשבורד מנהלת ובקרת איכות המעון | בהנהלת רותם עירון | אריאל");
+  header.setValue("🐝 מערכת ניהול מעון ילדים - דשבורד מנהלת ובקרת איכות המעון");
   header.setBackground(BRAND.colors.primaryBrown)
         .setFontColor("#ffffff")
         .setFontSize(14)
@@ -160,7 +159,7 @@ function setupExecutiveDashboardSheet(ss) {
   // הדרכה מהירה למנהלת
   sheet.getRange("B13:H14").merge();
   var tipCell = sheet.getRange("B13");
-  tipCell.setValue("💡 פעולות מהירות למנהלת: לפתיחת סרגל הניהול, סינכרון מיידי עם האתר, או כיבוי זמני של הסנכרון מהטבלה - השתמשי בתפריט '🐝 הבית של מאיה' בראש העמוד.")
+  tipCell.setValue("💡 פעולות מהירות למנהלת: לפתיחת סרגל הניהול, סינכרון מיידי עם האתר, או כיבוי זמני של הסנכרון מהטבלה - השתמשי בתפריט '🐝 ניהול מעון' בראש העמוד.")
          .setBackground("#f8fafc")
          .setFontColor("#334155")
          .setFontSize(10)
@@ -191,7 +190,7 @@ function updateDashboardSyncBanner(sheet, isEnabled) {
   
   var cell = sheet.getRange("B3");
   if (isEnabled) {
-    cell.setValue("🟢 מצב סנכרון מול האתר: פעיל ומסונכרן דו-כיוונית (לכיבוי: תפריט 'הבית של מאיה' > כפתור כיבוי)")
+    cell.setValue("🟢 מצב סנכרון מול האתר: פעיל ומסונכרן דו-כיוונית (לכיבוי: תפריט 'ניהול מעון' > כפתור כיבוי)")
         .setBackground("#ecfdf5")
         .setFontColor("#065f46")
         .setFontWeight("bold")
@@ -296,7 +295,7 @@ function promptSetWebsiteUrl() {
   var currentUrl = getWebsiteUrl();
   var prompt = ui.prompt(
     "🌐 הגדרת כתובת האתר",
-    "הזן את כתובת האתר של 'הבית של מאיה' (GitHub Pages או דומיין):\\n(כתובת נוכחית: " + (currentUrl || "לא הוגדרה") + ")",
+    "הזן את כתובת האתר של מערכת הניהול (GitHub Pages או דומיין):\\n(כתובת נוכחית: " + (currentUrl || "לא הוגדרה") + ")",
     ui.ButtonSet.OK_CANCEL
   );
   if (prompt.getSelectedButton() === ui.Button.OK) {
@@ -416,7 +415,7 @@ function setupStaffSheet(ss) {
   sheet.setFrozenRows(1);
   
   var sampleStaff = [
-    ["st-1", "רותם עירון", "034567890", "מנהלת המעון ומובילה פדגוגית", "052-870-7056", 75, "2027-08-15", "מאושר בתוקף", "פעילה"],
+    ["st-1", "רונית כהן", "034567890", "מנהלת המעון ומובילה פדגוגית", "052-870-7056", 75, "2027-08-15", "מאושר בתוקף", "פעילה"],
     ["st-2", "אורלי שמעון", "045678901", "סייעת ראשית ומוסמכת", "050-7654321", 45, "2027-05-10", "מאושר בתוקף", "פעילה"],
     ["st-3", "רחל לוי", "056789012", "סייעת משלימה וצהרון", "054-9876543", 42, "2026-12-01", "מאושר בתוקף", "פעילה"]
   ];
@@ -464,8 +463,8 @@ function setupSettingsSheet(ss) {
   var syncVal = isSyncEnabled() ? "פעיל ✅" : "מושבת ידנית ⏸️";
   var settingsData = [
     ["פרמטר הגדרה", "ערך נוכחי", "הערות והנחיות"],
-    ["שם המעון והעסק", "הבית של מאיה", "שם רשמי ברשות המסים"],
-    ["מנהלת המעון", "רותם עירון", "מורשית חתימה וניהול פדגוגי"],
+    ["שם המעון והעסק", "מעון ילדים", "שם רשמי ברשות המסים"],
+    ["מנהלת המעון", "הנהלת המעון", "מורשית חתימה וניהול פדגוגי"],
     ["טלפון מנהלת", "052-870-7056", "קו ישיר למעון"],
     ["כתובת המעון", "אריאל, שומרון", "כולל מרחב מוגן תקני ומאושר"],
     ["סוג עוסק", "עוסק פטור", "תקרת מחזור שנתית 122,000 ₪ לשנת 2026"],
@@ -546,7 +545,7 @@ function showDashboardSidebar() {
   template.websiteUrl = getWebsiteUrl();
   
   var html = template.evaluate()
-    .setTitle("🐝 הבית של מאיה - סרגל ניהול")
+    .setTitle("🐝 ניהול מעון - סרגל ניהול")
     .setWidth(340);
   SpreadsheetApp.getUi().showSidebar(html);
 }
@@ -560,8 +559,8 @@ function openTodayAttendance() {
 function showAboutDialog() {
   var ui = SpreadsheetApp.getUi();
   ui.alert(
-    "🐝 אודות מערכת 'הבית של מאיה'",
-    "מערכת ניהול מעון, משפחתון וצהרון באריאל\\nבהנהלת רותם עירון | 052-870-7056\\n\\nמערכת אוטומטית מסונכרנת ל-Google Sheets עם בקרת סנכרון מלאה.",
+    "🐝 אודות מערכת ניהול מעון",
+    "מערכת ניהול מעון, משפחתון וצהרון\\n\\nמערכת אוטומטית מסונכרנת ל-Google Sheets עם בקרת סנכרון מלאה.",
     ui.ButtonSet.OK
   );
 }
@@ -638,7 +637,7 @@ function doPost(e) {
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       syncDisabled: true,
-      message: "הסנכרון מהגליון כבוי כעת על ידי המנהלת. ניתן להפעילו מחדש מתפריט 'הבית של מאיה' בגוגל שיטס."
+      message: "הסנכרון מהגליון כבוי כעת על ידי המנהלת. ניתן להפעילו מחדש מתפריט 'ניהול מעון' בגוגל שיטס."
     })).setMimeType(ContentService.MimeType.JSON);
   }
 
@@ -760,9 +759,9 @@ export const APPS_SCRIPT_SIDEBAR_HTML = `<!DOCTYPE html>
   <div class="honey-header p-4 rounded-2xl shadow-md">
     <div class="flex items-center justify-between">
       <span class="text-2xl">🐝</span>
-      <h2 class="text-base font-bold text-white">הבית של מאיה</h2>
+      <h2 class="text-base font-bold text-white">מערכת ניהול מעון</h2>
     </div>
-    <p class="text-xs text-yellow-200 mt-1">בהנהלת רותם עירון • אריאל</p>
+    <p class="text-xs text-yellow-200 mt-1">ניהול ומאזן תקציבי</p>
     <div class="mt-2 text-xs bg-white bg-opacity-20 rounded-lg p-2 flex justify-between">
       <span>פורטל ניהול ובקרה</span>
       <span>מעון וצהרון</span>

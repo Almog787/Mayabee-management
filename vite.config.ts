@@ -15,9 +15,9 @@ export default defineConfig(() => {
         includeAssets: ['apple-touch-icon.png', 'icon.svg'],
         manifest: {
           id: './',
-          name: 'מערכת ניהול מעון ילדים - פורטל ניהול פיננסי ובקרה',
-          short_name: 'ניהול מעון',
-          description: 'מערכת ניהול ובקרה פנימית למעון ילדים באריאל בגישת Local-First',
+          name: 'הגן של רותם ומאיה - פורטל ניהול פיננסי ובקרה',
+          short_name: 'הגן של רותם ומאיה',
+          description: 'מערכת ניהול ובקרה פנימית למעון הילדים הגן של רותם ומאיה באריאל בגישת Local-First',
           theme_color: '#7a4b29',
           background_color: '#fbf9f5',
           display: 'standalone',

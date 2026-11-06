@@ -68,7 +68,7 @@ export async function testAppsScriptConnection(scriptUrl: string): Promise<{
     if (data && (data.status === 'ok' || data.daycare)) {
       return {
         success: true,
-        message: `חיבור תקין! גליון המעון "${data.daycare || 'הבית של מאיה'}" זוהה ומגיב כהלכה.`,
+        message: `חיבור תקין! גליון המעון "${data.daycare || 'מעון ילדים'}" זוהה ומגיב כהלכה.`,
         info: data,
       };
     }

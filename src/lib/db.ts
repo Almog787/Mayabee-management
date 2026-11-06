@@ -312,7 +312,7 @@ const initialChildren: Child[] = [
 const initialStaff: StaffMember[] = [
   {
     id: 's-01',
-    fullName: 'רותם עירון',
+    fullName: 'מנהלת המעון',
     idNumber: '028912345',
     role: 'DIRECTOR',
     phone: '052-870-7056',
@@ -423,7 +423,7 @@ const initialSafetyChecks: SafetyCheckItem[] = [
     description: 'בדיקה פיזית ששער הביטחון ננעל אוטומטית ובגובה תקני שאינו נגיש לפעוטות.',
     lastCheckedDate: new Date().toISOString().split('T')[0],
     status: 'PASSED',
-    inspectorName: 'רותם עירון',
+    inspectorName: 'מנהלת המעון',
   },
   {
     id: 'sc-02',
@@ -443,7 +443,7 @@ const initialSafetyChecks: SafetyCheckItem[] = [
     description: 'פתיחה מלאה של דלת הממ"ד, בדיקת תאורת חירום וסוללת גיבוי בלחצן מצוקה.',
     lastCheckedDate: new Date().toISOString().split('T')[0],
     status: 'PASSED',
-    inspectorName: 'רותם עירון',
+    inspectorName: 'מנהלת המעון',
   },
   {
     id: 'sc-04',

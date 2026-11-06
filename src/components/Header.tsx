@@ -16,6 +16,8 @@ import {
 import { ComplianceRatioResult, DaycareSettings } from '../types';
 import { TaxStatusReport } from '../lib/taxEngine';
 
+import daycareLogo from '../assets/images/applet_daycare_logo_1793960832604.jpg';
+
 export type AppTab = 'planner' | 'management-suggestions' | 'business-suggestions';
 
 interface HeaderProps {
@@ -49,8 +51,7 @@ export const Header: React.FC<HeaderProps> = ({
     day: 'numeric',
   });
 
-  const logoUrl =
-    'https://raw.githubusercontent.com/Almog787/Mayabee/7556da7292780737f265ca3915efad246ff2eef9/public/Logo%20Mayabee.jpg';
+  const logoUrl = daycareLogo;
 
   return (
     <header className="sticky top-0 z-40 bg-[#fbf9f5]/95 backdrop-blur-md text-[#5f3414] border-b border-[#d6c3b8]/40 shadow-xs">
@@ -63,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
                 {logoLoaded ? (
                   <img
                     src={logoUrl}
-                    alt="מערכת ניהול מעון ילדים"
+                    alt="לוגו מערכת ניהול"
                     className="w-full h-full object-cover rounded-full"
                     onError={() => setLogoLoaded(false)}
                   />
@@ -74,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
 
               <div className="flex flex-col text-right">
                 <h1 className="text-lg sm:text-2xl font-black text-[#5f3414] leading-tight font-heading">
-                  ניהול מעון ילדים
+                  מערכת ניהול מעון ילדים
                 </h1>
                 <p className="text-[10px] sm:text-xs text-[#7a4b29] font-bold flex items-center gap-1.5 opacity-80">
                   <span>מערכת חיזוי ותכנון מאזן תקציבי</span>

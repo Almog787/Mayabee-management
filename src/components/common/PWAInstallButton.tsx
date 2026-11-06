@@ -17,7 +17,7 @@ export const PWAInstallButton: React.FC = () => {
       <button
         onClick={install}
         className="flex items-center gap-2 rounded-xl bg-[#7a4b29] hover:bg-[#5f3414] px-3.5 py-1.5 text-xs sm:text-sm font-bold text-white shadow-xs transition cursor-pointer active:scale-95 border border-[#ffdeab]/30"
-        title="התקנת מערכת 'הבית של מאיה' כאפליקציה במחשב או בטלפון"
+        title="התקנת המערכת כאפליקציה במחשב או בטלפון"
       >
         <Download className="w-4 h-4 text-[#ffdeab]" />
         <span>התקנת אפליקציה</span>
@@ -41,7 +41,7 @@ export const PWAInstallButton: React.FC = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
             <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl text-right border border-[#e4e2de]">
               <div className="flex items-center justify-between pb-3 border-b border-[#e4e2de]">
-                <h3 className="text-base font-bold text-[#5f3414]">התקנת 'הבית של מאיה' ב-iPhone / iPad</h3>
+                <h3 className="text-base font-bold text-[#5f3414]">התקנת האפליקציה ב-iPhone / iPad</h3>
                 <button
                   onClick={() => setShowIOSGuide(false)}
                   className="rounded-lg p-1 text-[#51443c] hover:bg-[#efeeea]"

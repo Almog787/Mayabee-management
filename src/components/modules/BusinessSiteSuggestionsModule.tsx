@@ -29,6 +29,11 @@ import {
   Maximize2,
   X,
   Eye,
+  ShieldAlert,
+  Music,
+  Heart,
+  Home,
+  CheckSquare,
 } from 'lucide-react';
 
 interface BusinessSiteSuggestionsProps {
@@ -81,122 +86,135 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
   const [downloadSuccess, setDownloadSuccess] = useState<boolean>(false);
   const [inspectingFeature, setInspectingFeature] = useState<SiteFeatureOption | null>(null);
 
-  // Features of the daycare's public-facing business website (Mayabee) with realistic non-interactive visual preview windows
+  // Expanded site features aligned with the Mayabee Daycare website structure in Ariel
   const siteFeatures: SiteFeatureOption[] = useMemo(
     () => [
       {
-        id: 'gallery',
-        title: 'גלריית תמונות וסרטוני מעון',
-        category: 'מדיה וויזואל',
-        icon: <Camera className="w-4 h-4 text-[#7a4b29]" />,
-        defaultPrompt: 'לגבי גלריית התמונות והסרטונים של המעון, המתקנים והחצר:',
-        fullPreviewTitle: 'גלריית תמונות וסרטונים מהמעון והחצר באריאל',
-        fullPreviewDesc: 'תצוגה ויזואלית של מתקני המשחקים, חדרי הפעילות, פינות הג\'ימבורי וארוחות הילדים.',
+        id: 'hero-header',
+        title: 'שער המעון, סלוגן וכותרת ראשית',
+        category: 'כותרת ושער',
+        icon: <Home className="w-4 h-4 text-[#7a4b29]" />,
+        defaultPrompt: 'לגבי כותרת השער של האתר, הסלוגן והתמונה המרכזית בכניסה:',
+        fullPreviewTitle: 'כותרת שער האתר, סלוגן המעון ותמונת הכניסה',
+        fullPreviewDesc: 'הרו הידר מרשים עם סלוגן "בית חם, עוטף ובטוח לקטנטנים באריאל", כפתור חיוג מהיר ושריון מקום.',
         previewSnippet: (
-          <div className="bg-[#faf8f5] p-2.5 rounded-xl border border-[#e4e2de] space-y-1.5 pointer-events-none select-none text-[9px]">
-            <div className="flex justify-between items-center text-[#5f3414] font-black border-b border-[#e4e2de] pb-1">
-              <span>📸 גלריית חוויות מהמעון</span>
-              <span className="text-[8px] text-slate-400">4 תמונות להמחשה</span>
+          <div className="bg-gradient-to-l from-[#7a4b29] to-[#5f3414] text-white p-3 rounded-xl space-y-1.5 pointer-events-none select-none text-[9px]">
+            <div className="flex justify-between items-center border-b border-white/20 pb-1">
+              <span className="font-black text-[#ffdeab]">🐝 מעון הבית של מאיה • אריאל</span>
+              <span className="text-[8px] bg-white/20 px-1 rounded">תשפ"ו</span>
             </div>
-            <div className="grid grid-cols-2 gap-1.5">
-              <div className="bg-amber-100 rounded-lg p-2 text-center text-amber-900 font-bold border border-amber-200">
-                🌳 חצר מתקנים מוצלת
-              </div>
-              <div className="bg-emerald-100 rounded-lg p-2 text-center text-emerald-900 font-bold border border-emerald-200">
-                🎨 פינת יצירה וצבע
-              </div>
-              <div className="bg-rose-100 rounded-lg p-2 text-center text-rose-900 font-bold border border-rose-200">
-                🧸 ג'ימבורי בטיחותי
-              </div>
-              <div className="bg-indigo-100 rounded-lg p-2 text-center text-indigo-900 font-bold border border-indigo-200">
-                📚 שעת סיפור ומפגש
-              </div>
+            <h4 className="text-xs font-black">מקום חם, אוהב ומפתח לקטנטנים</h4>
+            <p className="text-[8.5px] text-[#ffedd5]">תינוקייה ופעוטון באווירה משפחתית, למידה חווייתית וליווי פדגוגי צמוד.</p>
+            <div className="bg-[#ffdeab] text-[#5f3414] text-center font-black py-1 rounded text-[8.5px]">
+              שריון מקום לשנת הלימודים הבאה ➔
             </div>
           </div>
         ),
       },
       {
-        id: 'staff-presentation',
-        title: 'הצגת הצוות והמובילות הפדגוגיות',
-        category: 'אמינות והיכרות',
-        icon: <Users className="w-4 h-4 text-[#7a4b29]" />,
-        defaultPrompt: 'לגבי הצגת המטפלות, הגננות והרקע המקצועי שלהן:',
-        fullPreviewTitle: 'כרטיסי היכרות עם צוות המעון והמובילות',
-        fullPreviewDesc: 'הצגת שמות, תפקידים, שנות ניסיון, הכשרות עזרה ראשונה ותפיסה חינוכית של צוות המעון.',
+        id: 'about-vision',
+        title: 'אודות המעון והחזון החינוכי',
+        category: 'פדגוגיה וחזון',
+        icon: <Heart className="w-4 h-4 text-[#7a4b29]" />,
+        defaultPrompt: 'לגבי סקירת החזון החינוכי, הגישה הפדגוגית והערכים של המעון:',
+        fullPreviewTitle: 'אודות המעון והחזון הפדגוגי',
+        fullPreviewDesc: 'פירוט הערכים המובילים: יחס אישי, פיתוח ערוצי תקשורת, עצמאות, סדר יום עשיר וביטחון רגשי.',
         previewSnippet: (
           <div className="bg-[#faf8f5] p-2.5 rounded-xl border border-[#e4e2de] space-y-1.5 pointer-events-none select-none text-[9px]">
             <div className="text-[#5f3414] font-black border-b border-[#e4e2de] pb-1 flex justify-between">
-              <span>👩‍🏫 הצוות החינוכי המסור שלנו</span>
-              <span className="text-emerald-700 font-bold">הכשרות בתוקף ✓</span>
+              <span>💛 הגישה החינוכית והערכים שלנו</span>
+              <span className="text-slate-400">חזון פדגוגי</span>
             </div>
-            <div className="space-y-1">
-              <div className="bg-white p-1.5 rounded-lg border border-[#e4e2de] flex items-center justify-between">
-                <div>
-                  <strong className="block text-[#5f3414]">גננת ומנהלת פדגוגית</strong>
-                  <span className="text-[8px] text-slate-400">תואר בחינוך לגיל הרך • 12 שנות ניסיון</span>
-                </div>
-                <span className="text-[8px] bg-[#ffdeab] px-1 py-0.5 rounded font-bold text-[#5f3414]">מובילה</span>
-              </div>
-              <div className="bg-white p-1.5 rounded-lg border border-[#e4e2de] flex items-center justify-between">
-                <div>
-                  <strong className="block text-[#5f3414]">מטפלת מוסמכת בתינוקייה</strong>
-                  <span className="text-[8px] text-slate-400">עזרה ראשונה • גישה חמה ומכילה</span>
-                </div>
-                <span className="text-[8px] bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded font-bold">צוות מוסמך</span>
-              </div>
+            <div className="grid grid-cols-2 gap-1 text-[8.5px] text-slate-700">
+              <div className="bg-white p-1 rounded border border-[#e4e2de]">✨ יחס אישי ומכיל לכל ילד/ה</div>
+              <div className="bg-white p-1 rounded border border-[#e4e2de]">🌱 פיתוח עצמאות וביטחון עצמי</div>
+              <div className="bg-white p-1 rounded border border-[#e4e2de]">🎨 גירוי חושי ולמידה חווייתית</div>
+              <div className="bg-white p-1 rounded border border-[#e4e2de]">🤗 תקשורת שוטפת ומקרבת מול ההורים</div>
             </div>
           </div>
         ),
       },
       {
-        id: 'contact-tour-booking',
-        title: 'טופס יצירת קשר ותיאום סיור היכרות',
-        category: 'קליטת הורים חדשים',
-        icon: <PhoneCall className="w-4 h-4 text-[#7a4b29]" />,
-        defaultPrompt: 'לגבי תהליך השארת הפרטים של הורים ותיאום סיור במעון:',
-        fullPreviewTitle: 'טופס פנייה מקוון לתיאום סיור היכרות במעון',
-        fullPreviewDesc: 'טופס נוח שמאפשר להורים להשאיר פרטים, לבחור מועד מועדף לביקור ולקבל מענה מהיר.',
-        previewSnippet: (
-          <div className="bg-white p-2.5 rounded-xl border border-[#ebd7c5] space-y-1.5 pointer-events-none select-none text-[9px]">
-            <div className="text-[#5f3414] font-black border-b border-[#ebd7c5] pb-1 flex justify-between">
-              <span>📞 בואו להכיר: תיאום ביקור במעון</span>
-              <span className="text-amber-800 font-bold">שנת הלימודים הבאה</span>
-            </div>
-            <div className="space-y-1">
-              <div className="bg-[#faf8f5] px-2 py-1 rounded border border-[#e4e2de] text-slate-500">
-                שם מלא: ישראל ישראלי | טלפון: 050-XXXXXXX
-              </div>
-              <div className="bg-[#faf8f5] px-2 py-1 rounded border border-[#e4e2de] text-slate-500">
-                גיל הילד/ה: שנה ו-3 חודשים (קבוצת פעוטות)
-              </div>
-              <div className="bg-[#7a4b29] text-white py-1 rounded text-center font-black">
-                תיאום סיור היכרות בלחיצה אחת ➔
-              </div>
-            </div>
-          </div>
-        ),
-      },
-      {
-        id: 'location-map',
-        title: 'מיקום, דרכי הגעה ומפה באריאל',
-        category: 'נגישות ומיקום',
-        icon: <MapPin className="w-4 h-4 text-[#7a4b29]" />,
-        defaultPrompt: 'לגבי המיקום של המעון באריאל, הוראות הגעה ושעות הפעילות:',
-        fullPreviewTitle: 'מיקום המעון באריאל, שעות פעילות ודרכי הגעה',
-        fullPreviewDesc: 'כתובת מדויקת, מפה אינטראקטיבית, חניה נוחה להורדת והעלאת ילדים ושעות פעילות.',
+        id: 'age-groups',
+        title: 'קבוצות גיל: תינוקייה ופעוטון',
+        category: 'כיתות וגילאים',
+        icon: <Users className="w-4 h-4 text-[#7a4b29]" />,
+        defaultPrompt: 'לגבי פירוט קבוצות הגיל (תינוקייה ופעוטון) והחלוקה לכיתות:',
+        fullPreviewTitle: 'חלוקה לקבוצות גיל: תינוקייה ופעוטון',
+        fullPreviewDesc: 'הפרדה מותאמת בין תינוקות (3 חודשים עד שנה וחצי, יחס 1:6) לפעוטות (שנה וחצי עד 3 שנים, יחס 1:9).',
         previewSnippet: (
           <div className="bg-[#faf8f5] p-2.5 rounded-xl border border-[#e4e2de] space-y-1.5 pointer-events-none select-none text-[9px]">
-            <div className="flex items-center justify-between text-[#5f3414] font-black border-b border-[#e4e2de] pb-1">
-              <span>📍 רחוב הרקפת 12, אריאל</span>
-              <span className="text-emerald-700">חניה צמודה ✓</span>
+            <div className="text-[#5f3414] font-black border-b border-[#e4e2de] pb-1 flex justify-between">
+              <span>👶 קבוצות הגיל במעון</span>
+              <span className="text-emerald-700 font-bold">יחס מורחב</span>
             </div>
-            <div className="bg-white p-1.5 rounded border border-[#e4e2de] text-slate-600 space-y-0.5">
-              <div>⏰ <strong>שעות פעילות:</strong> א'-ה' 07:00-17:00, ו' 07:30-12:30</div>
-              <div>🚗 <strong>דרכי הגעה:</strong> גישה ישירה, ללא מדרגות, נגיש לעגלות</div>
+            <div className="grid grid-cols-2 gap-1.5">
+              <div className="bg-white p-1.5 rounded-lg border border-amber-200">
+                <strong className="block text-[#7a4b29] text-[9.5px]">תינוקייה (3 חוד' - 1.5)</strong>
+                <span className="text-[8px] text-slate-500 block">יחס חוקי 1:6 • מרחב זחילה מרופד</span>
+              </div>
+              <div className="bg-white p-1.5 rounded-lg border border-emerald-200">
+                <strong className="block text-emerald-800 text-[9.5px]">פעוטון (1.5 - 3 שנים)</strong>
+                <span className="text-[8px] text-slate-500 block">יחס חוקי 1:9 • פינות משחק ויצירה</span>
+              </div>
             </div>
-            <div className="flex gap-1">
-              <span className="bg-sky-100 text-sky-800 px-2 py-0.5 rounded font-bold text-[8px]">ניווט ב-Waze</span>
-              <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold text-[8px]">Google Maps</span>
+          </div>
+        ),
+      },
+      {
+        id: 'safety-security',
+        title: 'בטיחות, מרחב מוגן ומצלמות',
+        category: 'בטיחות ומוגנות',
+        icon: <ShieldAlert className="w-4 h-4 text-[#7a4b29]" />,
+        defaultPrompt: 'לגבי נהלי הבטיחות, המרחב המוגן, המצלמות והאבטחה במעון:',
+        fullPreviewTitle: 'נהלי בטיחות, מרחב מוגן (ממ"ד) ואבטחה היקפית',
+        fullPreviewDesc: 'ממ"ד מרווח ותקני, שער חשמלי עם קודן, לחצן מצוקה, בדיקות בטיחות תקופתיות של מהנדס מוסמך.',
+        previewSnippet: (
+          <div className="bg-[#faf8f5] p-2.5 rounded-xl border border-[#e4e2de] space-y-1.5 pointer-events-none select-none text-[9px]">
+            <div className="text-[#5f3414] font-black border-b border-[#e4e2de] pb-1 flex justify-between">
+              <span>🛡️ בטיחות ומוגנות ברמה הגבוהה ביותר</span>
+              <span className="text-emerald-700 font-bold">מאושר משרד העבודה</span>
+            </div>
+            <div className="space-y-1 text-[8.5px]">
+              <div className="bg-white p-1 rounded border border-[#e4e2de] flex justify-between">
+                <span>🏰 מרחב מוגן (ממ"ד) תקני ומאובזר:</span>
+                <strong className="text-emerald-700">גישה מיידית ✓</strong>
+              </div>
+              <div className="bg-white p-1 rounded border border-[#e4e2de] flex justify-between">
+                <span>🔐 שער כניסה נעול עם קודן מאובטח:</span>
+                <strong className="text-emerald-700">בקרת כניסה ✓</strong>
+              </div>
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: 'enrichment-activities',
+        title: 'חוגי העשרה, תנועה ומוזיקה',
+        category: 'חוגים ופעילויות',
+        icon: <Music className="w-4 h-4 text-[#7a4b29]" />,
+        defaultPrompt: 'לגבי פירוט חוגי ההעשרה (מוזיקה, ריתמיקה, תנועה ובעלי חיים):',
+        fullPreviewTitle: 'חוגי העשרה חיצוניים וסדנאות התפתחות',
+        fullPreviewDesc: 'חוגי ריתמיקה ומוזיקה לגיל הרך, חוג תנועה וספורט כייפי, מפגשי טבע וחוויה עם בעלי חיים.',
+        previewSnippet: (
+          <div className="bg-[#faf8f5] p-2.5 rounded-xl border border-[#e4e2de] space-y-1.5 pointer-events-none select-none text-[9px]">
+            <div className="text-[#5f3414] font-black border-b border-[#e4e2de] pb-1 flex justify-between">
+              <span>🎵 חוגי העשרה שבועיים</span>
+              <span className="text-indigo-700 font-bold">מדריכים מוסמכים</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1 text-[8px] text-center">
+              <div className="bg-white p-1 rounded border border-[#e4e2de]">
+                <strong className="block text-indigo-700">🎶 ריתמיקה וצליל</strong>
+                <span>פיתוח שמיעה וקצב</span>
+              </div>
+              <div className="bg-white p-1 rounded border border-[#e4e2de]">
+                <strong className="block text-[#7a4b29]">🤸 תנועה לגיל הרך</strong>
+                <span>מוטוריקה גסה</span>
+              </div>
+              <div className="bg-white p-1 rounded border border-[#e4e2de]">
+                <strong className="block text-emerald-700">🐾 מפגש טבע</strong>
+                <span>חוויה חושית</span>
+              </div>
             </div>
           </div>
         ),
@@ -233,27 +251,64 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
         ),
       },
       {
-        id: 'calendar-schedule',
-        title: 'לוח חופשות ופעילויות שנתי',
-        category: 'לוח זמנים',
-        icon: <Calendar className="w-4 h-4 text-[#7a4b29]" />,
-        defaultPrompt: 'לגבי לוח החופשות, חגי ישראל, מסיבות ואירועים במעון:',
-        fullPreviewTitle: 'לוח חופשות שנתי, מסיבות ואירועים קהילתיים',
-        fullPreviewDesc: 'לוח שנה שנתי ברור להורים עם חופשות משרד העבודה/החינוך, ימי שישי, מסיבות חנוכה, פורים וסוף שנה.',
+        id: 'gallery',
+        title: 'גלריית תמונות וסרטוני מעון',
+        category: 'מדיה וויזואל',
+        icon: <Camera className="w-4 h-4 text-[#7a4b29]" />,
+        defaultPrompt: 'לגבי גלריית התמונות והסרטונים של המעון, המתקנים והחצר:',
+        fullPreviewTitle: 'גלריית תמונות וסרטונים מהמעון והחצר באריאל',
+        fullPreviewDesc: 'תצוגה ויזואלית של מתקני המשחקים, חדרי הפעילות, פינות הג\'ימבורי וארוחות הילדים.',
+        previewSnippet: (
+          <div className="bg-[#faf8f5] p-2.5 rounded-xl border border-[#e4e2de] space-y-1.5 pointer-events-none select-none text-[9px]">
+            <div className="flex justify-between items-center text-[#5f3414] font-black border-b border-[#e4e2de] pb-1">
+              <span>📸 גלריית חוויות מהמעון</span>
+              <span className="text-[8px] text-slate-400">מתקנים וחצר</span>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              <div className="bg-amber-100 rounded-lg p-2 text-center text-amber-900 font-bold border border-amber-200">
+                🌳 חצר מתקנים מוצלת
+              </div>
+              <div className="bg-emerald-100 rounded-lg p-2 text-center text-emerald-900 font-bold border border-emerald-200">
+                🎨 פינת יצירה וצבע
+              </div>
+              <div className="bg-rose-100 rounded-lg p-2 text-center text-rose-900 font-bold border border-rose-200">
+                🧸 ג'ימבורי בטיחותי
+              </div>
+              <div className="bg-indigo-100 rounded-lg p-2 text-center text-indigo-900 font-bold border border-indigo-200">
+                📚 שעת סיפור ומפגש
+              </div>
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: 'staff-presentation',
+        title: 'הצגת הצוות והמובילות הפדגוגיות',
+        category: 'אמינות והיכרות',
+        icon: <Users className="w-4 h-4 text-[#7a4b29]" />,
+        defaultPrompt: 'לגבי הצגת המטפלות, הגננות והרקע המקצועי שלהן:',
+        fullPreviewTitle: 'כרטיסי היכרות עם צוות המעון והמובילות',
+        fullPreviewDesc: 'הצגת שמות, תפקידים, שנות ניסיון, הכשרות עזרה ראשונה ותפיסה חינוכית של צוות המעון.',
         previewSnippet: (
           <div className="bg-[#faf8f5] p-2.5 rounded-xl border border-[#e4e2de] space-y-1.5 pointer-events-none select-none text-[9px]">
             <div className="text-[#5f3414] font-black border-b border-[#e4e2de] pb-1 flex justify-between">
-              <span>📅 לוח חופשות ואירועים תשפ"ו</span>
-              <span className="text-slate-400">מעודכן להורים</span>
+              <span>👩‍🏫 הצוות החינוכי המסור שלנו</span>
+              <span className="text-emerald-700 font-bold">הכשרות בתוקף ✓</span>
             </div>
-            <div className="space-y-1 text-[8.5px]">
-              <div className="bg-white p-1 rounded border border-[#e4e2de] flex justify-between">
-                <span>חופשת סוכות ושמחת תורה:</span>
-                <strong className="text-amber-800">גשר קצר בלבד</strong>
+            <div className="space-y-1">
+              <div className="bg-white p-1.5 rounded-lg border border-[#e4e2de] flex items-center justify-between">
+                <div>
+                  <strong className="block text-[#5f3414]">גננת ומנהלת פדגוגית</strong>
+                  <span className="text-[8px] text-slate-400">תואר בחינוך לגיל הרך • ניסיון עשיר</span>
+                </div>
+                <span className="text-[8px] bg-[#ffdeab] px-1 py-0.5 rounded font-bold text-[#5f3414]">מובילה</span>
               </div>
-              <div className="bg-white p-1 rounded border border-[#e4e2de] flex justify-between">
-                <span>מסיבת חנוכה משותפת:</span>
-                <strong className="text-indigo-800">יום שישי 10:00</strong>
+              <div className="bg-white p-1.5 rounded-lg border border-[#e4e2de] flex items-center justify-between">
+                <div>
+                  <strong className="block text-[#5f3414]">מטפלת מוסמכת בתינוקייה</strong>
+                  <span className="text-[8px] text-slate-400">עזרה ראשונה • גישה חמה ומכילה</span>
+                </div>
+                <span className="text-[8px] bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded font-bold">צוות מוסמך</span>
               </div>
             </div>
           </div>
@@ -281,27 +336,77 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
         ),
       },
       {
-        id: 'mobile-experience',
-        title: 'חוויית גלישה בטלפונים ניידים',
-        category: 'עיצוב ומובייל',
-        icon: <Smartphone className="w-4 h-4 text-[#7a4b29]" />,
-        defaultPrompt: 'לגבי מראה אתר העסק במובייל, נוחות הקריאה ומהירות הטעינה:',
-        fullPreviewTitle: 'חוויית משתמש ונגישות מלאה בטלפונים ניידים',
-        fullPreviewDesc: 'התאמה מלאה לכל מסך סמארטפון: כפתור ווטסאפ צף, חיוג ישיר בלחיצה, תמונות מותאמות וטעינה מהירה.',
+        id: 'calendar-schedule',
+        title: 'לוח חופשות ופעילויות שנתי',
+        category: 'לוח זמנים',
+        icon: <Calendar className="w-4 h-4 text-[#7a4b29]" />,
+        defaultPrompt: 'לגבי לוח החופשות, חגי ישראל, מסיבות ואירועים במעון:',
+        fullPreviewTitle: 'לוח חופשות שנתי, מסיבות ואירועים קהילתיים',
+        fullPreviewDesc: 'לוח שנה שנתי ברור להורים עם חופשות משרד העבודה/החינוך, ימי שישי, מסיבות חנוכה, פורים וסוף שנה.',
         previewSnippet: (
-          <div className="bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 space-y-1.5 pointer-events-none select-none text-[9px]">
-            <div className="flex justify-between text-[8px] text-slate-400 border-b border-slate-800 pb-1">
-              <span>📱 מובייל - אתר הגן Mayabee</span>
-              <span className="text-emerald-400">כפתור חיוג מהיר</span>
+          <div className="bg-[#faf8f5] p-2.5 rounded-xl border border-[#e4e2de] space-y-1.5 pointer-events-none select-none text-[9px]">
+            <div className="text-[#5f3414] font-black border-b border-[#e4e2de] pb-1 flex justify-between">
+              <span>📅 לוח חופשות ואירועים תשפ"ו</span>
+              <span className="text-slate-400">מעודכן להורים</span>
             </div>
-            <div className="bg-slate-800 p-1.5 rounded space-y-1">
-              <div className="flex items-center gap-1">
-                <span className="text-xs">🐝</span>
-                <span className="font-bold text-[8.5px]">מעון ופעוטון באריאל</span>
+            <div className="space-y-1 text-[8.5px]">
+              <div className="bg-white p-1 rounded border border-[#e4e2de] flex justify-between">
+                <span>חופשת סוכות ושמחת תורה:</span>
+                <strong className="text-amber-800">גשר קצר בלבד</strong>
               </div>
-              <div className="bg-emerald-600 text-white text-center py-1 rounded font-bold text-[8px]">
-                פנייה מיידית בוואטסאפ 💬
+              <div className="bg-white p-1 rounded border border-[#e4e2de] flex justify-between">
+                <span>מסיבת חנוכה משותפת:</span>
+                <strong className="text-indigo-800">יום שישי 10:00</strong>
               </div>
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: 'contact-tour-booking',
+        title: 'טופס יצירת קשר ותיאום סיור היכרות',
+        category: 'קליטת הורים חדשים',
+        icon: <PhoneCall className="w-4 h-4 text-[#7a4b29]" />,
+        defaultPrompt: 'לגבי תהליך השארת הפרטים של הורים ותיאום סיור במעון:',
+        fullPreviewTitle: 'טופס פנייה מקוון לתיאום סיור היכרות במעון',
+        fullPreviewDesc: 'טופס נוח שמאפשר להורים להשאיר פרטים, לבחור מועד מועדף לביקור ולקבל מענה מהיר.',
+        previewSnippet: (
+          <div className="bg-white p-2.5 rounded-xl border border-[#ebd7c5] space-y-1.5 pointer-events-none select-none text-[9px]">
+            <div className="text-[#5f3414] font-black border-b border-[#ebd7c5] pb-1 flex justify-between">
+              <span>📞 בואו להכיר: תיאום ביקור במעון</span>
+              <span className="text-amber-800 font-bold">שנת הלימודים הבאה</span>
+            </div>
+            <div className="space-y-1">
+              <div className="bg-[#faf8f5] px-2 py-1 rounded border border-[#e4e2de] text-slate-500">
+                שם מלא: ישראל ישראלי | טלפון: 050-XXXXXXX
+              </div>
+              <div className="bg-[#7a4b29] text-white py-1 rounded text-center font-black">
+                תיאום סיור היכרות בלחיצה אחת ➔
+              </div>
+            </div>
+          </div>
+        ),
+      },
+      {
+        id: 'location-map',
+        title: 'מיקום, דרכי הגעה ומפה באריאל',
+        category: 'נגישות ומיקום',
+        icon: <MapPin className="w-4 h-4 text-[#7a4b29]" />,
+        defaultPrompt: 'לגבי המיקום של המעון באריאל, הוראות הגעה ושעות הפעילות:',
+        fullPreviewTitle: 'מיקום המעון באריאל, שעות פעילות ודרכי הגעה',
+        fullPreviewDesc: 'כתובת מדויקת, מפה אינטראקטיבית, חניה נוחה להורדת והעלאת ילדים ושעות פעילות.',
+        previewSnippet: (
+          <div className="bg-[#faf8f5] p-2.5 rounded-xl border border-[#e4e2de] space-y-1.5 pointer-events-none select-none text-[9px]">
+            <div className="flex items-center justify-between text-[#5f3414] font-black border-b border-[#e4e2de] pb-1">
+              <span>📍 רחוב הרקפת 12, אריאל</span>
+              <span className="text-emerald-700">חניה צמודה ✓</span>
+            </div>
+            <div className="bg-white p-1.5 rounded border border-[#e4e2de] text-slate-600 space-y-0.5">
+              <div>⏰ <strong>שעות פעילות:</strong> א'-ה' 07:00-17:00, ו' 07:30-12:30</div>
+            </div>
+            <div className="flex gap-1">
+              <span className="bg-sky-100 text-sky-800 px-2 py-0.5 rounded font-bold text-[8px]">ניווט ב-Waze</span>
+              <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold text-[8px]">Google Maps</span>
             </div>
           </div>
         ),
@@ -556,7 +661,7 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
           </h2>
 
           <p className="text-xs sm:text-sm text-[#ffedd5]/90 leading-relaxed font-medium">
-            התבוננו בחלוניות הדוגמה של חלקי אתר העסק למטה, סמנו את החלקים שתרצו לשדרג, או בקשו כל מערכת אוטומטית עבור אתר הגן בכתובת{' '}
+            התבוננו בחלוניות הדוגמה המעודכנות של חלקי אתר העסק למטה (כותרות, חזון, בטיחות, חוגים, תזונה וצוות), סמנו את החלקים שתרצו לשדרג, או בקשו כל מערכת אוטומטית עבור אתר הגן בכתובת{' '}
             <a
               href={BUSINESS_SITE_URL}
               target="_blank"
@@ -806,7 +911,7 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
               <div className="flex items-center gap-2">
                 <Layers className="w-5 h-5 text-[#7a4b29]" />
                 <h4 className="font-black text-base text-[#5f3414] font-heading">
-                  חלוניות דוגמה של אתר הגן (סמנו כדי לדבר עליהם)
+                  חלוניות דוגמה מעודכנות של אתר הגן (סמנו כדי לדבר עליהם)
                 </h4>
               </div>
               <p className="text-xs text-[#51443c]">
@@ -944,7 +1049,7 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
                       </span>
                     </div>
 
-                    <p className="text-[11px] text-slate-600 mt-2 leading-relaxed">
+                    <p className="text-[11px] text-[#51443c] mt-2 leading-relaxed">
                       {preset.description}
                     </p>
                   </div>

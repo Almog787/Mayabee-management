@@ -176,6 +176,6 @@ export function exportToGoogleSheetsXlsx(data: ExportBalanceData) {
   XLSX.utils.book_append_sheet(wb, wsStaff, 'צוות ושכר');
 
   // Download the file
-  const fileName = `מעון_ילדים_מאזן_חודשי_${data.selectedMonth}.xlsx`;
+  const fileName = `מאזן_חודשי_${data.selectedMonth}.xlsx`;
   XLSX.writeFile(wb, fileName);
 }

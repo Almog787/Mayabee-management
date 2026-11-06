@@ -398,7 +398,7 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
     const bTypeLabel =
       businessType === 'OSEK_PATUR' ? 'עוסק פטור' : businessType === 'OSEK_MURSHE' ? 'עוסק מורשה' : 'חברה בע"מ';
 
-    const text = `📊 *דוח תכנון פיננסי ושותפות - מעון ילדים*
+    const text = `📊 *דוח תכנון פיננסי ושותפות - מערכת ניהול מעון ילדים*
 📅 *חודש יעד:* ${monthLabel}
 💼 *סוג עסק:* ${bTypeLabel}
 
@@ -440,7 +440,7 @@ https://almog787.github.io/Mayabee-management/`;
         <div className="space-y-2.5 max-w-2xl relative z-10 text-right">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-[#ffdeab] text-xs font-black tracking-wide uppercase">
             <HeartHandshake className="w-3.5 h-3.5" />
-            <span>מודל שותפות מלא • מעון 40 ילדים • ניהול פיננסי ובקרה</span>
+            <span>מודל שותפות • 40 ילדים • ניהול מעון</span>
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white font-heading leading-tight">
