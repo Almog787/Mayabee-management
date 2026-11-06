@@ -32,6 +32,7 @@ import { calculateIsraeliTaxEstimate, EstimatedTaxResult } from '../../lib/taxEn
 interface QuickMasterPlannerProps {
   settings: DaycareSettings | null;
   onUpdateSettings?: (updates: Partial<DaycareSettings>) => Promise<void>;
+  onOpenSuggestions?: () => void;
 }
 
 // Bumping storage key to ensure all users start in clean default state with 0 children (no anxiety / debts)
@@ -113,7 +114,10 @@ const MacroSlider: React.FC<{
   );
 };
 
-export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ settings }) => {
+export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
+  settings,
+  onOpenSuggestions,
+}) => {
   const [resetSuccessMessage, setResetSuccessMessage] = useState<boolean>(false);
 
   // Target Month
@@ -482,6 +486,31 @@ https://almog787.github.io/Mayabee-management/`;
         {/* Soft background glow */}
         <div className="absolute -left-12 -bottom-12 w-64 h-64 bg-[#f59e0b]/15 rounded-full blur-3xl pointer-events-none" />
       </div>
+
+      {/* Suggestions & Automation Invitation Banner */}
+      {onOpenSuggestions && (
+        <div className="bg-gradient-to-r from-amber-50 via-[#faf6f0] to-[#fffdfa] rounded-2xl border border-amber-300 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs">
+          <div className="flex items-center gap-3 text-right">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center flex-shrink-0 font-bold shadow-2xs">
+              <Sparkles className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <h4 className="text-sm font-black text-[#5f3414]">
+                יש לכם רעיון לשיפור המערכת או שתרצו לבקש אוטומציה מותאמת אישית?
+              </h4>
+              <p className="text-xs text-[#51443c] mt-0.5">
+                פתחנו עבורכם תיבת הצעות ייעודית שבה תוכלו לסמן רכיבים באתר, לבקש מערכות אוטומטיות, ולשלוח ישירות לצוות הפיתוח.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onOpenSuggestions}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#7a4b29] hover:bg-[#5f3414] text-white text-xs font-black shadow-sm transition cursor-pointer active:scale-95 flex-shrink-0"
+          >
+            <span>פתיחת תיבת ההצעות והאוטומציה 💡</span>
+          </button>
+        </div>
+      )}
 
       {/* 2. DATA ENTRY INPUT FORM FIRST (קודם הזנת נתונים!) */}
       <div className="bg-white rounded-3xl border border-[#e4e2de] p-6 sm:p-8 shadow-xs space-y-6">

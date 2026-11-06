@@ -239,3 +239,12 @@ export interface DatabaseDiagnosticsReport {
   status: 'EXCELLENT' | 'NEEDS_ATTENTION' | 'CRITICAL_RISK';
   score: number;
 }
+
+export interface ExpectedExpenseItem {
+  id: string;
+  categoryName: string;
+  description: string;
+  expectedAmount: number;
+  isConfirmed: boolean;
+  notes?: string;
+}

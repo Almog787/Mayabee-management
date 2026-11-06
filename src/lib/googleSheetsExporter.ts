@@ -1,6 +1,5 @@
 import * as XLSX from 'xlsx';
-import { Child, StaffMember, DaycareSettings } from '../types';
-import { ExpectedExpenseItem } from '../components/modules/MonthlyBalancePlannerModule';
+import { Child, StaffMember, DaycareSettings, ExpectedExpenseItem } from '../types';
 
 interface ExportBalanceData {
   monthLabel: string;

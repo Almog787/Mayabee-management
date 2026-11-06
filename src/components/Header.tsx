@@ -22,7 +22,9 @@ interface HeaderProps {
   ratioCompliance: ComplianceRatioResult;
   taxStatus: TaxStatusReport;
   allergyConflictsCount: number;
-  onOpenBackupModal: () => void;
+  activeTab: 'planner' | 'suggestions';
+  onSelectTab: (tab: 'planner' | 'suggestions') => void;
+  onOpenBackupModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -32,7 +34,8 @@ export const Header: React.FC<HeaderProps> = ({
   ratioCompliance,
   taxStatus,
   allergyConflictsCount,
-  onOpenBackupModal,
+  activeTab,
+  onSelectTab,
 }) => {
   const [logoLoaded, setLogoLoaded] = useState(true);
 
@@ -70,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
                 ניהול מעון ילדים
               </h1>
               <p className="text-[10px] sm:text-xs text-[#7a4b29] font-bold flex items-center gap-1.5 opacity-80">
-                <span>מערכת חיזוי ותכנון מאזן תציבי</span>
+                <span>מערכת חיזוי ותכנון מאזן תקציבי</span>
                 <span className="hidden md:inline text-[#d6c3b8]">•</span>
                 <span className="hidden md:flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
@@ -80,12 +83,35 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Cleaner Header: Middle area empty or for branding */}
-          <div className="hidden lg:flex items-center gap-2.5">
-            {/* Optional subtle branding elements can go here */}
+          {/* Navigation Tabs (Dedicated Suggestions & Planner Pages) */}
+          <div className="flex items-center p-1 bg-[#efeeea] rounded-2xl border border-[#d6c3b8]/60 text-xs font-black shadow-inner">
+            <button
+              onClick={() => onSelectTab('planner')}
+              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl transition cursor-pointer ${
+                activeTab === 'planner'
+                  ? 'bg-[#7a4b29] text-white shadow-xs'
+                  : 'text-[#5f3414] hover:bg-white/60'
+              }`}
+            >
+              <TrendingUp className="w-4 h-4" />
+              <span>מתכנן מאזן ושותפות</span>
+            </button>
+
+            <button
+              onClick={() => onSelectTab('suggestions')}
+              className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl transition cursor-pointer relative ${
+                activeTab === 'suggestions'
+                  ? 'bg-[#7a4b29] text-white shadow-xs'
+                  : 'text-[#5f3414] hover:bg-white/60'
+              }`}
+            >
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span>תיבת הצעות ואוטומציה</span>
+              <span className="w-2 h-2 rounded-full bg-amber-500 inline-block animate-pulse" />
+            </button>
           </div>
 
-          {/* Action Buttons: PWA Install only (Cleaner Header) */}
+          {/* Action Buttons: PWA Install only */}
           <div className="flex items-center gap-2">
             <PWAInstallButton />
           </div>

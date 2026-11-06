@@ -15,9 +15,9 @@ export default defineConfig(() => {
         includeAssets: ['apple-touch-icon.png', 'icon.svg'],
         manifest: {
           id: './',
-          name: 'הבית של מאיה - פורטל ניהול ובקרה למנהלת המעון',
-          short_name: 'הבית של מאיה',
-          description: 'מערכת ניהול ובקרה פנימית למנהלת מעון הבית של מאיה באריאל בגישת Local-First',
+          name: 'מערכת ניהול מעון ילדים - פורטל ניהול פיננסי ובקרה',
+          short_name: 'ניהול מעון',
+          description: 'מערכת ניהול ובקרה פנימית למעון ילדים באריאל בגישת Local-First',
           theme_color: '#7a4b29',
           background_color: '#fbf9f5',
           display: 'standalone',
