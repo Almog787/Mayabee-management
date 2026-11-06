@@ -26,6 +26,9 @@ import {
   Utensils,
   Download,
   RotateCcw,
+  Maximize2,
+  X,
+  Eye,
 } from 'lucide-react';
 
 interface BusinessSiteSuggestionsProps {
@@ -50,6 +53,9 @@ interface SiteFeatureOption {
   category: string;
   icon: React.ReactNode;
   defaultPrompt: string;
+  previewSnippet: React.ReactNode;
+  fullPreviewTitle?: string;
+  fullPreviewDesc?: string;
 }
 
 interface AutomationPreset {
@@ -73,8 +79,9 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [isSent, setIsSent] = useState<boolean>(false);
   const [downloadSuccess, setDownloadSuccess] = useState<boolean>(false);
+  const [inspectingFeature, setInspectingFeature] = useState<SiteFeatureOption | null>(null);
 
-  // Features of the daycare's public-facing business website (Mayabee)
+  // Features of the daycare's public-facing business website (Mayabee) with realistic non-interactive visual preview windows
   const siteFeatures: SiteFeatureOption[] = useMemo(
     () => [
       {
@@ -83,6 +90,30 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
         category: 'מדיה וויזואל',
         icon: <Camera className="w-4 h-4 text-[#7a4b29]" />,
         defaultPrompt: 'לגבי גלריית התמונות והסרטונים של המעון, המתקנים והחצר:',
+        fullPreviewTitle: 'גלריית תמונות וסרטונים מהמעון והחצר באריאל',
+        fullPreviewDesc: 'תצוגה ויזואלית של מתקני המשחקים, חדרי הפעילות, פינות הג\'ימבורי וארוחות הילדים.',
+        previewSnippet: (
+          <div className="bg-[#faf8f5] p-2.5 rounded-xl border border-[#e4e2de] space-y-1.5 pointer-events-none select-none text-[9px]">
+            <div className="flex justify-between items-center text-[#5f3414] font-black border-b border-[#e4e2de] pb-1">
+              <span>📸 גלריית חוויות מהמעון</span>
+              <span className="text-[8px] text-slate-400">4 תמונות להמחשה</span>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              <div className="bg-amber-100 rounded-lg p-2 text-center text-amber-900 font-bold border border-amber-200">
+                🌳 חצר מתקנים מוצלת
+              </div>
+              <div className="bg-emerald-100 rounded-lg p-2 text-center text-emerald-900 font-bold border border-emerald-200">
+                🎨 פינת יצירה וצבע
+              </div>
+              <div className="bg-rose-100 rounded-lg p-2 text-center text-rose-900 font-bold border border-rose-200">
+                🧸 ג'ימבורי בטיחותי
+              </div>
+              <div className="bg-indigo-100 rounded-lg p-2 text-center text-indigo-900 font-bold border border-indigo-200">
+                📚 שעת סיפור ומפגש
+              </div>
+            </div>
+          </div>
+        ),
       },
       {
         id: 'staff-presentation',
@@ -90,6 +121,32 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
         category: 'אמינות והיכרות',
         icon: <Users className="w-4 h-4 text-[#7a4b29]" />,
         defaultPrompt: 'לגבי הצגת המטפלות, הגננות והרקע המקצועי שלהן:',
+        fullPreviewTitle: 'כרטיסי היכרות עם צוות המעון והמובילות',
+        fullPreviewDesc: 'הצגת שמות, תפקידים, שנות ניסיון, הכשרות עזרה ראשונה ותפיסה חינוכית של צוות המעון.',
+        previewSnippet: (
+          <div className="bg-[#faf8f5] p-2.5 rounded-xl border border-[#e4e2de] space-y-1.5 pointer-events-none select-none text-[9px]">
+            <div className="text-[#5f3414] font-black border-b border-[#e4e2de] pb-1 flex justify-between">
+              <span>👩‍🏫 הצוות החינוכי המסור שלנו</span>
+              <span className="text-emerald-700 font-bold">הכשרות בתוקף ✓</span>
+            </div>
+            <div className="space-y-1">
+              <div className="bg-white p-1.5 rounded-lg border border-[#e4e2de] flex items-center justify-between">
+                <div>
+                  <strong className="block text-[#5f3414]">גננת ומנהלת פדגוגית</strong>
+                  <span className="text-[8px] text-slate-400">תואר בחינוך לגיל הרך • 12 שנות ניסיון</span>
+                </div>
+                <span className="text-[8px] bg-[#ffdeab] px-1 py-0.5 rounded font-bold text-[#5f3414]">מובילה</span>
+              </div>
+              <div className="bg-white p-1.5 rounded-lg border border-[#e4e2de] flex items-center justify-between">
+                <div>
+                  <strong className="block text-[#5f3414]">מטפלת מוסמכת בתינוקייה</strong>
+                  <span className="text-[8px] text-slate-400">עזרה ראשונה • גישה חמה ומכילה</span>
+                </div>
+                <span className="text-[8px] bg-emerald-100 text-emerald-800 px-1 py-0.5 rounded font-bold">צוות מוסמך</span>
+              </div>
+            </div>
+          </div>
+        ),
       },
       {
         id: 'contact-tour-booking',
@@ -97,6 +154,27 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
         category: 'קליטת הורים חדשים',
         icon: <PhoneCall className="w-4 h-4 text-[#7a4b29]" />,
         defaultPrompt: 'לגבי תהליך השארת הפרטים של הורים ותיאום סיור במעון:',
+        fullPreviewTitle: 'טופס פנייה מקוון לתיאום סיור היכרות במעון',
+        fullPreviewDesc: 'טופס נוח שמאפשר להורים להשאיר פרטים, לבחור מועד מועדף לביקור ולקבל מענה מהיר.',
+        previewSnippet: (
+          <div className="bg-white p-2.5 rounded-xl border border-[#ebd7c5] space-y-1.5 pointer-events-none select-none text-[9px]">
+            <div className="text-[#5f3414] font-black border-b border-[#ebd7c5] pb-1 flex justify-between">
+              <span>📞 בואו להכיר: תיאום ביקור במעון</span>
+              <span className="text-amber-800 font-bold">שנת הלימודים הבאה</span>
+            </div>
+            <div className="space-y-1">
+              <div className="bg-[#faf8f5] px-2 py-1 rounded border border-[#e4e2de] text-slate-500">
+                שם מלא: ישראל ישראלי | טלפון: 050-XXXXXXX
+              </div>
+              <div className="bg-[#faf8f5] px-2 py-1 rounded border border-[#e4e2de] text-slate-500">
+                גיל הילד/ה: שנה ו-3 חודשים (קבוצת פעוטות)
+              </div>
+              <div className="bg-[#7a4b29] text-white py-1 rounded text-center font-black">
+                תיאום סיור היכרות בלחיצה אחת ➔
+              </div>
+            </div>
+          </div>
+        ),
       },
       {
         id: 'location-map',
@@ -104,6 +182,24 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
         category: 'נגישות ומיקום',
         icon: <MapPin className="w-4 h-4 text-[#7a4b29]" />,
         defaultPrompt: 'לגבי המיקום של המעון באריאל, הוראות הגעה ושעות הפעילות:',
+        fullPreviewTitle: 'מיקום המעון באריאל, שעות פעילות ודרכי הגעה',
+        fullPreviewDesc: 'כתובת מדויקת, מפה אינטראקטיבית, חניה נוחה להורדת והעלאת ילדים ושעות פעילות.',
+        previewSnippet: (
+          <div className="bg-[#faf8f5] p-2.5 rounded-xl border border-[#e4e2de] space-y-1.5 pointer-events-none select-none text-[9px]">
+            <div className="flex items-center justify-between text-[#5f3414] font-black border-b border-[#e4e2de] pb-1">
+              <span>📍 רחוב הרקפת 12, אריאל</span>
+              <span className="text-emerald-700">חניה צמודה ✓</span>
+            </div>
+            <div className="bg-white p-1.5 rounded border border-[#e4e2de] text-slate-600 space-y-0.5">
+              <div>⏰ <strong>שעות פעילות:</strong> א'-ה' 07:00-17:00, ו' 07:30-12:30</div>
+              <div>🚗 <strong>דרכי הגעה:</strong> גישה ישירה, ללא מדרגות, נגיש לעגלות</div>
+            </div>
+            <div className="flex gap-1">
+              <span className="bg-sky-100 text-sky-800 px-2 py-0.5 rounded font-bold text-[8px]">ניווט ב-Waze</span>
+              <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold text-[8px]">Google Maps</span>
+            </div>
+          </div>
+        ),
       },
       {
         id: 'daily-menu',
@@ -111,6 +207,30 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
         category: 'תזונה ובריאות',
         icon: <Utensils className="w-4 h-4 text-[#7a4b29]" />,
         defaultPrompt: 'לגבי הצגת התפריט השבועי, פירוט הארוחות הטריות והטיפול באלרגיות:',
+        fullPreviewTitle: 'תפריט הזנה עשיר, טרי ומאוזן לילדים',
+        fullPreviewDesc: '3 ארוחות טריות המבושלות יום-יום במעון, באישור תזונאית לגיל הרך ובהתאמה מלאה לאלרגיות.',
+        previewSnippet: (
+          <div className="bg-[#faf8f5] p-2.5 rounded-xl border border-[#e4e2de] space-y-1.5 pointer-events-none select-none text-[9px]">
+            <div className="text-[#5f3414] font-black border-b border-[#e4e2de] pb-1 flex justify-between">
+              <span>🍎 תפריט הזנה יומי טרי</span>
+              <span className="text-amber-800 font-bold">כשר • מבושל במקום</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1 text-[8px] text-center">
+              <div className="bg-white p-1 rounded border border-[#e4e2de]">
+                <strong className="block text-[#7a4b29]">08:30 בוקר</strong>
+                <span>ביצים, גבינות, ירקות</span>
+              </div>
+              <div className="bg-white p-1 rounded border border-[#e4e2de]">
+                <strong className="block text-[#7a4b29]">12:00 צהריים</strong>
+                <span>עוף טרי, קטניות ודגנים</span>
+              </div>
+              <div className="bg-white p-1 rounded border border-[#e4e2de]">
+                <strong className="block text-[#7a4b29]">15:30 מנחה</strong>
+                <span>פירות העונה וכריך</span>
+              </div>
+            </div>
+          </div>
+        ),
       },
       {
         id: 'calendar-schedule',
@@ -118,6 +238,26 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
         category: 'לוח זמנים',
         icon: <Calendar className="w-4 h-4 text-[#7a4b29]" />,
         defaultPrompt: 'לגבי לוח החופשות, חגי ישראל, מסיבות ואירועים במעון:',
+        fullPreviewTitle: 'לוח חופשות שנתי, מסיבות ואירועים קהילתיים',
+        fullPreviewDesc: 'לוח שנה שנתי ברור להורים עם חופשות משרד העבודה/החינוך, ימי שישי, מסיבות חנוכה, פורים וסוף שנה.',
+        previewSnippet: (
+          <div className="bg-[#faf8f5] p-2.5 rounded-xl border border-[#e4e2de] space-y-1.5 pointer-events-none select-none text-[9px]">
+            <div className="text-[#5f3414] font-black border-b border-[#e4e2de] pb-1 flex justify-between">
+              <span>📅 לוח חופשות ואירועים תשפ"ו</span>
+              <span className="text-slate-400">מעודכן להורים</span>
+            </div>
+            <div className="space-y-1 text-[8.5px]">
+              <div className="bg-white p-1 rounded border border-[#e4e2de] flex justify-between">
+                <span>חופשת סוכות ושמחת תורה:</span>
+                <strong className="text-amber-800">גשר קצר בלבד</strong>
+              </div>
+              <div className="bg-white p-1 rounded border border-[#e4e2de] flex justify-between">
+                <span>מסיבת חנוכה משותפת:</span>
+                <strong className="text-indigo-800">יום שישי 10:00</strong>
+              </div>
+            </div>
+          </div>
+        ),
       },
       {
         id: 'parent-testimonials',
@@ -125,6 +265,20 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
         category: 'הוכחה חברתית',
         icon: <Star className="w-4 h-4 text-[#7a4b29]" />,
         defaultPrompt: 'לגבי הצגת חוות הדעת וההמלצות של הורים מרוצים מהמעון:',
+        fullPreviewTitle: 'המלצות וחוות דעת של הורים מרוצים',
+        fullPreviewDesc: 'עדויות של הורים על החום, המסירות, ההתפתחות המוטורית והשפה שהילדים רוכשים במעון.',
+        previewSnippet: (
+          <div className="bg-amber-50/60 p-2.5 rounded-xl border border-amber-200 space-y-1.5 pointer-events-none select-none text-[9px]">
+            <div className="flex justify-between items-center border-b border-amber-200 pb-1">
+              <span className="font-black text-[#5f3414]">⭐ הורים ממליצים בחום</span>
+              <span className="text-amber-500 font-bold">★★★★★</span>
+            </div>
+            <p className="bg-white p-1.5 rounded border border-[#ebd7c5] text-slate-700 italic leading-snug">
+              "הצוות הכי חם, אכפתי ומקצועי שיש באריאל! הילד רץ לגן כל בוקר עם חיוך ענק."
+              <span className="block text-left text-[8px] text-slate-400 font-bold not-italic mt-0.5">- משפחת לוי</span>
+            </p>
+          </div>
+        ),
       },
       {
         id: 'mobile-experience',
@@ -132,6 +286,25 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
         category: 'עיצוב ומובייל',
         icon: <Smartphone className="w-4 h-4 text-[#7a4b29]" />,
         defaultPrompt: 'לגבי מראה אתר העסק במובייל, נוחות הקריאה ומהירות הטעינה:',
+        fullPreviewTitle: 'חוויית משתמש ונגישות מלאה בטלפונים ניידים',
+        fullPreviewDesc: 'התאמה מלאה לכל מסך סמארטפון: כפתור ווטסאפ צף, חיוג ישיר בלחיצה, תמונות מותאמות וטעינה מהירה.',
+        previewSnippet: (
+          <div className="bg-slate-900 text-white p-2.5 rounded-xl border border-slate-700 space-y-1.5 pointer-events-none select-none text-[9px]">
+            <div className="flex justify-between text-[8px] text-slate-400 border-b border-slate-800 pb-1">
+              <span>📱 מובייל - אתר הגן Mayabee</span>
+              <span className="text-emerald-400">כפתור חיוג מהיר</span>
+            </div>
+            <div className="bg-slate-800 p-1.5 rounded space-y-1">
+              <div className="flex items-center gap-1">
+                <span className="text-xs">🐝</span>
+                <span className="font-bold text-[8.5px]">מעון ופעוטון באריאל</span>
+              </div>
+              <div className="bg-emerald-600 text-white text-center py-1 rounded font-bold text-[8px]">
+                פנייה מיידית בוואטסאפ 💬
+              </div>
+            </div>
+          </div>
+        ),
       },
     ],
     []
@@ -383,7 +556,7 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
           </h2>
 
           <p className="text-xs sm:text-sm text-[#ffedd5]/90 leading-relaxed font-medium">
-            דף ייעודי להצעות שדרוג, תוספות תכנים, רעיונות עיצוב ובקשת מערכות אוטומטיות עבור אתר העסק הרשמי של הגן בכתובת{' '}
+            התבוננו בחלוניות הדוגמה של חלקי אתר העסק למטה, סמנו את החלקים שתרצו לשדרג, או בקשו כל מערכת אוטומטית עבור אתר הגן בכתובת{' '}
             <a
               href={BUSINESS_SITE_URL}
               target="_blank"
@@ -625,68 +798,94 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
           </div>
         </div>
 
-        {/* LEFT COLUMN: Feature Selection Tags & Custom Automations for Mayabee (5 cols) */}
+        {/* LEFT COLUMN: Visual Preview Windows & Custom Automations for Mayabee (5 cols) */}
         <div className="lg:col-span-5 space-y-6">
-          {/* Card 1: Features on Mayabee public site */}
+          {/* Card 1: Features on Mayabee public site with mini preview snippets */}
           <div className="bg-white rounded-3xl border border-[#e4e2de] p-6 shadow-xs space-y-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <Layers className="w-5 h-5 text-[#7a4b29]" />
                 <h4 className="font-black text-base text-[#5f3414] font-heading">
-                  סימון רכיבים ספציפיים באתר הגן להתייחסות
+                  חלוניות דוגמה של אתר הגן (סמנו כדי לדבר עליהם)
                 </h4>
               </div>
               <p className="text-xs text-[#51443c]">
-                סמנו את החלקים באתר העסק שאליהם תרצו להתייחס או הוסיפו תבנית ישירות לטקסט:
+                סמנו את החלקים באתר העסק שאליהם תרצו להתייחס או לחצו על זכוכית המגדלת להגדלה:
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2.5">
+            <div className="space-y-3.5">
               {siteFeatures.map((feature) => {
                 const isSelected = selectedFeatures.includes(feature.id);
                 return (
                   <div
                     key={feature.id}
-                    className={`p-3 rounded-2xl border transition-all flex items-center justify-between gap-3 ${
+                    className={`rounded-2xl border transition-all overflow-hidden ${
                       isSelected
-                        ? 'bg-[#ffdeab]/30 border-[#7a4b29] ring-2 ring-[#7a4b29]/10'
+                        ? 'bg-[#fffdfa] border-[#7a4b29] ring-2 ring-[#7a4b29]/20 shadow-xs'
                         : 'bg-[#faf8f5] border-[#e4e2de] hover:border-[#7a4b29]/40'
                     }`}
                   >
-                    <button
-                      type="button"
+                    {/* Header bar of the feature card */}
+                    <div className="p-3 bg-white flex items-center justify-between border-b border-[#efeeea] gap-2">
+                      <div className="flex items-center gap-2 flex-1">
+                        <div className="w-7 h-7 rounded-lg bg-[#faf8f5] border border-[#e4e2de] flex items-center justify-center flex-shrink-0">
+                          {feature.icon}
+                        </div>
+                        <div>
+                          <span className="text-xs font-black text-[#5f3414] block leading-tight">
+                            {feature.title}
+                          </span>
+                          <span className="text-[9.5px] text-slate-400 font-medium">
+                            {feature.category}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setInspectingFeature(feature)}
+                          className="p-1.5 rounded-lg bg-[#faf8f5] hover:bg-[#efeeea] text-slate-500 hover:text-[#7a4b29] transition cursor-pointer"
+                          title="צפייה בחלון דוגמה מוגדל"
+                        >
+                          <Maximize2 className="w-3.5 h-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => insertFeaturePrompt(feature)}
+                          className="px-2 py-1 rounded-lg bg-[#efeeea] hover:bg-[#ffdeab] text-[10px] font-bold text-[#7a4b29] cursor-pointer shadow-2xs transition"
+                          title="הוסף התייחסות לרכיב זה בתיבת הטקסט"
+                        >
+                          + טקסט
+                        </button>
+
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleFeature(feature.id)}
+                          className="w-4 h-4 rounded text-[#7a4b29] accent-[#7a4b29] cursor-pointer"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Interactive Non-Interactive Mini Window / Screenshot Replica */}
+                    <div
                       onClick={() => toggleFeature(feature.id)}
-                      className="flex items-center gap-2.5 flex-1 text-right cursor-pointer"
+                      className="p-3 cursor-pointer group hover:bg-[#fff9f2] transition"
+                      title="לחץ לסימון/ביטול סימון רכיב זה"
                     >
-                      <div className="w-8 h-8 rounded-xl bg-white border border-[#e4e2de] flex items-center justify-center flex-shrink-0 shadow-2xs">
-                        {feature.icon}
-                      </div>
-                      <div>
-                        <span className="text-xs font-black text-[#5f3414] block leading-snug">
-                          {feature.title}
+                      {feature.previewSnippet}
+                      <div className="flex justify-between items-center text-[9.5px] text-slate-400 pt-1.5">
+                        <span className="group-hover:text-[#7a4b29] font-bold transition flex items-center gap-1">
+                          <Eye className="w-3 h-3" />
+                          <span>חלון דוגמה לא פעיל (לחצו לסימון)</span>
                         </span>
-                        <span className="text-[10px] text-slate-400 font-medium block">
-                          {feature.category}
+                        <span className={`font-black ${isSelected ? 'text-emerald-700' : 'text-slate-400'}`}>
+                          {isSelected ? 'נבחר להתייחסות ✓' : 'לא נבחר'}
                         </span>
                       </div>
-                    </button>
-
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => insertFeaturePrompt(feature)}
-                        className="px-2 py-1 rounded-lg bg-white hover:bg-[#ffdeab] text-[10px] font-bold text-[#7a4b29] border border-[#d6c3b8]/60 cursor-pointer shadow-2xs transition"
-                        title="הוסף פסקה על רכיב זה בתיבת הטקסט"
-                      >
-                        + הוסף לטקסט
-                      </button>
-
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleFeature(feature.id)}
-                        className="w-4 h-4 rounded text-[#7a4b29] accent-[#7a4b29] cursor-pointer"
-                      />
                     </div>
                   </div>
                 );
@@ -755,6 +954,67 @@ export const BusinessSiteSuggestionsModule: React.FC<BusinessSiteSuggestionsProp
           </div>
         </div>
       </div>
+
+      {/* MODAL: Large Inspected Preview Window */}
+      {inspectingFeature && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full border border-[#d6c3b8] shadow-2xl overflow-hidden space-y-4 p-6 relative">
+            <div className="flex items-center justify-between border-b border-[#efeeea] pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[#faf8f5] flex items-center justify-center">
+                  {inspectingFeature.icon}
+                </div>
+                <div>
+                  <h4 className="text-base font-black text-[#5f3414]">
+                    {inspectingFeature.fullPreviewTitle || inspectingFeature.title}
+                  </h4>
+                  <span className="text-[10px] text-slate-400">
+                    {inspectingFeature.category} • חלון דוגמה לא פעיל לאתר הגן
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setInspectingFeature(null)}
+                className="w-8 h-8 rounded-full bg-[#efeeea] hover:bg-[#d6c3b8] flex items-center justify-center text-slate-600 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-[#51443c] leading-relaxed">
+              {inspectingFeature.fullPreviewDesc || 'תצוגה מוגדלת של הרכיב כפי שהוא מופיע באתר העסק של הגן (Mayabee):'}
+            </p>
+
+            <div className="bg-[#fbf9f5] p-5 rounded-2xl border border-[#d6c3b8]/60 shadow-inner">
+              {inspectingFeature.previewSnippet}
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!selectedFeatures.includes(inspectingFeature.id)) {
+                    toggleFeature(inspectingFeature.id);
+                  }
+                  insertFeaturePrompt(inspectingFeature);
+                  setInspectingFeature(null);
+                }}
+                className="flex-1 bg-[#7a4b29] hover:bg-[#5f3414] text-white font-black py-2.5 rounded-xl text-xs transition cursor-pointer"
+              >
+                סמן רכיב זה והוסף פסקה לטקסט ✓
+              </button>
+              <button
+                type="button"
+                onClick={() => setInspectingFeature(null)}
+                className="px-4 py-2.5 rounded-xl bg-[#efeeea] hover:bg-slate-200 text-xs font-bold text-slate-600 cursor-pointer"
+              >
+                סגור
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
