@@ -26,8 +26,8 @@ export function exportToGoogleSheetsXlsx(data: ExportBalanceData) {
     completenessScore,
   } = data;
 
-  const directorName = settings?.directorName || 'רותם עירון';
-  const daycareName = settings?.daycareName || 'הבית של מאיה';
+  const directorName = settings?.directorName || 'הנהלת המעון';
+  const daycareName = settings?.daycareName || 'מעון ילדים';
 
   const wb = XLSX.utils.book_new();
 
@@ -177,6 +177,6 @@ export function exportToGoogleSheetsXlsx(data: ExportBalanceData) {
   XLSX.utils.book_append_sheet(wb, wsStaff, 'צוות ושכר');
 
   // Download the file
-  const fileName = `הבית_של_מאיה_מאזן_חודשי_${data.selectedMonth}.xlsx`;
+  const fileName = `מעון_ילדים_מאזן_חודשי_${data.selectedMonth}.xlsx`;
   XLSX.writeFile(wb, fileName);
 }

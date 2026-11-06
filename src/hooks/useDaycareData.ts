@@ -350,10 +350,10 @@ export function useDaycareData() {
     } else {
       await db.settings.add({
         id: 'settings-default',
-        daycareName: 'הבית של מאיה - בהנהלת רותם עירון',
+        daycareName: 'מעון ילדים',
         businessType: 'OSEK_PATUR',
         businessTaxId: '028912345',
-        directorName: 'רותם עירון',
+        directorName: 'הנהלת המעון',
         directorPhone: '052-870-7056',
         daycareAddress: 'אריאל, שומרון',
         currentYearOsekPaturCeiling: 122000,

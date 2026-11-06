@@ -469,11 +469,11 @@ const initialSafetyChecks: SafetyCheckItem[] = [
 
 const initialSettings: DaycareSettings = {
   id: 'settings-default',
-  daycareName: 'הבית של מאיה - בהנהלת רותם עירון',
-  licenseNumber: 'LIC-MAYABEE-ARIEL-40700',
+  daycareName: 'מעון ילדים',
+  licenseNumber: 'LIC-ARIEL-40700',
   businessType: 'OSEK_PATUR',
   businessTaxId: '028912345',
-  directorName: 'רותם עירון',
+  directorName: 'הנהלת המעון',
   directorPhone: '052-870-7056',
   daycareAddress: 'רחוב הרקפת 12, אריאל (שומרון)',
   currentYearOsekPaturCeiling: 122000,

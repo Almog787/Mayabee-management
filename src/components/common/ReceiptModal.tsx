@@ -42,7 +42,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
           <div className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-[#ffdeab]" />
             <h2 className="text-base font-bold">
-              {isOsekPatur ? 'קבלה לתיעוד פנימי (עוסק פטור) • הבית של מאיה' : 'שובר קבלה / תיעוד תקבול'}
+              {isOsekPatur ? 'קבלה לתיעוד פנימי (עוסק פטור) • מעון ילדים' : 'שובר קבלה / תיעוד תקבול'}
             </h2>
           </div>
           <div className="flex items-center gap-3">
@@ -70,7 +70,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🐝</span>
                 <h1 className="text-2xl font-black text-[#5f3414]">
-                  {settings?.daycareName || 'הבית של מאיה - בהנהלת רותם עירון'}
+                  {settings?.daycareName || 'מעון ילדים'}
                 </h1>
               </div>
               <p className="text-sm text-[#51443c] mt-1 font-medium">
@@ -84,7 +84,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
                   </span>
                 </p>
                 <p>
-                  <strong>מנהלת הגן:</strong> רותם עירון | <strong>טלפון:</strong> {settings?.directorPhone || '052-870-7056'}
+                  <strong>הנהלת המעון</strong> | <strong>טלפון:</strong> {settings?.directorPhone || '052-870-7056'}
                 </p>
                 {settings?.licenseNumber && (
                   <p>
@@ -226,10 +226,10 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
             <div className="flex items-center gap-1.5 text-[#5f3414]">
               <Shield className="w-3.5 h-3.5 text-[#7a4b29]" />
               <span>
-                מסמך זה הופק באמצעות מערכת הניהול של 'הבית של מאיה' לתיעוד פנימי ודיווח לרואה חשבון
+                מסמך זה הופק באמצעות מערכת ניהול מעון ילדים לתיעוד פנימי ודיווח לרואה חשבון
               </span>
             </div>
-            <span>חתימת רותם עירון: _________________</span>
+            <span>חתימת הנהלת המעון: _________________</span>
           </div>
         </div>
       </div>

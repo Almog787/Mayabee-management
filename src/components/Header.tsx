@@ -56,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
               {logoLoaded ? (
                 <img
                   src={logoUrl}
-                  alt="הבית של מאיה - בהנהלת רותם עירון"
+                  alt="מערכת ניהול מעון ילדים"
                   className="w-full h-full object-cover rounded-full"
                   onError={() => setLogoLoaded(false)}
                 />
@@ -67,7 +67,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <div className="flex flex-col text-right">
               <h1 className="text-xl sm:text-2xl font-black text-[#5f3414] leading-tight font-heading">
-                הבית של מאיה
+                ניהול מעון ילדים
               </h1>
               <p className="text-[10px] sm:text-xs text-[#7a4b29] font-bold flex items-center gap-1.5 opacity-80">
                 <span>מערכת חיזוי ותכנון מאזן תציבי</span>
