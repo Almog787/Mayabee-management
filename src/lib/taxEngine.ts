@@ -57,17 +57,17 @@ export function calculateIsraeliTaxEstimate(
       nationalInsuranceAnnual = lowerTierMax * 0.0597 + (annualProfit - lowerTierMax) * 0.1783;
     }
 
-    // Income tax with 2.25 credit points (~₪6,480 annual credit)
-    const creditPointsDiscount = 6480;
+    // Income tax with 2.25 credit points (~₪7,020 annual credit / ₪260 per point in 2026)
+    const creditPointsDiscount = 7020;
     let grossIncomeTax = 0;
-    if (annualProfit <= 81480) {
+    if (annualProfit <= 84120) {
       grossIncomeTax = annualProfit * 0.10;
-    } else if (annualProfit <= 116760) {
-      grossIncomeTax = 81480 * 0.10 + (annualProfit - 81480) * 0.14;
-    } else if (annualProfit <= 187440) {
-      grossIncomeTax = 81480 * 0.10 + (116760 - 81480) * 0.14 + (annualProfit - 116760) * 0.20;
+    } else if (annualProfit <= 120720) {
+      grossIncomeTax = 84120 * 0.10 + (annualProfit - 84120) * 0.14;
+    } else if (annualProfit <= 193800) {
+      grossIncomeTax = 84120 * 0.10 + (120720 - 84120) * 0.14 + (annualProfit - 120720) * 0.20;
     } else {
-      grossIncomeTax = 81480 * 0.10 + (116760 - 81480) * 0.14 + (187440 - 116760) * 0.20 + (annualProfit - 187440) * 0.31;
+      grossIncomeTax = 84120 * 0.10 + (120720 - 84120) * 0.14 + (193800 - 120720) * 0.20 + (annualProfit - 193800) * 0.31;
     }
     incomeTaxAnnual = Math.max(0, grossIncomeTax - creditPointsDiscount);
     explanationSummary = 'עוסק פטור: פטור ממע"מ עד תקרת ₪122,000. חישוב מס הכנסה לפי מדרגות יחיד בניכוי נקודות זיכוי (2.25 נק\') ודמי ביטוח לאומי.';
@@ -81,16 +81,16 @@ export function calculateIsraeliTaxEstimate(
       nationalInsuranceAnnual = lowerTierMax * 0.0597 + (annualProfit - lowerTierMax) * 0.1783;
     }
 
-    const creditPointsDiscount = 6480;
+    const creditPointsDiscount = 7020;
     let grossIncomeTax = 0;
-    if (annualProfit <= 81480) {
+    if (annualProfit <= 84120) {
       grossIncomeTax = annualProfit * 0.10;
-    } else if (annualProfit <= 116760) {
-      grossIncomeTax = 81480 * 0.10 + (annualProfit - 81480) * 0.14;
-    } else if (annualProfit <= 187440) {
-      grossIncomeTax = 81480 * 0.10 + (116760 - 81480) * 0.14 + (annualProfit - 116760) * 0.20;
+    } else if (annualProfit <= 120720) {
+      grossIncomeTax = 84120 * 0.10 + (annualProfit - 84120) * 0.14;
+    } else if (annualProfit <= 193800) {
+      grossIncomeTax = 84120 * 0.10 + (120720 - 84120) * 0.14 + (annualProfit - 120720) * 0.20;
     } else {
-      grossIncomeTax = 81480 * 0.10 + (116760 - 81480) * 0.14 + (187440 - 116760) * 0.20 + (annualProfit - 187440) * 0.31;
+      grossIncomeTax = 84120 * 0.10 + (120720 - 84120) * 0.14 + (193800 - 120720) * 0.20 + (annualProfit - 193800) * 0.31;
     }
     incomeTaxAnnual = Math.max(0, grossIncomeTax - creditPointsDiscount);
     explanationSummary = 'עוסק מורשה: חבות מע"מ 17% + מדרגות מס הכנסה ליחיד ודמי ביטוח לאומי מלאים.';
@@ -108,7 +108,9 @@ export function calculateIsraeliTaxEstimate(
   const monthlyNationalInsurance = Math.round(nationalInsuranceAnnual / 12);
   const monthlyNetVat = Math.round(netVatAnnual / 12);
 
-  const totalMonthlyTaxLiability = monthlyIncomeTax + monthlyNationalInsurance;
+  const totalMonthlyTaxLiability = businessType === 'OSEK_MURSHE'
+    ? monthlyIncomeTax + monthlyNationalInsurance + monthlyNetVat
+    : monthlyIncomeTax + monthlyNationalInsurance;
   const postTaxNetProfit = Math.max(0, preTaxNetProfit - totalMonthlyTaxLiability);
   const effectiveTaxRatePercent = preTaxNetProfit > 0 ? (totalMonthlyTaxLiability / preTaxNetProfit) * 100 : 0;
 

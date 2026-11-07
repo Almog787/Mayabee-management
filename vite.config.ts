@@ -13,13 +13,16 @@ export default defineConfig(() => {
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['apple-touch-icon.png', 'icon.svg'],
+        workbox: {
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        },
         manifest: {
           id: './',
-          name: 'הגן של רותם ומאיה - פורטל ניהול פיננסי ובקרה',
-          short_name: 'הגן של רותם ומאיה',
-          description: 'מערכת ניהול ובקרה פנימית למעון הילדים הגן של רותם ומאיה באריאל בגישת Local-First',
-          theme_color: '#7a4b29',
-          background_color: '#fbf9f5',
+          name: 'מערכת ניהול מעון ילדים - פורטל ניהול פיננסי ובקרה',
+          short_name: 'ניהול מעון',
+          description: 'מערכת ניהול ובקרה פנימית למעון ילדים בגישת Local-First',
+          theme_color: '#0f172a',
+          background_color: '#090d16',
           display: 'standalone',
           start_url: './',
           scope: './',
