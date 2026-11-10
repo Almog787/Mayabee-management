@@ -135,7 +135,7 @@ export function exportToGoogleSheetsXlsx(data: ExportBalanceData) {
   // ==========================================
   const staffRows: (string | number | { f: string })[][] = [
     [`👩‍🏫 ${daycareName} - חבות שכר צוות ומטפלות (${monthLabel})`],
-    ['שם העובדת', 'תפקיד', 'שכר שעתי (₪)', 'שעות חודשיות', 'חבות שכר צפויה (₪)', 'סטטוס'],
+    ['שם העובדת', 'תפקיד', 'שכר שעתי (₪)', 'שעות חודשיות', 'חבות שכר צפויה (₪)', 'סטטוס', 'הערות ופירוט עלויות מעסיק'],
   ];
 
   const activeStaff = staff.filter((s) => s.status === 'ACTIVE');
@@ -156,8 +156,9 @@ export function exportToGoogleSheetsXlsx(data: ExportBalanceData) {
       roleLabel,
       s.hourlyRate || 45,
       estHours,
-      { f: `C${rowNum}*D${rowNum}` }, // Formula for staff wage liability
+      s.hourlyRate === 0 ? s.notes?.split('= ₪')[1] ? Number(s.notes.split('= ₪')[1]) : 10000 : { f: `C${rowNum}*D${rowNum}` }, // Formula for staff wage liability
       'פעילה במשמרת',
+      s.notes || '',
     ]);
   });
 
@@ -169,10 +170,11 @@ export function exportToGoogleSheetsXlsx(data: ExportBalanceData) {
     { f: `SUM(D3:D${lastStaffRow})` },
     { f: `SUM(E3:E${lastStaffRow})` },
     '',
+    '',
   ]);
 
   const wsStaff = XLSX.utils.aoa_to_sheet(staffRows);
-  wsStaff['!cols'] = [{ wch: 22 }, { wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 20 }, { wch: 16 }];
+  wsStaff['!cols'] = [{ wch: 22 }, { wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 20 }, { wch: 16 }, { wch: 45 }];
   XLSX.utils.book_append_sheet(wb, wsStaff, 'צוות ושכר');
 
   // Download the file

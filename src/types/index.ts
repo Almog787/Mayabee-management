@@ -136,6 +136,7 @@ export interface StaffMember {
   policeClearanceDate: string; // אישור משטרה להעסקת בגיר
   policeClearanceApproved: boolean;
   status: 'ACTIVE' | 'INACTIVE';
+  notes?: string;
   updatedAt: number;
 }
 
