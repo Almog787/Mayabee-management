@@ -2,7 +2,7 @@ import { Child, FinancialTransaction, StaffMember, StaffShift, ComplianceRatioRe
 
 export const OSEK_PATUR_2026_CEILING = 122000; // תקרת עוסק פטור לשנת 2026
 export const CASH_LEGAL_LIMIT = 6000; // חוק לצמצום השימוש במזומן
-export const DEFAULT_VAT_RATE = 0.17; // מע"מ נוכחי בישראל
+export const DEFAULT_VAT_RATE = 0.18; // מע"מ עדכני בישראל (18% החל משנת 2025/2026)
 
 export interface TaxStatusReport {
   totalAnnualIncome: number;
@@ -37,7 +37,8 @@ export interface EstimatedTaxResult {
 export function calculateIsraeliTaxEstimate(
   monthlyIncome: number,
   monthlyExpenses: number,
-  businessType: 'OSEK_PATUR' | 'OSEK_MURSHE' | 'COMPANY' = 'OSEK_PATUR'
+  businessType: 'OSEK_PATUR' | 'OSEK_MURSHE' | 'COMPANY' = 'OSEK_MURSHE',
+  vatRate: number = DEFAULT_VAT_RATE
 ): EstimatedTaxResult {
   const preTaxNetProfit = Math.max(0, monthlyIncome - monthlyExpenses);
   const annualProfit = preTaxNetProfit * 12;
@@ -72,8 +73,8 @@ export function calculateIsraeliTaxEstimate(
     incomeTaxAnnual = Math.max(0, grossIncomeTax - creditPointsDiscount);
     explanationSummary = 'עוסק פטור: פטור ממע"מ עד תקרת ₪122,000. חישוב מס הכנסה לפי מדרגות יחיד בניכוי נקודות זיכוי (2.25 נק\') ודמי ביטוח לאומי.';
   } else if (businessType === 'OSEK_MURSHE') {
-    // Osek Murshe includes VAT deduction & progressive tax
-    netVatAnnual = (monthlyIncome - monthlyExpenses) * 12 * 0.17; // 17% VAT
+    // Osek Murshe includes VAT deduction & progressive tax (18% VAT)
+    netVatAnnual = (monthlyIncome - monthlyExpenses) * 12 * vatRate; // 18% VAT
     const lowerTierMax = 86304;
     if (annualProfit <= lowerTierMax) {
       nationalInsuranceAnnual = annualProfit * 0.0597;
@@ -93,7 +94,7 @@ export function calculateIsraeliTaxEstimate(
       grossIncomeTax = 84120 * 0.10 + (120720 - 84120) * 0.14 + (193800 - 120720) * 0.20 + (annualProfit - 193800) * 0.31;
     }
     incomeTaxAnnual = Math.max(0, grossIncomeTax - creditPointsDiscount);
-    explanationSummary = 'עוסק מורשה: חבות מע"מ 17% + מדרגות מס הכנסה ליחיד ודמי ביטוח לאומי מלאים.';
+    explanationSummary = `עוסק מורשה: חבות מע"מ ${Math.round(vatRate * 100)}% + מדרגות מס הכנסה ליחיד ודמי ביטוח לאומי מלאים.`;
   } else {
     // Company Ltd (23% Corporate tax + 25% Dividend tax on remaining)
     const corpTax = annualProfit * 0.23;
