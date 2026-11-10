@@ -54,13 +54,13 @@ export const Header: React.FC<HeaderProps> = ({
   const logoUrl = daycareLogo;
 
   return (
-    <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md text-slate-100 border-b border-slate-800 shadow-md">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md text-slate-800 border-b border-slate-200 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row items-center justify-between py-2 sm:h-16 gap-3">
           {/* Brand & BI System Identity */}
           <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl p-0.5 bg-slate-800 ring-1 ring-cyan-500/30 overflow-hidden shadow-inner flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl p-0.5 bg-slate-100 ring-1 ring-slate-200 overflow-hidden shadow-xs flex items-center justify-center shrink-0">
                 {logoLoaded ? (
                   <img
                     src={logoUrl}
@@ -75,18 +75,18 @@ export const Header: React.FC<HeaderProps> = ({
 
               <div className="flex flex-col text-right">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-base sm:text-lg font-bold text-slate-100 tracking-tight leading-tight">
+                  <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight leading-tight">
                     מערכת ניהול מעון ילדים
                   </h1>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/80 border border-cyan-800/60 text-cyan-400 font-semibold tracking-wider">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-teal-50 border border-teal-200 text-teal-800 font-semibold tracking-wider">
                     BI ANALYTICS
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5">
+                <p className="text-[11px] text-slate-500 font-medium flex items-center gap-1.5">
                   <span>מאזן חכם, חיזוי תזרימי וסימולציות</span>
-                  <span className="hidden md:inline text-slate-600">·</span>
-                  <span className="hidden md:flex items-center gap-1 text-slate-400 font-mono text-[10px]">
-                    <Calendar className="w-3 h-3 text-cyan-400" />
+                  <span className="hidden md:inline text-slate-300">·</span>
+                  <span className="hidden md:flex items-center gap-1 text-slate-500 font-mono text-[10px]">
+                    <Calendar className="w-3 h-3 text-teal-600" />
                     {todayHebrew}
                   </span>
                 </p>
@@ -99,40 +99,40 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Navigation Tabs (Superset Workspace Slices) */}
-          <div className="flex items-center p-1 bg-slate-950/80 rounded-xl border border-slate-800 text-xs font-semibold shadow-inner overflow-x-auto max-w-full">
+          <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs font-semibold shadow-inner overflow-x-auto max-w-full">
             <button
               onClick={() => onSelectTab('planner')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'planner'
-                  ? 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/40 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  ? 'bg-white text-teal-800 border border-slate-200 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
             >
-              <TrendingUp className="w-3.5 h-3.5 text-cyan-400" />
+              <TrendingUp className="w-3.5 h-3.5 text-teal-600" />
               <span>דשבורד מאזן ו-BI</span>
             </button>
 
             <button
               onClick={() => onSelectTab('management-suggestions')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'management-suggestions'
-                  ? 'bg-amber-500/15 text-amber-300 border border-amber-500/40 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  ? 'bg-white text-amber-800 border border-slate-200 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
               <span>הצעות לניהול</span>
             </button>
 
             <button
               onClick={() => onSelectTab('business-suggestions')}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg transition-all cursor-pointer whitespace-nowrap ${
                 activeTab === 'business-suggestions'
-                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/40 shadow-xs'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  ? 'bg-white text-emerald-800 border border-slate-200 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
               }`}
             >
-              <Building className="w-3.5 h-3.5 text-emerald-400" />
+              <Building className="w-3.5 h-3.5 text-emerald-600" />
               <span>הצעות לאתר הגן (Mayabee) 🏡</span>
             </button>
           </div>

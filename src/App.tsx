@@ -78,7 +78,7 @@ export default function App() {
     : undefined;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-['Heebo','Rubik',sans-serif] selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-['Heebo','Rubik',sans-serif] selection:bg-teal-500/20 selection:text-teal-900">
       {/* Top Header with Navigation Tabs */}
       <Header
         settings={settings}

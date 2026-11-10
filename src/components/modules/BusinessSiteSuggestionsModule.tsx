@@ -376,18 +376,18 @@ ${content}
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto font-sans">
       {/* Top Header Bar */}
-      <div className="bg-slate-900 border border-slate-700/80 rounded-2xl p-5 sm:p-6 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1 text-right">
-          <div className="flex items-center gap-2 text-emerald-300 text-xs font-mono font-bold">
-            <Sparkles className="w-4 h-4 text-emerald-400" />
+          <div className="flex items-center gap-2 text-emerald-700 text-xs font-mono font-bold">
+            <Sparkles className="w-4 h-4 text-emerald-600" />
             <span>שאלון תוכן ואישור לאתר · הגן של רותם ומאיה (Mayabee)</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white leading-tight font-heading">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 leading-tight">
             📋 שאלון לבדיקה ואישור תוכן לאתר הגן
           </h2>
-          <p className="text-xs text-slate-300">
+          <p className="text-xs text-slate-600">
             אישור התכנים, הנהלים והסעיפים שיופיעו באתר "הבית של רותם ומאיה" ושליחה ישירה במייל.
           </p>
         </div>
@@ -397,15 +397,15 @@ ${content}
             href={BUSINESS_SITE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-600 transition"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 transition"
           >
             <span>פתח אתר הגן</span>
-            <ExternalLink className="w-3.5 h-3.5 text-emerald-400" />
+            <ExternalLink className="w-3.5 h-3.5 text-emerald-600" />
           </a>
           {onBackToPlanner && (
             <button
               onClick={onBackToPlanner}
-              className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-600 transition cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 transition cursor-pointer"
             >
               חזרה למאזן ←
             </button>
@@ -414,8 +414,8 @@ ${content}
       </div>
 
       {/* Hero preview card */}
-      <div className="bg-slate-900 border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-center gap-4">
-        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden shrink-0 border border-slate-700 bg-slate-950">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-center gap-4">
+        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-slate-50">
           <img
             src={HERO_LOGO_URL}
             alt="הגן של רותם ומאיה"
@@ -427,34 +427,34 @@ ${content}
         </div>
         <div className="space-y-1 text-right flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h4 className="text-sm font-bold text-white">הבית של רותם ומאיה (Mayabee) · אריאל</h4>
-            <span className="text-[10px] text-emerald-300 bg-emerald-950/80 border border-emerald-800/80 px-2 py-0.5 rounded-full font-bold">טופס אישור תוכן</span>
+            <h4 className="text-sm font-bold text-slate-900">הבית של רותם ומאיה (Mayabee) · אריאל</h4>
+            <span className="text-[10px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full font-bold">טופס אישור תוכן</span>
           </div>
-          <p className="text-xs text-slate-300 leading-relaxed">
+          <p className="text-xs text-slate-600 leading-relaxed">
             עברו על 10 הסעיפים למטה, טענו את השאלון לתיבת הטקסט, רשמו אישור או תיקון, ושלחו בלחיצה אחת.
           </p>
-          <span className="text-[11px] font-mono text-slate-400 block truncate">{BUSINESS_SITE_URL}</span>
+          <span className="text-[11px] font-mono text-slate-500 block truncate">{BUSINESS_SITE_URL}</span>
         </div>
       </div>
 
       {/* Load Full Questionnaire Action Banner */}
-      <div className="bg-slate-900 border border-emerald-500/40 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3 text-right">
-          <div className="w-10 h-10 rounded-xl bg-emerald-950/80 text-emerald-300 border border-emerald-800 flex items-center justify-center shrink-0 font-bold">
-            <ClipboardList className="w-5 h-5 text-emerald-400" />
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center justify-center shrink-0 font-bold">
+            <ClipboardList className="w-5 h-5 text-emerald-700" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-white">
+            <h4 className="text-sm font-bold text-emerald-950">
               טעינת השאלון המלא לתיבת העריכה והמשלוח
             </h4>
-            <p className="text-xs text-slate-300 mt-0.5">
+            <p className="text-xs text-emerald-800 mt-0.5">
               בלחיצה אחת השאלון המלא עם 10 הסעיפים יטען לתיבת הטקסט, שם תוכלו לרשום הערות ולשלוח ישירות למייל.
             </p>
           </div>
         </div>
         <button
           onClick={loadFullQuestionnaire}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-bold text-xs shadow-md transition cursor-pointer shrink-0 active:scale-95"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition cursor-pointer shrink-0 active:scale-95"
         >
           <FileText className="w-4 h-4" />
           <span>טען שאלון מלא לעריכה 📝</span>
@@ -462,15 +462,15 @@ ${content}
       </div>
 
       {/* Accordion / Interactive 10 Questionnaire Sections */}
-      <div className="bg-slate-900 border border-slate-700/80 rounded-2xl p-5 shadow-md space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
-            <CheckSquare className="w-4 h-4 text-emerald-400" />
-            <h3 className="text-sm font-bold text-white">
+            <CheckSquare className="w-4 h-4 text-emerald-600" />
+            <h3 className="text-sm font-bold text-slate-900">
               10 סעיפי השאלון לבדיקה ואישור (לחצו לצפייה בפרטים):
             </h3>
           </div>
-          <span className="text-xs text-slate-400 font-mono">10 סעיפים</span>
+          <span className="text-xs text-slate-500 font-mono">10 סעיפים</span>
         </div>
 
         <div className="space-y-2">
@@ -479,34 +479,34 @@ ${content}
             return (
               <div
                 key={sec.id}
-                className="bg-slate-950/80 rounded-xl border border-slate-800 overflow-hidden transition-colors"
+                className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden transition-colors"
               >
                 <div
                   onClick={() => setOpenSectionId(isOpen ? null : sec.id)}
-                  className="p-3 sm:p-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-800/50 transition"
+                  className="p-3 sm:p-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-100 transition"
                 >
-                  <span className="text-xs font-bold text-slate-200">{sec.title}</span>
+                  <span className="text-xs font-bold text-slate-800">{sec.title}</span>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         appendSectionToText(sec.title, sec.content);
                       }}
-                      className="text-[11px] font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-950/60 border border-emerald-800/80 px-2.5 py-1 rounded-lg transition"
+                      className="text-[11px] font-bold text-emerald-800 hover:text-emerald-900 bg-emerald-50 border border-emerald-300 px-2.5 py-1 rounded-lg transition"
                       title="הוסף סעיף זה בלבד לתיבת הטקסט"
                     >
                       + הוסף סעיף לעריכה
                     </button>
                     {isOpen ? (
-                      <ChevronUp className="w-4 h-4 text-slate-400" />
+                      <ChevronUp className="w-4 h-4 text-slate-500" />
                     ) : (
-                      <ChevronDown className="w-4 h-4 text-slate-400" />
+                      <ChevronDown className="w-4 h-4 text-slate-500" />
                     )}
                   </div>
                 </div>
 
                 {isOpen && (
-                  <div className="p-3.5 border-t border-slate-800 bg-slate-900/60 text-xs font-sans text-slate-300 whitespace-pre-wrap leading-relaxed">
+                  <div className="p-3.5 border-t border-slate-200 bg-white text-xs font-sans text-slate-700 whitespace-pre-wrap leading-relaxed">
                     {sec.content}
                   </div>
                 )}
@@ -517,15 +517,15 @@ ${content}
       </div>
 
       {/* Form Card for Editing & Emailing */}
-      <div className="bg-slate-900 border border-slate-700/80 rounded-2xl p-5 sm:p-6 shadow-md space-y-5">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
         <div className="space-y-1.5">
           <div className="flex justify-between items-center">
-            <label className="text-xs font-bold text-slate-200 block">
+            <label className="text-xs font-bold text-slate-800 block">
               תוכן השאלון, המענה וההערות לשליחה במייל:
             </label>
             <button
               onClick={loadFullQuestionnaire}
-              className="text-[11px] text-emerald-400 hover:underline font-semibold"
+              className="text-[11px] text-emerald-700 hover:underline font-semibold"
             >
               טען טקסט שאלון מלא 📝
             </button>
@@ -535,41 +535,41 @@ ${content}
             onChange={(e) => setSuggestionText(e.target.value)}
             placeholder="לחצו על 'טען שאלון מלא לעריכה' למעלה או רשמו כאן את התשובות והתיקונים לשאלון..."
             rows={10}
-            className="w-full bg-slate-950/90 border border-slate-700 rounded-xl p-3.5 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 leading-relaxed font-sans"
+            className="w-full bg-slate-50/70 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 leading-relaxed font-sans"
           />
         </div>
 
         {/* Sender details */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
           <div>
-            <label className="text-xs font-medium text-slate-300 block mb-1">שם המאשר/ת (אופציונלי):</label>
+            <label className="text-xs font-medium text-slate-700 block mb-1">שם המאשר/ת (אופציונלי):</label>
             <input
               type="text"
               value={senderName}
               onChange={(e) => setSenderName(e.target.value)}
               placeholder="רותם / מאיה"
-              className="w-full bg-slate-950/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-400"
+              className="w-full bg-slate-50/70 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-emerald-500"
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-slate-300 block mb-1">טלפון או מייל לחזרה (אופציונלי):</label>
+            <label className="text-xs font-medium text-slate-700 block mb-1">טלפון או מייל לחזרה (אופציונלי):</label>
             <input
               type="text"
               value={senderContact}
               onChange={(e) => setSenderContact(e.target.value)}
               placeholder="052-8707056"
-              className="w-full bg-slate-950/90 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-400"
+              className="w-full bg-slate-50/70 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 outline-none focus:bg-white focus:border-emerald-500"
             />
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800">
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
           <button
             onClick={() => {
               setSuggestionText('');
             }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-slate-200 transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-slate-800 transition cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>נקה טופס</span>
@@ -578,16 +578,16 @@ ${content}
           <div className="flex items-center gap-2.5">
             <button
               onClick={handleCopyText}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-600 transition cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200 transition cursor-pointer"
             >
-              <Copy className="w-3.5 h-3.5 text-emerald-400" />
+              <Copy className="w-3.5 h-3.5 text-emerald-600" />
               <span>{isCopied ? 'הועתק ללוח! ✓' : 'העתק שאלון ללוח'}</span>
             </button>
 
             <button
               onClick={handleSendEmail}
               disabled={!suggestionText.trim()}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 disabled:opacity-40 text-slate-950 text-xs font-bold transition cursor-pointer shadow-md active:scale-95"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white text-xs font-bold transition cursor-pointer shadow-xs active:scale-95"
             >
               <Send className="w-4 h-4" />
               <span>{isSent ? 'נפתח במייל! ✓' : 'שלח שאלון מאושר במייל'}</span>

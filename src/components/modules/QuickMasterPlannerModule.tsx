@@ -9,22 +9,17 @@ import {
   MessageCircle,
   PiggyBank,
   BarChart3,
-  PieChart as PieChartIcon,
   Activity,
   Info,
-  Layers,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
   Cell,
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
   CartesianGrid,
 } from 'recharts';
 import { DaycareSettings } from '../../types';
@@ -36,7 +31,7 @@ interface QuickMasterPlannerProps {
   onOpenSuggestions?: () => void;
 }
 
-const STORAGE_KEY = 'daycare_budget_rotem_maya_exact_table_v10';
+const STORAGE_KEY = 'daycare_budget_rotem_maya_exact_table_v11_light';
 
 /**
  * EXACT VALUES DIRECTLY FROM THE USER'S BUDGET TABLE:
@@ -58,7 +53,7 @@ const DEFAULT_TABLE_INPUTS = {
 };
 
 /**
- * Eye-friendly Touch Slider Component
+ * Eye-friendly Touch Slider Component (Light Theme)
  */
 const EyeFriendlySlider: React.FC<{
   label: string;
@@ -71,20 +66,20 @@ const EyeFriendlySlider: React.FC<{
   suffix?: string;
   sublabel?: string;
   accentColor?: string;
-}> = ({ label, value, onChange, min, max, step = 1, prefix = '', suffix = '', sublabel, accentColor = 'accent-teal-500' }) => {
+}> = ({ label, value, onChange, min, max, step = 1, prefix = '', suffix = '', sublabel, accentColor = 'accent-teal-600' }) => {
   const safeVal = Math.max(min, Math.min(max, isNaN(value) ? min : value));
 
   return (
-    <div className="space-y-2 bg-slate-900/80 p-3.5 rounded-xl border border-slate-700/60 shadow-xs hover:border-slate-600 transition-colors">
+    <div className="space-y-2 bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs hover:border-slate-300 transition-colors">
       <div className="flex justify-between items-baseline gap-2">
         <div className="min-w-0">
-          <label className="text-slate-100 font-bold text-xs tracking-tight block truncate">{label}</label>
-          {sublabel && <span className="text-[11px] text-slate-300 font-normal block truncate mt-0.5">{sublabel}</span>}
+          <label className="text-slate-800 font-bold text-xs tracking-tight block truncate">{label}</label>
+          {sublabel && <span className="text-[11px] text-slate-500 font-normal block truncate mt-0.5">{sublabel}</span>}
         </div>
-        <div className="flex items-center gap-1 font-mono font-bold text-teal-300 text-sm shrink-0 tabular-nums bg-slate-950/80 px-2 py-0.5 rounded-md border border-slate-800">
+        <div className="flex items-center gap-1 font-mono font-bold text-teal-800 text-sm shrink-0 tabular-nums bg-teal-50/70 px-2.5 py-0.5 rounded-md border border-teal-200">
           <span>{prefix}</span>
           <span>{safeVal.toLocaleString('he-IL', { maximumFractionDigits: 2 })}</span>
-          <span className="text-[10px] text-slate-300">{suffix}</span>
+          <span className="text-[10px] text-teal-700">{suffix}</span>
         </div>
       </div>
       <div className="flex items-center gap-3 pt-1">
@@ -98,7 +93,7 @@ const EyeFriendlySlider: React.FC<{
             const num = Number(e.target.value);
             onChange(isNaN(num) ? min : Math.max(min, Math.min(max, num)));
           }}
-          className={`flex-1 h-2.5 bg-slate-800 rounded-lg appearance-none cursor-pointer ${accentColor} touch-none`}
+          className={`flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer ${accentColor} touch-none`}
         />
       </div>
     </div>
@@ -207,11 +202,11 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
   // Chart Data: Exact allocation of Disposable Net Income
   const costDistributionData = useMemo(() => {
     return [
-      { name: 'עלות כוח אדם', value: Math.round(currentStaffCost), fill: '#38bdf8' },
-      { name: 'הוצאות תפעול', value: Math.round(currentOperatingExpenses), fill: '#34d399' },
-      { name: 'הפרשה לבלת״מים', value: Math.round(contingencyAmount), fill: '#fbbf24' },
+      { name: 'עלות כוח אדם', value: Math.round(currentStaffCost), fill: '#0284c7' },
+      { name: 'הוצאות תפעול', value: Math.round(currentOperatingExpenses), fill: '#0d9488' },
+      { name: 'הפרשה לבלת״מים', value: Math.round(contingencyAmount), fill: '#d97706' },
       ...(estimatedMonthlyBalance > 0
-        ? [{ name: 'יתרה חודשית משוערת', value: Math.round(estimatedMonthlyBalance), fill: '#a78bfa' }]
+        ? [{ name: 'יתרה חודשית משוערת', value: Math.round(estimatedMonthlyBalance), fill: '#16a34a' }]
         : []),
     ];
   }, [currentStaffCost, currentOperatingExpenses, contingencyAmount, estimatedMonthlyBalance]);
@@ -297,45 +292,45 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
   return (
     <div className="space-y-6 max-w-7xl mx-auto font-sans">
       {/* 1. TOP HEADER & CONTROLS */}
-      <div className="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-5 sm:p-6 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1.5 text-right">
-          <div className="inline-flex items-center gap-2 text-teal-300 text-xs font-mono font-bold">
-            <Activity className="w-3.5 h-3.5 text-teal-400" />
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1 text-right">
+          <div className="inline-flex items-center gap-2 text-teal-700 text-xs font-mono font-bold">
+            <Activity className="w-3.5 h-3.5 text-teal-600" />
             <span>תקציב חודשי – הבית של רותם ומאיה</span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white leading-tight">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 leading-tight">
             מחשבון תקציב חודשי ומאזן 📊
           </h2>
 
-          <p className="text-xs text-slate-300 leading-relaxed">
+          <p className="text-xs text-slate-600 leading-relaxed">
             המחשבון כולו מבוסס במדויק על טבלת התקציב ונוסחאותיה (16 ילדים, 18% מע"מ, 5 עובדות, ₪7,150 תפעול, 10% בלת"ם).
           </p>
         </div>
 
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          <div className="bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-700 flex items-center gap-2">
-            <span className="text-xs text-slate-300 font-medium">חודש יעד:</span>
+          <div className="bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 flex items-center gap-2">
+            <span className="text-xs text-slate-600 font-medium">חודש יעד:</span>
             <input
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="bg-transparent text-teal-300 font-bold text-xs outline-none font-mono cursor-pointer"
+              className="bg-transparent text-teal-800 font-bold text-xs outline-none font-mono cursor-pointer"
             />
           </div>
 
           <button
             onClick={handleShareWhatsAppBudget}
-            className="flex items-center gap-1.5 bg-emerald-700/30 hover:bg-emerald-700/40 text-emerald-200 border border-emerald-500/50 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer active:scale-95"
+            className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer active:scale-95"
           >
-            <MessageCircle className="w-3.5 h-3.5" />
+            <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
             <span>שיתוף בווטסאפ</span>
           </button>
 
           <button
             onClick={handleExportGoogleSheets}
-            className="flex items-center gap-1.5 bg-teal-400 hover:bg-teal-300 text-slate-950 font-bold px-3.5 py-1.5 rounded-xl text-xs transition cursor-pointer active:scale-95 shadow-sm"
+            className="flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs transition cursor-pointer active:scale-95 shadow-xs"
           >
             <FileSpreadsheet className="w-3.5 h-3.5" />
             <span>ייצוא Sheets / Excel</span>
@@ -344,17 +339,17 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
       </div>
 
       {/* 2. THE EXACT BUDGET TABLE (תואם לטבלה במדויק) */}
-      <div className="bg-slate-900 border border-teal-800/50 rounded-2xl p-5 sm:p-6 shadow-md space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-teal-950 border border-teal-700/60 flex items-center justify-center text-teal-300">
+            <div className="w-9 h-9 rounded-xl bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700">
               <DollarSign className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <span>תקציב חודשי – הבית של רותם ומאיה</span>
               </h3>
-              <p className="text-xs text-slate-300">
+              <p className="text-xs text-slate-500">
                 כל הקטגוריות והחישובים מחושבים לפי הגדרות הטבלה במדויק:
               </p>
             </div>
@@ -362,103 +357,103 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
 
           <div className="flex items-center gap-2">
             {resetSuccessMessage && (
-              <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+              <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>הערכים שוחזרו לדיפולט הטבלה!</span>
               </span>
             )}
             <button
               onClick={handleResetToTableDefaults}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-teal-300 text-xs font-bold transition cursor-pointer border border-slate-700"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold transition cursor-pointer border border-slate-200"
               title="שחזור נתוני ברירת המחדל של הטבלה"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+              <RotateCcw className="w-3.5 h-3.5 text-teal-600" />
               <span>איפוס לדיפולט הטבלה (16 ילדים)</span>
             </button>
           </div>
         </div>
 
         {/* Structured Table Rows */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
           <table className="w-full text-right text-xs">
-            <thead>
-              <tr className="border-b border-slate-800 text-slate-400">
-                <th className="py-2.5 px-3 font-semibold">סעיף</th>
-                <th className="py-2.5 px-3 font-semibold font-mono">סכום (₪)</th>
-                <th className="py-2.5 px-3 font-semibold">פירוט</th>
+            <thead className="bg-slate-50 text-slate-700 border-b border-slate-200">
+              <tr>
+                <th className="py-3 px-3.5 font-bold">סעיף</th>
+                <th className="py-3 px-3.5 font-bold font-mono">סכום (₪)</th>
+                <th className="py-3 px-3.5 font-bold">פירוט</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60 font-mono">
-              <tr className="hover:bg-slate-800/40 transition">
-                <td className="py-3 px-3 font-bold text-slate-200 font-sans">מספר ילדים</td>
-                <td className="py-3 px-3 text-base font-bold text-teal-300">{numChildren}</td>
-                <td className="py-3 px-3 text-slate-300 font-sans">ניתן לשינוי בגיליון הנחות</td>
+            <tbody className="divide-y divide-slate-100 font-mono">
+              <tr className="hover:bg-teal-50/40 transition">
+                <td className="py-3 px-3.5 font-bold text-slate-800 font-sans">מספר ילדים</td>
+                <td className="py-3 px-3.5 text-base font-bold text-teal-700">{numChildren}</td>
+                <td className="py-3 px-3.5 text-slate-600 font-sans">ניתן לשינוי בגיליון הנחות</td>
               </tr>
 
-              <tr className="hover:bg-slate-800/40 transition bg-slate-950/30">
-                <td className="py-3 px-3 font-bold text-slate-200 font-sans">הכנסה חודשית כולל מע״מ</td>
-                <td className="py-3 px-3 text-base font-bold text-emerald-400">₪{monthlyIncomeWithVat.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="py-3 px-3 text-slate-300 font-sans">מספר ילדים × שכר לימוד</td>
+              <tr className="hover:bg-teal-50/40 transition bg-slate-50/50">
+                <td className="py-3 px-3.5 font-bold text-slate-800 font-sans">הכנסה חודשית כולל מע״מ</td>
+                <td className="py-3 px-3.5 text-base font-bold text-emerald-700">₪{monthlyIncomeWithVat.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="py-3 px-3.5 text-slate-600 font-sans">מספר ילדים × שכר לימוד</td>
               </tr>
 
-              <tr className="hover:bg-slate-800/40 transition">
-                <td className="py-3 px-3 font-bold text-amber-300 font-sans">מע״מ מתוך ההכנסה</td>
-                <td className="py-3 px-3 text-base font-bold text-amber-300">₪{vatFromIncome.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="py-3 px-3 text-slate-300 font-sans">חישוב מע״מ מתוך מחיר כולל מע״מ</td>
+              <tr className="hover:bg-teal-50/40 transition">
+                <td className="py-3 px-3.5 font-bold text-amber-800 font-sans">מע״מ מתוך ההכנסה</td>
+                <td className="py-3 px-3.5 text-base font-bold text-amber-700">₪{vatFromIncome.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="py-3 px-3.5 text-slate-600 font-sans">חישוב מע״מ מתוך מחיר כולל מע״מ</td>
               </tr>
 
-              <tr className="hover:bg-slate-800/40 transition bg-slate-950/50">
-                <td className="py-3 px-3 font-bold text-teal-200 font-sans">הכנסה ללא מע״מ</td>
-                <td className="py-3 px-3 text-base font-bold text-teal-200">₪{netDisposableIncome.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="py-3 px-3 text-slate-300 font-sans">הכנסה פנויה לפני הוצאות</td>
+              <tr className="hover:bg-teal-50/40 transition bg-teal-50/30">
+                <td className="py-3 px-3.5 font-bold text-teal-900 font-sans">הכנסה ללא מע״מ</td>
+                <td className="py-3 px-3.5 text-base font-bold text-teal-800">₪{netDisposableIncome.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="py-3 px-3.5 text-slate-600 font-sans">הכנסה פנויה לפני הוצאות</td>
               </tr>
 
-              <tr className="hover:bg-slate-800/40 transition">
-                <td className="py-3 px-3 font-bold text-sky-300 font-sans">עלות כוח אדם</td>
-                <td className="py-3 px-3 text-base font-bold text-sky-300">₪{currentStaffCost.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="py-3 px-3 text-slate-300 font-sans">כולל אומדן עלות מעסיק ונסיעות לכל חמש העובדות</td>
+              <tr className="hover:bg-teal-50/40 transition">
+                <td className="py-3 px-3.5 font-bold text-sky-800 font-sans">עלות כוח אדם</td>
+                <td className="py-3 px-3.5 text-base font-bold text-sky-700">₪{currentStaffCost.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="py-3 px-3.5 text-slate-600 font-sans">כולל אומדן עלות מעסיק ונסיעות לכל חמש העובדות</td>
               </tr>
 
-              <tr className="hover:bg-slate-800/40 transition">
-                <td className="py-3 px-3 font-bold text-slate-200 font-sans">הוצאות תפעול</td>
-                <td className="py-3 px-3 text-base font-bold text-slate-200">₪{currentOperatingExpenses.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="py-3 px-3 text-slate-300 font-sans">סך הוצאות תפעול</td>
+              <tr className="hover:bg-teal-50/40 transition bg-slate-50/50">
+                <td className="py-3 px-3.5 font-bold text-slate-800 font-sans">הוצאות תפעול</td>
+                <td className="py-3 px-3.5 text-base font-bold text-slate-700">₪{currentOperatingExpenses.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="py-3 px-3.5 text-slate-600 font-sans">סך הוצאות תפעול</td>
               </tr>
 
-              <tr className="hover:bg-slate-800/40 transition">
-                <td className="py-3 px-3 font-bold text-amber-400 font-sans">הפרשה לבלת״מים</td>
-                <td className="py-3 px-3 text-base font-bold text-amber-400">₪{contingencyAmount.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="py-3 px-3 text-slate-300 font-sans">10% מההכנסה ללא מע״מ</td>
+              <tr className="hover:bg-teal-50/40 transition">
+                <td className="py-3 px-3.5 font-bold text-amber-800 font-sans">הפרשה לבלת״מים</td>
+                <td className="py-3 px-3.5 text-base font-bold text-amber-700">₪{contingencyAmount.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="py-3 px-3.5 text-slate-600 font-sans">10% מההכנסה ללא מע״מ</td>
               </tr>
 
-              <tr className="hover:bg-slate-800/40 transition bg-slate-950">
-                <td className="py-3 px-3 font-bold text-rose-300 font-sans">סה״כ הוצאות והפרשות</td>
-                <td className="py-3 px-3 text-base font-black text-rose-300">₪{totalExpensesAndContingency.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="py-3 px-3 text-slate-300 font-sans">כוח אדם + תפעול + בלת״מים</td>
+              <tr className="hover:bg-teal-50/40 transition bg-rose-50/40">
+                <td className="py-3 px-3.5 font-bold text-rose-800 font-sans">סה״כ הוצאות והפרשות</td>
+                <td className="py-3 px-3.5 text-base font-black text-rose-700">₪{totalExpensesAndContingency.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="py-3 px-3.5 text-slate-600 font-sans">כוח אדם + תפעול + בלת״מים</td>
               </tr>
 
-              <tr className="hover:bg-slate-800/40 transition bg-teal-950/40 border-t-2 border-teal-500/50">
-                <td className="py-3 px-3 font-black text-emerald-300 text-sm font-sans">יתרה חודשית משוערת</td>
-                <td className={`py-3 px-3 text-lg font-black ${estimatedMonthlyBalance >= 0 ? 'text-emerald-300' : 'text-rose-400'}`}>
+              <tr className="hover:bg-teal-50/60 transition bg-teal-50/80 border-t-2 border-teal-500">
+                <td className="py-3.5 px-3.5 font-black text-teal-950 text-sm font-sans">יתרה חודשית משוערת</td>
+                <td className={`py-3.5 px-3.5 text-lg font-black ${estimatedMonthlyBalance >= 0 ? 'text-teal-900' : 'text-rose-700'}`}>
                   ₪{estimatedMonthlyBalance.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </td>
-                <td className="py-3 px-3 text-slate-200 font-sans">לפני הוצאות ומסים שלא נכללו</td>
+                <td className="py-3.5 px-3.5 text-teal-800 font-sans font-medium">לפני הוצאות ומסים שלא נכללו</td>
               </tr>
 
-              <tr className="hover:bg-slate-800/40 transition bg-teal-950/20">
-                <td className="py-3 px-3 font-bold text-teal-300 font-sans">יתרה לכל ילד</td>
-                <td className="py-3 px-3 text-base font-black text-teal-300">₪{balancePerChild.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="py-3 px-3 text-slate-300 font-sans">יתרה חודשית חלקי מספר ילדים</td>
+              <tr className="hover:bg-teal-50/60 transition bg-teal-50/40">
+                <td className="py-3 px-3.5 font-bold text-teal-800 font-sans">יתרה לכל ילד</td>
+                <td className="py-3 px-3.5 text-base font-black text-teal-800">₪{balancePerChild.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="py-3 px-3.5 text-slate-600 font-sans">יתרה חודשית חלקי מספר ילדים</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         {/* Calculation note verbatim from user table */}
-        <div className="p-3.5 bg-slate-950/80 rounded-xl border border-amber-800/40 text-xs text-amber-200/90 leading-relaxed flex items-start gap-2.5">
-          <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+        <div className="p-3.5 bg-amber-50/90 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed flex items-start gap-2.5">
+          <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
           <div>
-            <span className="font-bold text-amber-300">הערת חישוב: </span>
+            <span className="font-bold text-amber-900">הערת חישוב: </span>
             <span>
               "ההכנסה חושבה בהנחה ששכר הלימוד 3,500 ₪ כולל מע״מ ושיעור המע״מ 18%. היתרה אינה רווח נקי: לא נכללו שכירות, ביטוחים, ניקיון, עובדות חולות , הבראה, עלות המעסיק היא אומדן אחיד של 1.3."
             </span>
@@ -469,84 +464,84 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
       {/* 3. PRIMARY SCORECARDS (מדדי הטבלה בלבד) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Estimated Monthly Balance */}
-        <div className="bg-slate-900/90 p-4 sm:p-5 rounded-2xl border border-slate-700/80 shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-300 font-medium">
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+          <div className="flex items-center justify-between text-xs text-slate-600 font-medium">
             <span>יתרה חודשית משוערת</span>
-            <DollarSign className="w-4 h-4 text-emerald-400" />
+            <DollarSign className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className={`text-2xl sm:text-3xl font-bold font-mono tabular-nums ${estimatedMonthlyBalance >= 0 ? 'text-emerald-300' : 'text-rose-400'}`}>
+            <span className={`text-2xl sm:text-3xl font-bold font-mono tabular-nums ${estimatedMonthlyBalance >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
               ₪{Math.round(estimatedMonthlyBalance).toLocaleString()}
             </span>
-            <span className="text-[11px] font-mono text-slate-400">/ חודש</span>
+            <span className="text-[11px] font-mono text-slate-500">/ חודש</span>
           </div>
-          <div className="flex justify-between items-center text-[11px] pt-2 border-t border-slate-800 text-slate-300">
+          <div className="flex justify-between items-center text-[11px] pt-2 border-t border-slate-100 text-slate-600">
             <span>יתרה לכל ילד:</span>
-            <span className="font-mono font-bold text-teal-300">₪{balancePerChild.toFixed(2)}</span>
+            <span className="font-mono font-bold text-teal-700">₪{balancePerChild.toFixed(2)}</span>
           </div>
         </div>
 
         {/* Card 2: Income without VAT */}
-        <div className="bg-slate-900/90 p-4 sm:p-5 rounded-2xl border border-slate-700/80 shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-300 font-medium">
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+          <div className="flex items-center justify-between text-xs text-slate-600 font-medium">
             <span>הכנסה ללא מע"מ</span>
-            <Activity className="w-4 h-4 text-teal-400" />
+            <Activity className="w-4 h-4 text-teal-600" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-bold font-mono text-teal-300 tabular-nums">
+            <span className="text-2xl sm:text-3xl font-bold font-mono text-teal-700 tabular-nums">
               ₪{Math.round(netDisposableIncome).toLocaleString()}
             </span>
           </div>
-          <div className="flex justify-between items-center text-[11px] pt-2 border-t border-slate-800 text-slate-300">
+          <div className="flex justify-between items-center text-[11px] pt-2 border-t border-slate-100 text-slate-600">
             <span>מע״מ מתוך ההכנסה ({vatRatePercent}%):</span>
-            <span className="font-mono font-bold text-amber-300">₪{Math.round(vatFromIncome).toLocaleString()}</span>
+            <span className="font-mono font-bold text-amber-700">₪{Math.round(vatFromIncome).toLocaleString()}</span>
           </div>
         </div>
 
         {/* Card 3: Staff Cost */}
-        <div className="bg-slate-900/90 p-4 sm:p-5 rounded-2xl border border-slate-700/80 shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-300 font-medium">
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+          <div className="flex items-center justify-between text-xs text-slate-600 font-medium">
             <span>עלות כוח אדם</span>
-            <Users className="w-4 h-4 text-sky-400" />
+            <Users className="w-4 h-4 text-sky-600" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-bold font-mono text-sky-300 tabular-nums">
+            <span className="text-2xl sm:text-3xl font-bold font-mono text-sky-700 tabular-nums">
               ₪{Math.round(currentStaffCost).toLocaleString()}
             </span>
           </div>
-          <div className="flex justify-between items-center text-[11px] pt-2 border-t border-slate-800 text-slate-300">
+          <div className="flex justify-between items-center text-[11px] pt-2 border-t border-slate-100 text-slate-600">
             <span>5 עובדות + מקדם מעסיק:</span>
-            <span className="font-mono font-bold text-sky-400">1.3 אחיד ונסיעות</span>
+            <span className="font-mono font-bold text-sky-700">1.3 אחיד ונסיעות</span>
           </div>
         </div>
 
         {/* Card 4: Contingency Buffer */}
-        <div className="bg-slate-900/90 p-4 sm:p-5 rounded-2xl border border-slate-700/80 shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-300 font-medium">
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2">
+          <div className="flex items-center justify-between text-xs text-slate-600 font-medium">
             <span>הפרשה לבלת״מים</span>
-            <PiggyBank className="w-4 h-4 text-amber-400" />
+            <PiggyBank className="w-4 h-4 text-amber-600" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-bold font-mono text-amber-300 tabular-nums">
+            <span className="text-2xl sm:text-3xl font-bold font-mono text-amber-700 tabular-nums">
               ₪{Math.round(contingencyAmount).toLocaleString()}
             </span>
           </div>
-          <div className="flex justify-between items-center text-[11px] pt-2 border-t border-slate-800 text-slate-300">
+          <div className="flex justify-between items-center text-[11px] pt-2 border-t border-slate-100 text-slate-600">
             <span>חישוב מהכנסה ללא מע"מ:</span>
-            <span className="font-mono font-bold text-amber-400">{contingencyPercent}% בדיוק</span>
+            <span className="font-mono font-bold text-amber-700">{contingencyPercent}% בדיוק</span>
           </div>
         </div>
       </div>
 
       {/* 4. INTERACTIVE INPUT CONTROLS (שדות המחשבון המותאמים לסעיפי הטבלה בלבד) */}
-      <div className="bg-slate-900 border border-slate-700/80 rounded-2xl p-5 sm:p-6 shadow-md space-y-5">
-        <div className="flex items-center gap-2 border-b border-slate-700/80 pb-3">
-          <Sliders className="w-5 h-5 text-teal-400" />
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
+        <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+          <Sliders className="w-5 h-5 text-teal-600" />
           <div>
-            <h3 className="text-base font-bold text-white">
+            <h3 className="text-base font-bold text-slate-900">
               התאמת משתני הטבלה (סימולטור חישובי)
             </h3>
-            <p className="text-xs text-slate-300">
+            <p className="text-xs text-slate-500">
               שינוי כל אחד ממרכיבי הטבלה מעדכן מיידית את כל שורות התקציב למעלה:
             </p>
           </div>
@@ -554,8 +549,8 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* SLICE 1: Enrollment & Tuition */}
-          <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
-            <span className="text-xs font-bold text-teal-300 block border-b border-slate-800 pb-2">
+          <div className="space-y-3 bg-slate-50/80 p-4 rounded-xl border border-slate-200">
+            <span className="text-xs font-bold text-teal-800 block border-b border-slate-200 pb-2">
               1. ילדים ושכר לימוד
             </span>
             <EyeFriendlySlider
@@ -566,7 +561,7 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
               min={1}
               max={30}
               suffix="ילדים"
-              accentColor="accent-teal-400"
+              accentColor="accent-teal-600"
             />
             <EyeFriendlySlider
               label="שכר לימוד כולל מע''מ לילד:"
@@ -577,7 +572,7 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
               max={5500}
               step={50}
               prefix="₪"
-              accentColor="accent-teal-400"
+              accentColor="accent-teal-600"
             />
             <EyeFriendlySlider
               label="שיעור מע''מ (%):"
@@ -588,13 +583,13 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
               max={25}
               step={0.5}
               suffix="%"
-              accentColor="accent-teal-400"
+              accentColor="accent-teal-600"
             />
           </div>
 
           {/* SLICE 2: Staff & Operations */}
-          <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
-            <span className="text-xs font-bold text-sky-300 block border-b border-slate-800 pb-2">
+          <div className="space-y-3 bg-slate-50/80 p-4 rounded-xl border border-slate-200">
+            <span className="text-xs font-bold text-sky-800 block border-b border-slate-200 pb-2">
               2. כוח אדם והוצאות תפעול
             </span>
             <EyeFriendlySlider
@@ -606,7 +601,7 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
               max={60000}
               step={50}
               prefix="₪"
-              accentColor="accent-sky-400"
+              accentColor="accent-sky-600"
             />
             <EyeFriendlySlider
               label="הוצאות תפעול (₪):"
@@ -617,13 +612,13 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
               max={20000}
               step={50}
               prefix="₪"
-              accentColor="accent-sky-400"
+              accentColor="accent-sky-600"
             />
           </div>
 
           {/* SLICE 3: Contingency Reserve */}
-          <div className="space-y-3 bg-slate-950/60 p-4 rounded-xl border border-slate-800">
-            <span className="text-xs font-bold text-amber-300 block border-b border-slate-800 pb-2">
+          <div className="space-y-3 bg-slate-50/80 p-4 rounded-xl border border-slate-200">
+            <span className="text-xs font-bold text-amber-800 block border-b border-slate-200 pb-2">
               3. הפרשה לבלת״מים
             </span>
             <EyeFriendlySlider
@@ -635,38 +630,38 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
               max={25}
               step={1}
               suffix="%"
-              accentColor="accent-amber-400"
+              accentColor="accent-amber-600"
             />
-            <div className="p-3 bg-slate-900 rounded-xl border border-slate-700/80 flex justify-between items-center text-xs">
-              <span className="text-slate-300 font-medium">סכום הפרשה חודשי:</span>
-              <span className="font-mono font-bold text-amber-300 text-sm">₪{Math.round(contingencyAmount).toLocaleString()}</span>
+            <div className="p-3 bg-white rounded-xl border border-slate-200 flex justify-between items-center text-xs">
+              <span className="text-slate-600 font-medium">סכום הפרשה חודשי:</span>
+              <span className="font-mono font-bold text-amber-700 text-sm">₪{Math.round(contingencyAmount).toLocaleString()}</span>
             </div>
-            <div className="p-3 bg-slate-900 rounded-xl border border-slate-700/80 flex justify-between items-center text-xs">
-              <span className="text-slate-300 font-medium">סה״כ הוצאות והפרשות:</span>
-              <span className="font-mono font-bold text-rose-300 text-sm">₪{Math.round(totalExpensesAndContingency).toLocaleString()}</span>
+            <div className="p-3 bg-white rounded-xl border border-slate-200 flex justify-between items-center text-xs">
+              <span className="text-slate-600 font-medium">סה״כ הוצאות והפרשות:</span>
+              <span className="font-mono font-bold text-rose-700 text-sm">₪{Math.round(totalExpensesAndContingency).toLocaleString()}</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* 5. VISUAL DISTRIBUTION CHART (סעיפי הטבלה בלבד) */}
-      <div className="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-5 shadow-xs space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-teal-400" />
-            <h3 className="text-sm font-bold text-white">פילוח ההכנסה הפנויה ללא מע״מ (₪{Math.round(netDisposableIncome).toLocaleString()})</h3>
+            <BarChart3 className="w-4 h-4 text-teal-600" />
+            <h3 className="text-sm font-bold text-slate-900">פילוח ההכנסה ללא מע״מ (₪{Math.round(netDisposableIncome).toLocaleString()})</h3>
           </div>
-          <span className="text-[11px] font-mono text-teal-300 font-bold">100% מסעיפי הטבלה</span>
+          <span className="text-[11px] font-mono text-teal-800 font-bold bg-teal-50 px-2 py-0.5 rounded border border-teal-200">100% מסעיפי הטבלה</span>
         </div>
 
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={costDistributionData} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.6} horizontal={false} />
-              <XAxis type="number" stroke="#cbd5e1" tick={{ fontSize: 10, fill: '#cbd5e1' }} tickFormatter={(val) => `₪${(val / 1000).toFixed(0)}k`} />
-              <YAxis dataKey="name" type="category" stroke="#cbd5e1" tick={{ fontSize: 11, fill: '#f1f5f9' }} width={135} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+              <XAxis type="number" stroke="#94a3b8" tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(val) => `₪${(val / 1000).toFixed(0)}k`} />
+              <YAxis dataKey="name" type="category" stroke="#94a3b8" tick={{ fontSize: 11, fill: '#334155' }} width={135} />
               <Tooltip
-                contentStyle={{ backgroundColor: '#0f172a', borderColor: '#475569', borderRadius: '0.75rem', color: '#f8fafc', fontSize: '12px' }}
+                contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '0.75rem', color: '#0f172a', fontSize: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                 formatter={(val: any) => [`₪${Number(val).toLocaleString()}`, 'סכום']}
               />
               <Bar dataKey="value" name="סכום (₪)" radius={[0, 6, 6, 0]}>
