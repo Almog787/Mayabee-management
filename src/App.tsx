@@ -3,128 +3,47 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useDaycareData } from './hooks/useDaycareData';
-import { Header, AppTab } from './components/Header';
+import { Header } from './components/Header';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
-import { ReceiptModal } from './components/common/ReceiptModal';
 import { QuickMasterPlannerModule } from './components/modules/QuickMasterPlannerModule';
-import { SuggestionsAndAutomationModule } from './components/modules/SuggestionsAndAutomationModule';
-import { BusinessSiteSuggestionsModule } from './components/modules/BusinessSiteSuggestionsModule';
-import { FinancialTransaction } from './types';
-import {
-  TrendingUp,
-  Building2,
-  FileSpreadsheet,
-  Sparkles,
-} from 'lucide-react';
+import { Building2 } from 'lucide-react';
 
 export default function App() {
   const {
     loading,
-    children,
-    activeChildren,
-    presentChildren,
-    attendance,
-    dailyLogs,
-    transactions,
-    staff,
-    shifts,
-    activeClockedStaff,
-    menu,
-    todayMenu,
-    allergenConflicts,
-    safetyChecks,
     settings,
-    ratioCompliance,
-    taxStatus,
-    todayStr,
-    addChild,
-    updateChild,
-    deleteChild,
-    setAttendanceStatus,
-    markCheckIn,
-    markCheckOut,
-    quickCheckInAll,
-    saveDailyLog,
-    addTransaction,
-    deleteTransaction,
-    addStaff,
-    updateStaff,
-    clockInStaff,
-    clockOutStaff,
-    updateSafetyCheck,
     updateSettings,
-    refreshData,
   } = useDaycareData();
-
-  const [activeTab, setActiveTab] = useState<AppTab>('planner');
-  const [selectedReceiptTx, setSelectedReceiptTx] = useState<FinancialTransaction | null>(null);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-        <div className="w-16 h-16 rounded-3xl bg-[#7a4b29] text-white flex items-center justify-center shadow-xl animate-bounce mb-4">
+        <div className="w-16 h-16 rounded-3xl bg-amber-600 text-white flex items-center justify-center shadow-xl animate-bounce mb-4">
           <Building2 className="w-8 h-8" />
         </div>
-        <h2 className="text-xl font-black text-slate-800">טוען את נתוני המעון...</h2>
-        <p className="text-xs text-slate-500 mt-1">מאתחל מערכת ניהול ובקרה פיננסית...</p>
+        <h2 className="text-xl font-black text-slate-800">טוען את נתוני המשפחתון...</h2>
+        <p className="text-xs text-slate-500 mt-1">מאתחל מחשבון מאזן אישי בדירה...</p>
       </div>
     );
   }
 
-  const receiptChild = selectedReceiptTx?.childId
-    ? children.find((c) => c.id === selectedReceiptTx.childId)
-    : undefined;
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-['Heebo','Rubik',sans-serif] selection:bg-teal-500/20 selection:text-teal-900">
-      {/* Top Header with Navigation Tabs */}
+      {/* Top Header for Private Home Daycare */}
       <Header
         settings={settings}
-        activeChildrenCount={activeChildren.length}
-        presentChildrenCount={presentChildren.length}
-        ratioCompliance={ratioCompliance}
-        taxStatus={taxStatus}
-        allergyConflictsCount={allergenConflicts.length}
-        activeTab={activeTab}
-        onSelectTab={setActiveTab}
+        onPrint={() => window.print()}
       />
 
-      {/* Main Dedicated Page View (3 Views) */}
+      {/* Single Unified Page */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {activeTab === 'planner' && (
-          <QuickMasterPlannerModule
-            settings={settings}
-            onUpdateSettings={updateSettings}
-            onOpenSuggestions={() => setActiveTab('management-suggestions')}
-          />
-        )}
-
-        {activeTab === 'management-suggestions' && (
-          <SuggestionsAndAutomationModule
-            onBackToPlanner={() => setActiveTab('planner')}
-            onSwitchToBusinessSuggestions={() => setActiveTab('business-suggestions')}
-          />
-        )}
-
-        {activeTab === 'business-suggestions' && (
-          <BusinessSiteSuggestionsModule
-            onBackToPlanner={() => setActiveTab('planner')}
-            onSwitchToManagementSuggestions={() => setActiveTab('management-suggestions')}
-          />
-        )}
-      </main>
-
-      {/* Internal Receipt & Voucher Modal */}
-      {selectedReceiptTx && (
-        <ReceiptModal
-          transaction={selectedReceiptTx}
-          child={receiptChild}
+        <QuickMasterPlannerModule
           settings={settings}
-          onClose={() => setSelectedReceiptTx(null)}
+          onUpdateSettings={updateSettings}
         />
-      )}
+      </main>
 
       {/* Offline Toast Indicator */}
       <OfflineIndicator />

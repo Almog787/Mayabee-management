@@ -1,168 +1,167 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
+  Home,
+  GraduationCap,
+  Sparkles,
   DollarSign,
-  FileSpreadsheet,
-  CheckCircle2,
-  Sliders,
-  Users,
-  RotateCcw,
-  MessageCircle,
-  PiggyBank,
-  BarChart3,
-  Activity,
-  Info,
-  Building,
   TrendingUp,
+  Percent,
+  Calendar,
+  Share2,
+  FileSpreadsheet,
+  RotateCcw,
+  Info,
+  CheckCircle2,
+  AlertCircle,
+  HelpCircle,
+  Shield,
+  Utensils,
+  Zap,
+  Building,
   Briefcase,
+  Layers,
+  Wrench,
+  BookOpen,
+  PieChart as PieChartIcon,
   ChevronDown,
   ChevronUp,
-  Brain,
-  Sparkles,
-  Scale,
-  ShieldCheck,
-  ArrowUpRight,
-  ArrowDownRight,
-  History,
-  XCircle,
-  Award,
+  Plus,
+  Trash2,
+  Printer,
+  HeartHandshake,
 } from 'lucide-react';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Cell,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-} from 'recharts';
-import { DaycareSettings } from '../../types';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { exportToGoogleSheetsXlsx } from '../../lib/googleSheetsExporter';
-import {
-  generateProfitabilityProposals,
-  recordProposalFeedback,
-  getLearningConclusions,
-  getLearnedWeights,
-  resetOptimizerMemory,
-  ProfitabilityProposal,
-  AlgorithmicConclusion,
-} from '../../lib/autonomousProfitabilityEngine';
+import { DaycareSettings } from '../../types';
 
 interface QuickMasterPlannerProps {
   settings: DaycareSettings | null;
-  onUpdateSettings?: (updates: Partial<DaycareSettings>) => Promise<void>;
-  onOpenSuggestions?: () => void;
+  onUpdateSettings?: (settings: Partial<DaycareSettings>) => void;
 }
 
-const STORAGE_KEY = 'daycare_budget_rotem_maya_full_model_v12_light';
+// 7 Recognized Home Apartment Daycare Operating Expenses
+interface OpexItem {
+  id: string;
+  name: string;
+  amount: number;
+  desc: string;
+  recognizedPercent: number; // e.g. 100% for food, 25-30% for home utilities
+  category: 'direct' | 'home-shared' | 'admin';
+}
 
-/**
- * 1. הנחות יסוד ופרמטרים של המודל (Model Assumptions & Variables)
- * -------------------------------------------------------------
- * • מספר ילדים במעון: 16 ילדים
- * • שכר לימוד חודשי לילד (כולל מע"מ): 3,500 ₪
- * • שיעור מע"מ: 18.0%
- * • שיעור עלות מעביד משוערת: 17.0% משכר הברוטו
- * • שכר שעתי לבסיס עובדות הוראה/עזרה: 45 ₪ ברוטו לשעה
- * • מקדם שעות חודשי לממוצע שבועי: 4.33333 (52 שבועות / 12 חודשים)
- * • הפרשה לבלת"מים (רזרבה): 10.0% מההכנסה נטו (ללא מע"מ)
- * • השתתפות בנסיעות: מקסימום 200 ₪ חודשי לעובדת (64 ₪ לעובדת ג' יום בשבוע)
- * • ימי פעילות המעון: ראשון–חמישי (7:30–16:00), שישי (7:20–12:00)
- */
-export const DEFAULT_MODEL_PARAMS = {
-  // Model Parameters
-  childrenCount: 16,
-  tuitionPerChild: 3500,
-  vatRatePercent: 18.0,
-  employerOverheadPercent: 17.0,
-  hourlyWage: 45.0,
-  weeklyToMonthlyMultiplier: 52 / 12, // 4.33333
-  contingencyPercent: 10.0,
-  maxTravelMonthly: 200.0,
+const DEFAULT_OPEX_ITEMS: OpexItem[] = [
+  {
+    id: 'food',
+    name: 'הזנה ביתית טרייה',
+    amount: 1250,
+    desc: 'ארוחות בוקר, צהריים מבושלות, פירות, ירקות ונשנושים איכותיים (5 ילדים)',
+    recognizedPercent: 100,
+    category: 'direct',
+  },
+  {
+    id: 'utilities',
+    name: 'חשמל, מים וגז (חלק יחסי בדירה)',
+    amount: 350,
+    desc: 'הוצאות תשתית מוכרות בדירת המגורים (מזגן, חימום בחורף, שטיפות ידיים, בישול)',
+    recognizedPercent: 25,
+    category: 'home-shared',
+  },
+  {
+    id: 'insurance',
+    name: 'ביטוח אחריות מקצועית וצד ג׳',
+    amount: 250,
+    desc: 'פוליסת ביטוח ייעודית למשפחתון ביתי לכיסוי מלא לפעוטות ולדירה',
+    recognizedPercent: 100,
+    category: 'admin',
+  },
+  {
+    id: 'accountant',
+    name: 'רואה חשבון / דוח שנתי לעצמאי',
+    amount: 350,
+    desc: 'הנהלת חשבונות חודשית, דוח שנתי לרשות המסים וביטוח לאומי לעצמאית',
+    recognizedPercent: 100,
+    category: 'admin',
+  },
+  {
+    id: 'arnona',
+    name: 'ארנונה מוניציפלית (חלק יחסי בדירה)',
+    amount: 200,
+    desc: 'הכרה במס בחלק היחסי של חדר הפעילות בדירת המגורים (כ-25% מהדירה)',
+    recognizedPercent: 25,
+    category: 'home-shared',
+  },
+  {
+    id: 'consumables',
+    name: 'חומרי יצירה, היגיינה ומתכלה',
+    amount: 250,
+    desc: 'דפי ציור, צבעי ידיים, מגבונים, סבונים, חיתולים ומוצרי ניקוי ייעודיים',
+    recognizedPercent: 100,
+    category: 'direct',
+  },
+  {
+    id: 'equipment',
+    name: 'פחת ציוד, ספרות חינוכית ומשחקים',
+    amount: 150,
+    desc: 'צעצועי התפתחות, ספרים לגיל הרך, שולחנות וכיסאות פעוטות',
+    recognizedPercent: 100,
+    category: 'direct',
+  },
+];
 
-  // Operating Expenses breakdown (₪7,150.00 total)
-  opex_food: 4000.0, // הזנה - מזון וארוחות חודשיות
-  opex_accountant: 1000.0, // רואה חשבון ותלושי שכר
-  opex_utilities: 800.0, // חשמל ומים
-  opex_arnona: 500.0, // ארנונה
-  opex_consumables: 350.0, // רכש מתכלה
-  opex_maintenance: 300.0, // תחזוקה
-  opex_fixedEquipment: 200.0, // רכש קבע / ציוד
-
-  // Labor breakdown parameters
-  staff_directorGross: 8000.0,
-  staff_directorTravel: 200.0,
-  staff_certifiedGross: 10000.0,
-  staff_certifiedTravel: 200.0,
-  staff_workerAWeeklyHours: 17.0,
-  staff_workerATravel: 200.0,
-  staff_workerBWeeklyHours: 22.0,
-  staff_workerBTravel: 200.0,
-  staff_workerCWeeklyHours: 8.5,
-  staff_workerCTravel: 64.0,
+// Baseline values for the home apartment daycare
+const DEFAULT_MODEL_PARAMS = {
+  childrenCount: 5, // Legal cap for single-caregiver home daycare
+  monthlyTuition: 3500, // Monthly fee per child incl. VAT
+  vatRatePercent: 18.0, // Israeli standard VAT
+  isVatExempt: false, // עוסק מורשה (true = עוסק פטור)
+  contingencyPercent: 10.0, // Reserve for vacations, holidays & unexpected home repairs
+  backupStaffFund: 500, // Monthly substitute caregiver backup fund (illness/vacation)
 };
 
-/**
- * Eye-friendly Touch Slider Component (Light Theme)
- */
-const EyeFriendlySlider: React.FC<{
-  label: string;
-  value: number;
-  onChange: (val: number) => void;
-  min: number;
-  max: number;
-  step?: number;
-  prefix?: string;
-  suffix?: string;
-  sublabel?: string;
-  accentColor?: string;
-}> = ({ label, value, onChange, min, max, step = 1, prefix = '', suffix = '', sublabel, accentColor = 'accent-teal-600' }) => {
-  const safeVal = Math.max(min, Math.min(max, isNaN(value) ? min : value));
+const STORAGE_KEY_PARAMS = 'mayabee_home_apartment_params_v3';
+const STORAGE_KEY_OPEX = 'mayabee_home_apartment_opex_v3';
 
-  return (
-    <div className="space-y-2 bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs hover:border-slate-300 transition-colors">
-      <div className="flex justify-between items-baseline gap-2">
-        <div className="min-w-0">
-          <label className="text-slate-800 font-bold text-xs tracking-tight block truncate">{label}</label>
-          {sublabel && <span className="text-[11px] text-slate-500 font-normal block truncate mt-0.5">{sublabel}</span>}
-        </div>
-        <div className="flex items-center gap-1 font-mono font-bold text-teal-800 text-sm shrink-0 tabular-nums bg-teal-50/70 px-2.5 py-0.5 rounded-md border border-teal-200">
-          <span>{prefix}</span>
-          <span>{safeVal.toLocaleString('he-IL', { maximumFractionDigits: 2 })}</span>
-          <span className="text-[10px] text-teal-700">{suffix}</span>
-        </div>
-      </div>
-      <div className="flex items-center gap-3 pt-1">
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={safeVal}
-          onChange={(e) => {
-            const num = Number(e.target.value);
-            onChange(isNaN(num) ? min : Math.max(min, Math.min(max, num)));
-          }}
-          className={`flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer ${accentColor} touch-none`}
-        />
-      </div>
-    </div>
-  );
-};
+export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({ settings }) => {
+  const [params, setParams] = useState<typeof DEFAULT_MODEL_PARAMS>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_PARAMS);
+      if (saved) return { ...DEFAULT_MODEL_PARAMS, ...JSON.parse(saved) };
+    } catch (e) {
+      console.error('Error loading params', e);
+    }
+    return DEFAULT_MODEL_PARAMS;
+  });
 
-export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
-  settings,
-}) => {
-  const [resetSuccessMessage, setResetSuccessMessage] = useState<boolean>(false);
-  const [activeSectionTab, setActiveSectionTab] = useState<'all' | 'optimizer' | 'summary' | 'staff' | 'opex' | 'simulator'>('all');
-  const [showDetailedFormulas, setShowDetailedFormulas] = useState<boolean>(false);
+  const [opexList, setOpexList] = useState<OpexItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_OPEX);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.error('Error loading opex list', e);
+    }
+    return DEFAULT_OPEX_ITEMS;
+  });
 
-  // Autonomous Optimizer State
-  const [optimizerToast, setOptimizerToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
-  const [appliedLeverIds, setAppliedLeverIds] = useState<string[]>([]);
-  const [conclusions, setConclusions] = useState<AlgorithmicConclusion[]>(() => getLearningConclusions());
-  const [learnedWeights, setLearnedWeights] = useState<Record<string, number>>(() => getLearnedWeights());
-  const [showConclusionsLog, setShowConclusionsLog] = useState<boolean>(true);
+  const [newOpexName, setNewOpexName] = useState('');
+  const [newOpexAmount, setNewOpexAmount] = useState<number>(100);
+  const [isAddingOpex, setIsAddingOpex] = useState(false);
+
+  // Save changes to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_PARAMS, JSON.stringify(params));
+    } catch (e) {
+      console.error('Error saving params', e);
+    }
+  }, [params]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY_OPEX, JSON.stringify(opexList));
+    } catch (e) {
+      console.error('Error saving opex list', e);
+    }
+  }, [opexList]);
 
   // Target Month
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
@@ -170,288 +169,146 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
   });
 
-  // State initialized with exact table values
-  const [params, setParams] = useState<typeof DEFAULT_MODEL_PARAMS>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return { ...DEFAULT_MODEL_PARAMS, ...parsed };
-      }
-    } catch (e) {
-      console.error('Failed to load table inputs from storage', e);
-    }
-    return { ...DEFAULT_MODEL_PARAMS };
-  });
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(params));
-    } catch (e) {
-      console.error('Failed to save table inputs to storage', e);
-    }
-  }, [params]);
-
-  const updateParam = (field: keyof typeof DEFAULT_MODEL_PARAMS, val: number) => {
-    setParams((prev) => ({ ...prev, [field]: val }));
-  };
-
-  const handleResetToTableDefaults = () => {
-    setParams({ ...DEFAULT_MODEL_PARAMS });
-    setAppliedLeverIds([]);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_MODEL_PARAMS));
-    } catch (e) {
-      console.error('Failed to reset storage', e);
-    }
-    setResetSuccessMessage(true);
-    setTimeout(() => setResetSuccessMessage(false), 2500);
-  };
-
-  const monthLabel = useMemo(() => {
-    const [year, month] = selectedMonth.split('-');
-    const date = new Date(Number(year), Number(month) - 1, 1);
-    return date.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' });
+  const [monthName, year] = useMemo(() => {
+    const [y, m] = selectedMonth.split('-');
+    const date = new Date(Number(y), Number(m) - 1, 1);
+    return [date.toLocaleDateString('he-IL', { month: 'long' }), y];
   }, [selectedMonth]);
+  const monthLabel = `${monthName} ${year}`;
 
   // =========================================================================
-  // 2. מפתח הכנסות והפרדת מע"מ (Revenue & Tax Breakdown)
+  // CORE FINANCIAL CALCULATIONS
   // =========================================================================
-  const numChildren = Math.max(1, Number(params.childrenCount) || 16);
-  const tuition = Number(params.tuitionPerChild) || 3500;
-  const vatRate = (Number(params.vatRatePercent) || 18) / 100;
+  const numChildren = Number(params.childrenCount) || 0;
+  const tuition = Number(params.monthlyTuition) || 0;
 
-  // הכנסה חודשית ברוטו (כולל מע"מ) = מספר ילדים × שכר לימוד
-  const monthlyGrossIncome = numChildren * tuition; // ₪56,000.00
-  // הכנסה חודשית נטו (ללא מע"מ) = הכנסה ברוטו / 1.18
-  const monthlyNetIncome = monthlyGrossIncome / (1 + vatRate); // ₪47,457.63 (47,457.60)
-  // רכיב מע"מ (18%) = הכנסה ברוטו - הכנסה נטו
-  const monthlyVatAmount = monthlyGrossIncome - monthlyNetIncome; // ₪8,542.37
-  const vatPercentOfNet = monthlyNetIncome > 0 ? (monthlyVatAmount / monthlyNetIncome) * 100 : 18.0;
+  // 1. Revenue
+  const monthlyGrossIncome = numChildren * tuition; // 5 × 3,500 = 17,500 ₪
+  const effectiveVatDivisor = params.isVatExempt ? 1.0 : (1 + (params.vatRatePercent || 18.0) / 100);
+  const monthlyNetIncome = params.isVatExempt ? monthlyGrossIncome : (monthlyGrossIncome / effectiveVatDivisor); // 14,830.51 ₪
+  const monthlyVatAmount = params.isVatExempt ? 0 : (monthlyGrossIncome - monthlyNetIncome); // 2,669.49 ₪
 
-  // =========================================================================
-  // 3. פירוט עלויות כוח אדם (Labor Cost Calculations)
-  // =========================================================================
-  const multiplier = params.weeklyToMonthlyMultiplier || 4.333333333333333; // 52 / 12
-  const employerRate = (params.employerOverheadPercent || 17) / 100;
-  const wagePerHour = params.hourlyWage || 45.0;
-
-  // עובדת 1: מנהלת
-  const staff1_gross = params.staff_directorGross || 8000.0;
-  const staff1_employer = staff1_gross * employerRate; // 1,360.00
-  const staff1_travel = params.staff_directorTravel || 200.0;
-  const staff1_total = staff1_gross + staff1_employer + staff1_travel; // 9,560.00
-
-  // עובדת 2: מטפלת מוסמכת
-  const staff2_gross = params.staff_certifiedGross || 10000.0;
-  const staff2_employer = staff2_gross * employerRate; // 1,700.00
-  const staff2_travel = params.staff_certifiedTravel || 200.0;
-  const staff2_total = staff2_gross + staff2_employer + staff2_travel; // 11,900.00
-
-  // עובדת 3: עובדת א' (ראשון, רביעי - 17 ש"ש)
-  const staff3_weeklyHours = params.staff_workerAWeeklyHours || 17.0;
-  const staff3_monthlyHours = staff3_weeklyHours * multiplier; // 73.6667 (73.67)
-  const staff3_gross = staff3_monthlyHours * wagePerHour; // 3,315.00
-  const staff3_employer = staff3_gross * employerRate; // 563.55
-  const staff3_travel = params.staff_workerATravel || 200.0;
-  const staff3_total = staff3_gross + staff3_employer + staff3_travel; // 4,078.55
-
-  // עובדת 4: עובדת ב' (ראשון, חמישי, שישי - 22 ש"ש)
-  const staff4_weeklyHours = params.staff_workerBWeeklyHours || 22.0;
-  const staff4_monthlyHours = staff4_weeklyHours * multiplier; // 95.3333 (95.33)
-  const staff4_gross = staff4_monthlyHours * wagePerHour; // 4,290.00
-  const staff4_employer = staff4_gross * employerRate; // 729.30
-  const staff4_travel = params.staff_workerBTravel || 200.0;
-  const staff4_total = staff4_gross + staff4_employer + staff4_travel; // 5,219.30
-
-  // עובדת 5: עובדת ג' (שלישי בלבד - 8.5 ש"ש)
-  const staff5_weeklyHours = params.staff_workerCWeeklyHours || 8.5;
-  const staff5_monthlyHours = staff5_weeklyHours * multiplier; // 36.8333 (36.83)
-  const staff5_gross = staff5_monthlyHours * wagePerHour; // 1,657.50
-  const staff5_employer = staff5_gross * employerRate; // 281.78
-  const staff5_travel = params.staff_workerCTravel || 64.0;
-  const staff5_total = staff5_gross + staff5_employer + staff5_travel; // 2,003.28 (2,003.27)
-
-  // סה"כ כוח אדם
-  const totalWeeklyHourlyHours = staff3_weeklyHours + staff4_weeklyHours + staff5_weeklyHours; // 47.5 ש"ש
-  const totalMonthlyHourlyHours = staff3_monthlyHours + staff4_monthlyHours + staff5_monthlyHours; // 205.83 שעות
-  const totalStaffGross = staff1_gross + staff2_gross + staff3_gross + staff4_gross + staff5_gross; // 27,262.50
-  const totalStaffEmployer = staff1_employer + staff2_employer + staff3_employer + staff4_employer + staff5_employer; // 4,634.63
-  const totalStaffTravel = staff1_travel + staff2_travel + staff3_travel + staff4_travel + staff5_travel; // 864.00
-  const totalLaborCost = staff1_total + staff2_total + staff3_total + staff4_total + staff5_total; // 32,761.12 ₪
-
-  // =========================================================================
-  // 4. פירוט הוצאות תפעול שוטפות (Operating Expenses)
-  // =========================================================================
-  const opexItems = useMemo(() => [
-    { id: 'food', name: 'הזנה', amount: params.opex_food || 4000.0, desc: 'מזון וארוחות חודשיות' },
-    { id: 'accountant', name: 'רואה חשבון ותלושי שכר', amount: params.opex_accountant || 1000.0, desc: 'הנהלת חשבונות והפקת תלושים' },
-    { id: 'utilities', name: 'חשמל ומים', amount: params.opex_utilities || 800.0, desc: 'תשלומי עירייה/חברות תשתית' },
-    { id: 'arnona', name: 'ארנונה', amount: params.opex_arnona || 500.0, desc: 'מס מוניציפלי' },
-    { id: 'consumables', name: 'רכש מתכלה', amount: params.opex_consumables || 350.0, desc: 'דפים, צבעים, חומרי יצירה וניקיון' },
-    { id: 'maintenance', name: 'תחזוקה', amount: params.opex_maintenance || 300.0, desc: 'תיקונים ושוטף' },
-    { id: 'fixedEquipment', name: 'רכש קבע / ציוד', amount: params.opex_fixedEquipment || 200.0, desc: 'פחת ציוד (מדפסת, מוצרי חשמל, כיסא מחשב)' },
-  ], [params]);
-
+  // 2. Recognized Operating Expenses of the Home Apartment
   const totalOperatingExpenses = useMemo(() => {
-    return opexItems.reduce((acc, item) => acc + item.amount, 0); // ₪7,150.00
-  }, [opexItems]);
+    return opexList.reduce((acc, item) => acc + (Number(item.amount) || 0), 0);
+  }, [opexList]); // 2,800 ₪ default
 
-  // =========================================================================
-  // 5. סיכום התקציב החודשי והיחסים הפיננסיים (Financial Overview & Summary)
-  // =========================================================================
-  const contingencyRate = (params.contingencyPercent || 10) / 100;
-  const contingencyAmount = monthlyNetIncome * contingencyRate; // ₪4,745.76
+  // 3. Backup & Reserves
+  const backupFundCost = Number(params.backupStaffFund) || 0; // 500 ₪
+  const contingencyAmount = (monthlyNetIncome * (Number(params.contingencyPercent) || 0)) / 100; // 1,483.05 ₪
+  const totalDeductions = totalOperatingExpenses + backupFundCost + contingencyAmount; // 4,783.05 ₪
 
-  const totalExpensesAndContingency = totalLaborCost + totalOperatingExpenses + contingencyAmount; // ₪44,656.88 (44,656.90)
+  // 4. Net Take-Home Salary for the Caregiver (Owner with B.Ed. in Education)
+  const soleCaregiverTakeHomeSalary = Math.max(0, monthlyNetIncome - totalDeductions); // 10,047.46 ₪
+  const profitMarginPercent = monthlyNetIncome > 0 ? (soleCaregiverTakeHomeSalary / monthlyNetIncome) * 100 : 0; // 67.75%
+  const profitPerChild = numChildren > 0 ? (soleCaregiverTakeHomeSalary / numChildren) : 0; // 2,009.49 ₪
 
-  const estimatedMonthlyBalance = monthlyNetIncome - totalExpensesAndContingency; // ₪2,800.75 (2,800.74)
-  const balancePerChild = numChildren > 0 ? (estimatedMonthlyBalance / numChildren) : 0; // ₪175.05
+  // Ratios
+  const opexRatio = monthlyNetIncome > 0 ? (totalOperatingExpenses / monthlyNetIncome) * 100 : 0;
+  const backupRatio = monthlyNetIncome > 0 ? (backupFundCost / monthlyNetIncome) * 100 : 0;
+  const contingencyRatio = monthlyNetIncome > 0 ? (contingencyAmount / monthlyNetIncome) * 100 : 0;
 
-  // =========================================================================
-  // 6. יחסים ומדדים מרכזיים להצגה באתר (KPIs)
-  // =========================================================================
-  const netProfitMarginPercent = monthlyNetIncome > 0 ? (estimatedMonthlyBalance / monthlyNetIncome) * 100 : 5.90; // 5.90%
-  const laborRatioPercent = monthlyNetIncome > 0 ? (totalLaborCost / monthlyNetIncome) * 100 : 69.03; // 69.03%
-  const opexRatioPercent = monthlyNetIncome > 0 ? (totalOperatingExpenses / monthlyNetIncome) * 100 : 15.07; // 15.07%
-  const contingencyRatioPercent = params.contingencyPercent || 10.0; // 10.00%
-  const totalExpensesRatioPercent = monthlyNetIncome > 0 ? (totalExpensesAndContingency / monthlyNetIncome) * 100 : 94.10; // 94.10%
-
-  // =========================================================================
-  // AUTONOMOUS LOCAL PROFITABILITY ENGINE & REAL-TIME PROPOSALS (ZERO-AI)
-  // =========================================================================
-  const autonomousProposals = useMemo(() => {
-    return generateProfitabilityProposals({
-      childrenCount: numChildren,
-      tuitionPerChild: tuition,
-      vatRatePercent: params.vatRatePercent,
-      staffCost: totalLaborCost,
-      operatingExpenses: totalOperatingExpenses,
-      contingencyPercent: params.contingencyPercent,
-      foodCost: params.opex_food,
-      utilitiesCost: params.opex_utilities,
-      consumablesCost: params.opex_consumables,
+  // Sensitivity / Scenario Matrix (1 to 6 children)
+  const scenarioMatrix = useMemo(() => {
+    return [1, 2, 3, 4, 5, 6].map((count) => {
+      const gross = count * tuition;
+      const net = params.isVatExempt ? gross : gross / effectiveVatDivisor;
+      const vat = gross - net;
+      const contingency = (net * (params.contingencyPercent || 10)) / 100;
+      const totalExp = totalOperatingExpenses + backupFundCost + contingency;
+      const caregiverNet = Math.max(0, net - totalExp);
+      const isCurrent = count === numChildren;
+      return {
+        count,
+        gross,
+        net,
+        vat,
+        totalExp,
+        caregiverNet,
+        perChild: count > 0 ? caregiverNet / count : 0,
+        margin: net > 0 ? (caregiverNet / net) * 100 : 0,
+        isCurrent,
+        isCapacityCap: count === 5,
+        isOverCapacity: count > 5,
+      };
     });
-  }, [numChildren, tuition, params, totalLaborCost, totalOperatingExpenses, learnedWeights]);
+  }, [tuition, effectiveVatDivisor, params.isVatExempt, params.contingencyPercent, totalOperatingExpenses, backupFundCost, numChildren]);
 
-  // Handle applying a proposal to the live budget simulator
-  const handleApplyProposal = (proposal: ProfitabilityProposal) => {
-    setParams((prev) => {
-      const next = { ...prev };
-      if (proposal.suggestedChanges.childrenCountDelta) {
-        next.childrenCount = Math.max(1, next.childrenCount + proposal.suggestedChanges.childrenCountDelta);
-      }
-      if (proposal.suggestedChanges.foodCostDelta) {
-        next.opex_food = Math.max(500, next.opex_food + proposal.suggestedChanges.foodCostDelta);
-      }
-      if (proposal.suggestedChanges.utilitiesCostDelta) {
-        next.opex_utilities = Math.max(100, next.opex_utilities + proposal.suggestedChanges.utilitiesCostDelta);
-      }
-      if (proposal.suggestedChanges.staffHoursDeltaWorkerB) {
-        next.staff_workerBWeeklyHours = Math.max(10, next.staff_workerBWeeklyHours + proposal.suggestedChanges.staffHoursDeltaWorkerB);
-      }
-      if (proposal.suggestedChanges.contingencyPercentDelta) {
-        next.contingencyPercent = Math.max(5, next.contingencyPercent + proposal.suggestedChanges.contingencyPercentDelta);
-      }
-      return next;
-    });
+  // Chart data
+  const chartData = [
+    { name: 'שכר נטו למטפלת (B.Ed)', value: Math.round(soleCaregiverTakeHomeSalary), color: '#0d9488' },
+    { name: 'הוצאות תפעול דירה מוכרות', value: Math.round(totalOperatingExpenses), color: '#0284c7' },
+    { name: 'רזרבת חופשה שנתית ובלת"ם', value: Math.round(contingencyAmount), color: '#d97706' },
+    { name: 'קרן גיבוי / ממלאת מקום', value: Math.round(backupFundCost), color: '#8b5cf6' },
+  ];
 
-    setAppliedLeverIds((prev) => [...prev, proposal.id]);
-    const { updatedWeights, newConclusion } = recordProposalFeedback(proposal, 'ACCEPTED');
-    setLearnedWeights(updatedWeights);
-    setConclusions((prev) => [newConclusion, ...prev]);
-
-    setOptimizerToast({
-      message: `ההצעה "${proposal.title}" הוחלה בסימולטור! האלגוריתם העלה את משקל ההעדפה ורשם מסקנה חדשה.`,
-      type: 'success',
-    });
-    setTimeout(() => setOptimizerToast(null), 4500);
+  // Reset to defaults
+  const handleResetToDefaults = () => {
+    setParams({ ...DEFAULT_MODEL_PARAMS });
+    setOpexList([...DEFAULT_OPEX_ITEMS]);
   };
 
-  // Handle rejecting a proposal (algorithm learns not to push this direction)
-  const handleRejectProposal = (proposal: ProfitabilityProposal) => {
-    const { updatedWeights, newConclusion } = recordProposalFeedback(proposal, 'REJECTED');
-    setLearnedWeights(updatedWeights);
-    setConclusions((prev) => [newConclusion, ...prev]);
-
-    setOptimizerToast({
-      message: `ההצעה "${proposal.title}" נדחתה. האלגוריתם הוריד את משקל התחום ורשם מסקנה עצמית כדי להתאים הצעות עתידיות.`,
-      type: 'info',
-    });
-    setTimeout(() => setOptimizerToast(null), 4500);
+  // Add new expense
+  const handleAddOpex = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newOpexName.trim() || newOpexAmount <= 0) return;
+    const newItem: OpexItem = {
+      id: `custom_${Date.now()}`,
+      name: newOpexName.trim(),
+      amount: newOpexAmount,
+      desc: 'הוצאה שוטפת נוספת בדירה',
+      recognizedPercent: 100,
+      category: 'direct',
+    };
+    setOpexList((prev) => [...prev, newItem]);
+    setNewOpexName('');
+    setNewOpexAmount(100);
+    setIsAddingOpex(false);
   };
 
-  // Handle resetting the optimizer's memory & conclusions
-  const handleResetOptimizerMemory = () => {
-    const { weights, conclusions: defaultConclusions } = resetOptimizerMemory();
-    setLearnedWeights(weights);
-    setConclusions(defaultConclusions);
-    setAppliedLeverIds([]);
-    setOptimizerToast({
-      message: 'זיכרון הלמידה והמסקנות של האלגוריתם אופסו לערכי ברירת המחדל.',
-      type: 'info',
-    });
-    setTimeout(() => setOptimizerToast(null), 3500);
+  const handleDeleteOpex = (id: string) => {
+    setOpexList((prev) => prev.filter((item) => item.id !== id));
   };
 
-  // Visual Chart Data
-  const costDistributionData = useMemo(() => {
-    return [
-      { name: 'עלות כוח אדם', value: Math.round(totalLaborCost), fill: '#0284c7', percent: `${laborRatioPercent.toFixed(1)}%` },
-      { name: 'הוצאות תפעול', value: Math.round(totalOperatingExpenses), fill: '#0d9488', percent: `${opexRatioPercent.toFixed(1)}%` },
-      { name: 'הפרשה לבלת״מים', value: Math.round(contingencyAmount), fill: '#d97706', percent: `${contingencyRatioPercent.toFixed(1)}%` },
-      ...(estimatedMonthlyBalance > 0
-        ? [{ name: 'יתרה חודשית משוערת', value: Math.round(estimatedMonthlyBalance), fill: '#16a34a', percent: `${netProfitMarginPercent.toFixed(1)}%` }]
-        : []),
-    ];
-  }, [totalLaborCost, totalOperatingExpenses, contingencyAmount, estimatedMonthlyBalance, laborRatioPercent, opexRatioPercent, contingencyRatioPercent, netProfitMarginPercent]);
+  const handleUpdateOpexAmount = (id: string, amount: number) => {
+    setOpexList((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, amount: Math.max(0, amount) } : item))
+    );
+  };
 
-  // WhatsApp formatted share message with the exact table lines
-  const handleShareWhatsAppBudget = () => {
-    const text = `📊 *תקציב ומודל חודשי – הבית של רותם ומאיה*
-📅 חודש: ${monthLabel}
+  // WhatsApp share for personal/family use
+  const handleShareWhatsApp = () => {
+    const text = `🏡 *תקציב ומאזן משפחתון ביתי (אדם יחיד - בעלת תואר בחינוך)*
+📍 *הדירה שלנו* | 📅 *חודש:* ${monthLabel}
 
-1️⃣ *הנחות יסוד:*
-• תפוסה: ${numChildren} ילדים (שכ"ל: ₪${tuition.toLocaleString()} כולל מע"מ)
-• מע"מ: ${params.vatRatePercent}% | מעביד: ${params.employerOverheadPercent}% | שכר שעתי: ₪${wagePerHour}
-• שעות מעון: א'-ה' 7:30–16:00, ו' 7:20–12:00
+📊 *הכנסות משכ"ל:*
+• מספר ילדים בדירה: ${numChildren} (תקן חוקי: עד 5)
+• שכר לימוד לילד: ₪${tuition.toLocaleString()} ${params.isVatExempt ? '(עוסק פטור)' : '(כולל מע"מ)'}
+• סך הכנסה ברוטו: ₪${monthlyGrossIncome.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
+${!params.isVatExempt ? `• מע"מ (18%): ₪${monthlyVatAmount.toLocaleString('he-IL', { minimumFractionDigits: 2 })}\n• הכנסה נטו (ללא מע"מ): ₪${monthlyNetIncome.toLocaleString('he-IL', { minimumFractionDigits: 2 })}` : ''}
 
-2️⃣ *הכנסות:*
-• הכנסה ברוטו (כולל מע"מ): ₪${monthlyGrossIncome.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
-• מע"מ (18%): ₪${monthlyVatAmount.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
-• הכנסה נטו (ללא מע"מ): ₪${monthlyNetIncome.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
+📦 *הוצאות תפעול הדירה והפרשות:*
+• הוצאות מוכרות בדירה (7 סעיפים): ₪${totalOperatingExpenses.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
+• קרן גיבוי לממלאת מקום: ₪${backupFundCost.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
+• רזרבת חופשה שנתית ובלת"ם (10%): ₪${contingencyAmount.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
+• סה"כ ניכויים: ₪${totalDeductions.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
 
-3️⃣ *כוח אדם (5 עובדות, 47.5 ש"ש סייעות, 205.83 שעות):*
-• מנהלת: ₪${staff1_total.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
-• מטפלת מוסמכת: ₪${staff2_total.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
-• עובדת א' (א', ד'): ₪${staff3_total.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
-• עובדת ב' (א', ה', ו'): ₪${staff4_total.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
-• עובדת ג' (ג' בלבד): ₪${staff5_total.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
-• סה"כ כוח אדם: ₪${totalLaborCost.toLocaleString('he-IL', { minimumFractionDigits: 2 })} (${laborRatioPercent.toFixed(2)}% מהנטו)
-
-4️⃣ *הוצאות תפעול (7 סעיפים):*
-• סה"כ תפעול: ₪${totalOperatingExpenses.toLocaleString('he-IL', { minimumFractionDigits: 2 })} (${opexRatioPercent.toFixed(2)}% מהנטו)
-
-5️⃣ *סיכום ומאזן:*
-• הפרשה לבלת"ם (10%): ₪${contingencyAmount.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
-• סה"כ הוצאות והפרשות: ₪${totalExpensesAndContingency.toLocaleString('he-IL', { minimumFractionDigits: 2 })} (${totalExpensesRatioPercent.toFixed(2)}%)
-• יתרה חודשית (רווח משוער): ₪${estimatedMonthlyBalance.toLocaleString('he-IL', { minimumFractionDigits: 2 })} (${netProfitMarginPercent.toFixed(2)}%)
-• יתרה לכל ילד: ₪${balancePerChild.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
-
-קישור למערכת: https://almog787.github.io/Mayabee-management/`;
+💰 *שכר נטו נשאר ביד למטפלת (B.Ed.):*
+• *₪${soleCaregiverTakeHomeSalary.toLocaleString('he-IL', { minimumFractionDigits: 2 })}* לחודש (${profitMarginPercent.toFixed(1)}% מהנטו)
+• רווח נקי לכל ילד: ₪${profitPerChild.toLocaleString('he-IL', { minimumFractionDigits: 2 })}`;
 
     const encoded = encodeURIComponent(text);
     window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
   };
 
-  // Export to Excel / Sheets matching the full model
-  const handleExportGoogleSheets = () => {
+  // Excel / Google Sheets export
+  const handleExportExcel = () => {
     const dummyChildren = Array.from({ length: numChildren }, (_, i) => ({
       id: `child-${i + 1}`,
-      idNumber: `0000000${i}`,
+      idNumber: `00000000${i + 1}`,
       firstName: `ילד/ה ${i + 1}`,
       lastName: '',
-      birthDate: '2024-01-01',
+      birthDate: '2024-03-01',
       enrollmentDate: '2025-09-01',
       ageGroup: 'TODDLER' as const,
       allergies: [],
@@ -463,9 +320,8 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
       updatedAt: Date.now(),
     }));
 
-    // Operating expenses list
     const tableExpenses = [
-      ...opexItems.map((item, idx) => ({
+      ...opexList.map((item, idx) => ({
         id: `opex-${idx + 1}`,
         categoryName: item.name,
         description: item.desc,
@@ -473,95 +329,37 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
         isConfirmed: true,
       })),
       {
+        id: 'backup-fund',
+        categoryName: 'קרן גיבוי / ממלאת מקום',
+        description: 'תקציב ימי מחלה/חופשה למטפלת',
+        expectedAmount: backupFundCost,
+        isConfirmed: true,
+      },
+      {
         id: 'contingency',
-        categoryName: 'הפרשה לבלת״מים',
-        description: `${params.contingencyPercent}% מההכנסה ללא מע״מ`,
+        categoryName: 'רזרבת חופשה ובלת״ם (10%)',
+        description: 'חיסכון חודשי לחופשות שנתיות ואירועים חריגים',
         expectedAmount: contingencyAmount,
         isConfirmed: true,
       },
     ];
 
-    // Staff list with 5 detailed staff members
     const staffList = [
       {
-        id: 'staff-1',
-        fullName: 'מנהלת',
+        id: 'staff-sole-caregiver',
+        fullName: 'מטפלת ומפעילה (B.Ed. בחינוך)',
         idNumber: '000000001',
-        role: 'DIRECTOR' as any,
-        phone: '052-870-7056',
+        role: 'DIRECTOR' as const,
+        phone: '052-0000000',
         email: '',
         hourlyRate: 0,
-        standardDailyHours: 8,
-        firstAidCertExpiryDate: '2027-01-01',
-        policeClearanceDate: '2026-01-01',
-        policeClearanceApproved: true,
-        status: 'ACTIVE' as const,
-        updatedAt: Date.now(),
-        notes: `גלובלי ₪${staff1_gross} + מעסיק ${params.employerOverheadPercent}% + נסיעות ₪${staff1_travel} = ₪${staff1_total.toFixed(2)}`,
-      },
-      {
-        id: 'staff-2',
-        fullName: 'מטפלת מוסמכת',
-        idNumber: '000000002',
-        role: 'LEAD_EDUCATOR' as any,
-        phone: '052-870-7056',
-        email: '',
-        hourlyRate: 0,
-        standardDailyHours: 8,
-        firstAidCertExpiryDate: '2027-01-01',
-        policeClearanceDate: '2026-01-01',
-        policeClearanceApproved: true,
-        status: 'ACTIVE' as const,
-        updatedAt: Date.now(),
-        notes: `א'-ו' (שלישי 1 ל-3 בלימודים) | גלובלי ₪${staff2_gross} + מעסיק + נסיעות = ₪${staff2_total.toFixed(2)}`,
-      },
-      {
-        id: 'staff-3',
-        fullName: 'עובדת א\'',
-        idNumber: '000000003',
-        role: 'ASSISTANT' as any,
-        phone: '052-870-7056',
-        email: '',
-        hourlyRate: wagePerHour,
         standardDailyHours: 8.5,
         firstAidCertExpiryDate: '2027-01-01',
         policeClearanceDate: '2026-01-01',
         policeClearanceApproved: true,
         status: 'ACTIVE' as const,
         updatedAt: Date.now(),
-        notes: `ראשון, רביעי (17 ש"ש, ${staff3_monthlyHours.toFixed(2)} חודשי) | סה"כ ₪${staff3_total.toFixed(2)}`,
-      },
-      {
-        id: 'staff-4',
-        fullName: 'עובדת ב\'',
-        idNumber: '000000004',
-        role: 'ASSISTANT' as any,
-        phone: '052-870-7056',
-        email: '',
-        hourlyRate: wagePerHour,
-        standardDailyHours: 7.33,
-        firstAidCertExpiryDate: '2027-01-01',
-        policeClearanceDate: '2026-01-01',
-        policeClearanceApproved: true,
-        status: 'ACTIVE' as const,
-        updatedAt: Date.now(),
-        notes: `ראשון, חמישי, שישי (22 ש"ש, ${staff4_monthlyHours.toFixed(2)} חודשי) | סה"כ ₪${staff4_total.toFixed(2)}`,
-      },
-      {
-        id: 'staff-5',
-        fullName: 'עובדת ג\'',
-        idNumber: '000000005',
-        role: 'ASSISTANT' as any,
-        phone: '052-870-7056',
-        email: '',
-        hourlyRate: wagePerHour,
-        standardDailyHours: 8.5,
-        firstAidCertExpiryDate: '2027-01-01',
-        policeClearanceDate: '2026-01-01',
-        policeClearanceApproved: true,
-        status: 'ACTIVE' as const,
-        updatedAt: Date.now(),
-        notes: `שלישי בלבד (8.5 ש"ש, ${staff5_monthlyHours.toFixed(2)} חודשי) | נסיעות ₪${staff5_travel} | סה"כ ₪${staff5_total.toFixed(2)}`,
+        notes: `משפחתון ביתי פרטי בדירת מגורים | שכר נטו נשאר ביד: ₪${soleCaregiverTakeHomeSalary.toFixed(2)}`,
       },
     ];
 
@@ -577,950 +375,818 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto font-sans">
-      {/* 1. TOP HEADER & CONTROLS */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1 text-right">
-          <div className="inline-flex items-center gap-2 text-teal-700 text-xs font-mono font-bold">
-            <Activity className="w-3.5 h-3.5 text-teal-600" />
-            <span>המודל התקציבי החודשי – הבית של רותם ומאיה 🐝</span>
+    <div className="space-y-6 max-w-7xl mx-auto font-sans pb-12 print:p-0 print:space-y-4">
+      {/* 1. TOP STATUS BAR & TARGET MONTH */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-amber-100/70 border border-amber-200 flex items-center justify-center shrink-0 text-amber-800">
+            <Home className="w-6 h-6" />
           </div>
-
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 leading-tight flex items-center gap-2">
-            <span>מחשבון תקציב מלא, מאזן ומנוע אופטימיזציה</span>
-            <span className="text-xs bg-teal-100 text-teal-800 font-normal px-2.5 py-0.5 rounded-full border border-teal-200">
-              Zero-AI Local Engine
-            </span>
-          </h2>
-
-          <p className="text-xs text-slate-600 leading-relaxed">
-            מודל תקציבי מקיף (16 ילדים, 18% מע"מ, עלות מעביד 17%, שכר שעתי ₪45) עם מנוע אופטימיזציה ולמידה מקומית ללא AI.
-          </p>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-lg sm:text-xl font-bold text-slate-900">
+                מחשבון מאזן ותקציב משפחתון ביתי
+              </h2>
+              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">
+                <GraduationCap className="w-3.5 h-3.5 text-emerald-600" />
+                <span>מטפלת בעלת תואר בחינוך</span>
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              העסק פועל בדירת המגורים שלנו · עסק של אדם יחיד ללא עובדים שכירים · תקן מקסימלי של 5 ילדים
+            </p>
+          </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          <div className="bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 flex items-center gap-2">
-            <span className="text-xs text-slate-600 font-medium">חודש יעד:</span>
+        <div className="flex items-center gap-2 flex-wrap justify-end">
+          <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+            <Calendar className="w-4 h-4 text-slate-500" />
             <input
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="bg-transparent text-teal-800 font-bold text-xs outline-none font-mono cursor-pointer"
+              className="bg-transparent text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
             />
           </div>
 
           <button
-            onClick={handleShareWhatsAppBudget}
-            className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer active:scale-95"
-            title="שיתוף דוח תקציב מלא בווטסאפ"
+            type="button"
+            onClick={handleExportExcel}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            title="ייצוא קובץ Excel / Google Sheets מפורט"
           >
-            <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-            <span>שיתוף בווטסאפ</span>
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>ייצוא לשייטס</span>
           </button>
 
           <button
-            onClick={handleExportGoogleSheets}
-            className="flex items-center gap-1.5 bg-teal-600 hover:bg-teal-700 text-white font-bold px-3.5 py-1.5 rounded-xl text-xs transition cursor-pointer active:scale-95 shadow-xs"
-            title="ייצוא קובץ Excel / Google Sheets מלא"
+            type="button"
+            onClick={handleShareWhatsApp}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            title="שליחת סיכום תקציב לווטסאפ"
           >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span>ייצוא Sheets / Excel</span>
+            <Share2 className="w-4 h-4" />
+            <span>שיתוף בוואטסאפ</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold border border-slate-200 transition-colors cursor-pointer"
+            title="הדפסת דוח מאזן"
+          >
+            <Printer className="w-4 h-4 text-slate-600" />
+            <span>הדפסה</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleResetToDefaults}
+            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+            title="איפוס נתונים לברירת מחדל של המשפחתון"
+          >
+            <RotateCcw className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      {/* SECTION NAV / FILTER TABS */}
-      <div className="flex items-center justify-between gap-2 overflow-x-auto p-1.5 bg-slate-100 rounded-xl border border-slate-200 text-xs font-semibold">
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setActiveSectionTab('all')}
-            className={`px-3 py-1.5 rounded-lg transition cursor-pointer whitespace-nowrap ${
-              activeSectionTab === 'all'
-                ? 'bg-white text-teal-800 border border-slate-200 shadow-2xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            כל הסעיפים והמודל
-          </button>
-
-          <button
-            onClick={() => setActiveSectionTab('optimizer')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer whitespace-nowrap ${
-              activeSectionTab === 'optimizer'
-                ? 'bg-teal-700 text-white shadow-xs font-bold'
-                : 'text-teal-800 hover:bg-teal-50'
-            }`}
-          >
-            <Brain className="w-3.5 h-3.5" />
-            <span>מנוע רווחיות ולמידה אוטונומי 🧠</span>
-          </button>
-
-          <button
-            onClick={() => setActiveSectionTab('summary')}
-            className={`px-3 py-1.5 rounded-lg transition cursor-pointer whitespace-nowrap ${
-              activeSectionTab === 'summary'
-                ? 'bg-white text-teal-800 border border-slate-200 shadow-2xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            מאזן והכנסות (סעיפים 2, 5)
-          </button>
-          <button
-            onClick={() => setActiveSectionTab('staff')}
-            className={`px-3 py-1.5 rounded-lg transition cursor-pointer whitespace-nowrap ${
-              activeSectionTab === 'staff'
-                ? 'bg-white text-sky-800 border border-slate-200 shadow-2xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            כוח אדם (סעיף 3)
-          </button>
-          <button
-            onClick={() => setActiveSectionTab('opex')}
-            className={`px-3 py-1.5 rounded-lg transition cursor-pointer whitespace-nowrap ${
-              activeSectionTab === 'opex'
-                ? 'bg-white text-teal-800 border border-slate-200 shadow-2xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            הוצאות תפעול (סעיף 4)
-          </button>
-          <button
-            onClick={() => setActiveSectionTab('simulator')}
-            className={`px-3 py-1.5 rounded-lg transition cursor-pointer whitespace-nowrap ${
-              activeSectionTab === 'simulator'
-                ? 'bg-white text-amber-800 border border-slate-200 shadow-2xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            הנחות וסימולטור (סעיף 1)
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          {resetSuccessMessage && (
-            <span className="text-xs font-bold text-emerald-700 flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>הנתונים שוחזרו לדיפולט 16 ילדים!</span>
+      {/* 2. 4 TOP KPI CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* KPI 1: Net Take-Home Salary */}
+        <div className="bg-gradient-to-br from-teal-50 to-emerald-50/50 border border-teal-200 rounded-2xl p-5 shadow-xs relative overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-teal-800 tracking-wide">
+              שכר נטו נשאר ביד למטפלת 💰
             </span>
-          )}
-          <button
-            onClick={handleResetToTableDefaults}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition cursor-pointer border border-slate-200 shadow-2xs"
-            title="שחזור נתוני ברירת המחדל של הטבלה (16 ילדים)"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-teal-600" />
-            <span>איפוס לדיפולט (16 ילדים)</span>
-          </button>
-        </div>
-      </div>
-
-      {/* NOTIFICATION TOAST */}
-      {optimizerToast && (
-        <div className={`p-4 rounded-xl border text-xs font-medium flex items-center justify-between gap-3 shadow-xs transition-all ${
-          optimizerToast.type === 'success'
-            ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
-            : 'bg-teal-50 border-teal-200 text-teal-900'
-        }`}>
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{optimizerToast.message}</span>
-          </div>
-          <button onClick={() => setOptimizerToast(null)} className="text-slate-400 hover:text-slate-600">✕</button>
-        </div>
-      )}
-
-      {/* =========================================================================
-          SECTION 6: מדדים מרכזיים (Key Performance Indicators - KPIs)
-         ========================================================================= */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {/* KPI 1: שיעור רווח נקי */}
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
-          <span className="text-[11px] font-medium text-slate-500 block truncate">שיעור רווח נקי (נטו)</span>
-          <div className="flex items-baseline gap-1">
-            <span className={`text-xl font-bold font-mono ${netProfitMarginPercent >= 10 ? 'text-emerald-700' : netProfitMarginPercent >= 5 ? 'text-teal-700' : 'text-amber-700'}`}>
-              {netProfitMarginPercent.toFixed(2)}%
-            </span>
-            <span className="text-[10px] text-slate-400 font-sans">
-              {netProfitMarginPercent >= 10 ? '(יעד הושג ✓)' : '(מסדרון יעד: 10%-15%)'}
+            <span className="w-8 h-8 rounded-lg bg-teal-600 text-white flex items-center justify-center shadow-xs">
+              <DollarSign className="w-4 h-4" />
             </span>
           </div>
-          <span className="text-[10px] text-slate-500 block truncate">₪{estimatedMonthlyBalance.toLocaleString('he-IL', { maximumFractionDigits: 0 })} רווח חודשי</span>
-        </div>
-
-        {/* KPI 2: משקל כוח אדם */}
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
-          <span className="text-[11px] font-medium text-slate-500 block truncate">משקל כוח אדם מהנטו</span>
-          <div className="flex items-baseline gap-1">
-            <span className="text-xl font-bold font-mono text-sky-700">{laborRatioPercent.toFixed(2)}%</span>
-          </div>
-          <span className="text-[10px] text-slate-500 block truncate">₪{totalLaborCost.toLocaleString('he-IL', { maximumFractionDigits: 0 })} ל-5 עובדות</span>
-        </div>
-
-        {/* KPI 3: משקל הוצאות תפעול */}
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
-          <span className="text-[11px] font-medium text-slate-500 block truncate">משקל הוצאות תפעול</span>
-          <div className="flex items-baseline gap-1">
-            <span className="text-xl font-bold font-mono text-teal-700">{opexRatioPercent.toFixed(2)}%</span>
-          </div>
-          <span className="text-[10px] text-slate-500 block truncate">₪{totalOperatingExpenses.toLocaleString('he-IL', { maximumFractionDigits: 0 })} סך 7 סעיפים</span>
-        </div>
-
-        {/* KPI 4: שיעור הרזרבה (בלת"מ) */}
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
-          <span className="text-[11px] font-medium text-slate-500 block truncate">שיעור רזרבה (בלת"מ)</span>
-          <div className="flex items-baseline gap-1">
-            <span className="text-xl font-bold font-mono text-amber-700">{contingencyRatioPercent.toFixed(2)}%</span>
-          </div>
-          <span className="text-[10px] text-slate-500 block truncate">₪{contingencyAmount.toLocaleString('he-IL', { maximumFractionDigits: 0 })} מההכנסה נטו</span>
-        </div>
-
-        {/* KPI 5: יתרה ממוצעת לילד */}
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
-          <span className="text-[11px] font-medium text-slate-500 block truncate">יתרה ממוצעת לילד</span>
-          <div className="flex items-baseline gap-1">
-            <span className="text-xl font-bold font-mono text-emerald-800">₪{balancePerChild.toFixed(2)}</span>
-          </div>
-          <span className="text-[10px] text-slate-500 block truncate">לפי {numChildren} ילדים</span>
-        </div>
-
-        {/* KPI 6: שעות שבועיות סייעות */}
-        <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
-          <span className="text-[11px] font-medium text-slate-500 block truncate">ש"ש סייעות / חודשי</span>
-          <div className="flex items-baseline gap-1">
-            <span className="text-xl font-bold font-mono text-purple-700">{totalWeeklyHourlyHours.toFixed(1)}</span>
-            <span className="text-[10px] text-purple-600 font-sans">ש"ש</span>
-          </div>
-          <span className="text-[10px] text-slate-500 block truncate">{totalMonthlyHourlyHours.toFixed(1)} שעות/חודש</span>
-        </div>
-      </div>
-
-      {/* =========================================================================
-          AUTONOMOUS LOCAL PROFITABILITY & LEARNING ENGINE SECTION (ZERO-AI)
-         ========================================================================= */}
-      {(activeSectionTab === 'all' || activeSectionTab === 'optimizer') && (
-        <div className="bg-gradient-to-br from-teal-50/70 via-white to-slate-50 border border-teal-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-teal-100 pb-4">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-xs shrink-0">
-                <Brain className="w-5 h-5" />
-              </div>
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                    מנוע רווחיות אוטונומי ולמידה מקומית (ללא AI) ⚙️🧠
-                  </h3>
-                  <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full border border-teal-200 font-mono">
-                    Local Reinforcement
-                  </span>
-                </div>
-                <p className="text-xs text-slate-600 leading-relaxed">
-                  המערכת מנתחת את הנתונים בזמן אמת, מציעה מנופים מאוזנים (מה להוסיף ומה להוריד) להגעה למסדרון רווחיות בריא (10%–15%), שומרת על חוק הפיקוח והבטיחות, ורושמת לעצמה מסקנות לשיפור האלגוריתם בעקבות כל אישור או דחייה.
-                </p>
-              </div>
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-black text-teal-950 font-mono tracking-tight">
+              ₪{soleCaregiverTakeHomeSalary.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={() => setShowConclusionsLog(!showConclusionsLog)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-teal-800 text-xs font-bold transition border border-teal-200 shadow-2xs cursor-pointer"
-              >
-                <History className="w-3.5 h-3.5 text-teal-600" />
-                <span>{showConclusionsLog ? 'הסתר יומן מסקנות' : `יומן מסקנות האלגוריתם (${conclusions.length})`}</span>
-              </button>
-
-              <button
-                onClick={handleResetOptimizerMemory}
-                className="text-[11px] text-slate-500 hover:text-slate-800 px-2 py-1 underline cursor-pointer"
-                title="איפוס הזיכרון המקומי של האלגוריתם לברירת המחדל"
-              >
-                איפוס זיכרון מקומי
-              </button>
+            <div className="flex items-center gap-2 mt-1.5 text-xs text-teal-700">
+              <span className="font-semibold">{profitMarginPercent.toFixed(1)}%</span>
+              <span>מההכנסה נטו</span>
+              <span>•</span>
+              <span className="font-semibold font-mono">₪{profitPerChild.toFixed(0)}</span>
+              <span>לילד</span>
             </div>
           </div>
+          <div className="mt-2 pt-2 border-t border-teal-200/60 text-[11px] text-teal-800 flex items-center gap-1 font-medium">
+            <GraduationCap className="w-3.5 h-3.5 text-teal-700" />
+            <span>גמול השכלה: בעלת תואר ראשון בחינוך (B.Ed.)</span>
+          </div>
+        </div>
 
-          {/* Current Status Health Banner */}
-          <div className="p-3.5 bg-white rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2.5">
-              <Scale className="w-4 h-4 text-teal-600 shrink-0" />
+        {/* KPI 2: Gross & Net Revenue */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-600">
+              הכנסה חודשית משכ״ל ({numChildren} פעוטות)
+            </span>
+            <span className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4" />
+            </span>
+          </div>
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
+              ₪{monthlyGrossIncome.toLocaleString('he-IL', { minimumFractionDigits: 0 })}
+            </div>
+            <div className="flex items-center justify-between text-xs text-slate-500 mt-1.5">
+              <span>{params.isVatExempt ? 'עוסק פטור (ללא מע"מ)' : `מע״מ (18%): ₪${monthlyVatAmount.toFixed(0)}`}</span>
+              <span className="font-semibold text-slate-700">נטו: ₪{monthlyNetIncome.toFixed(0)}</span>
+            </div>
+          </div>
+          <div className="mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
+            <span>שכ"ל לילד: ₪{tuition.toLocaleString()}</span>
+            <span className="text-teal-700 font-medium">{numChildren}/5 תפוסה מלאה</span>
+          </div>
+        </div>
+
+        {/* KPI 3: Recognized Home Expenses */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-600">
+              הוצאות תפעול מוכרות בדירה
+            </span>
+            <span className="w-8 h-8 rounded-lg bg-sky-50 text-sky-700 border border-sky-200 flex items-center justify-center">
+              <Home className="w-4 h-4" />
+            </span>
+          </div>
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
+              ₪{totalOperatingExpenses.toLocaleString('he-IL', { minimumFractionDigits: 0 })}
+            </div>
+            <div className="text-xs text-slate-500 mt-1.5 flex items-center justify-between">
+              <span>7 סעיפי הוצאה מוכרים</span>
+              <span className="font-semibold text-sky-700">{opexRatio.toFixed(1)}% מהנטו</span>
+            </div>
+          </div>
+          <div className="mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
+            <span>כולל אוכל טרי, חשמל/מים ורו"ח</span>
+            <span className="text-slate-700 font-mono">₪{(totalOperatingExpenses / numChildren).toFixed(0)} לילד</span>
+          </div>
+        </div>
+
+        {/* KPI 4: Reserves & Backup */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-600">
+              רזרבת חופשה וקרן גיבוי
+            </span>
+            <span className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center">
+              <Shield className="w-4 h-4" />
+            </span>
+          </div>
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">
+              ₪{(contingencyAmount + backupFundCost).toLocaleString('he-IL', { minimumFractionDigits: 0 })}
+            </div>
+            <div className="text-xs text-slate-500 mt-1.5 flex items-center justify-between">
+              <span>גיבוי מחלה: ₪{backupFundCost}</span>
+              <span className="font-semibold text-amber-700">בלת"ם {params.contingencyPercent}%: ₪{contingencyAmount.toFixed(0)}</span>
+            </div>
+          </div>
+          <div className="mt-2 pt-2 border-t border-slate-100 text-[11px] text-slate-500 flex items-center justify-between">
+            <span>ביטחון תזרימי למטפלת בדירה</span>
+            <span className="text-emerald-700 font-medium">מוגן לחופשות</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. MAIN INTERACTIVE CONTROLS SECTION */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left / Primary Column: Sliders and Core Inputs (7 cols) */}
+        <div className="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-6">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-2">
+              <span className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center text-xs font-bold">
+                1
+              </span>
               <div>
-                <span className="font-bold text-slate-900">סטטוס רווחיות נוכחי: </span>
-                <span className="font-mono font-bold text-teal-800">
-                  {netProfitMarginPercent.toFixed(2)}% (₪{Math.round(estimatedMonthlyBalance).toLocaleString()}/חודש)
-                </span>
-                <span className="text-slate-500 mx-2">·</span>
-                <span className="text-slate-600">
-                  {netProfitMarginPercent < 8
-                    ? 'מומלץ להפעיל 1–2 מנופים להגעה למסדרון רווחיות יציב (₪4,800–₪7,200 בחודש).'
-                    : 'המעון נמצא במסדרון רווחיות בריא ומוגן כחוק!'}
-                </span>
+                <h3 className="text-base font-bold text-slate-900">
+                  הגדרות ופרמטרים של המשפחתון בדירה
+                </h3>
+                <p className="text-xs text-slate-500">שנו את הסליידרים וצפו בהשפעה المיידית על השכר שנשאר ביד</p>
               </div>
             </div>
+          </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-[11px] font-medium text-slate-500">משקלי העדפה פעילים:</span>
-              <span className="font-mono text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 font-bold">
-                תפוסה: {learnedWeights.capacity?.toFixed(1) || '1.0'} | רכש: {learnedWeights.food?.toFixed(1) || '1.0'} | שעות: {learnedWeights.staffSchedule?.toFixed(1) || '1.0'}
+          {/* Slider 1: Number of children in the apartment */}
+          <div className="space-y-2 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                <span>מספר פעוטות בדירה (עד 5 לפי חוק הפיקוח)</span>
+                {numChildren === 5 && (
+                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full">
+                    תפוסה מלאה מומלצת ✓
+                  </span>
+                )}
+                {numChildren > 5 && (
+                  <span className="text-[10px] bg-rose-100 text-rose-800 font-semibold px-2 py-0.5 rounded-full">
+                    מעל התקן ליחיד!
+                  </span>
+                )}
+              </label>
+              <span className="text-lg font-black text-slate-900 font-mono bg-white px-3 py-0.5 rounded-lg border border-slate-200 shadow-2xs">
+                {numChildren} ילדים
               </span>
             </div>
+            <input
+              type="range"
+              min={1}
+              max={6}
+              step={1}
+              value={numChildren}
+              onChange={(e) => setParams((p) => ({ ...p, childrenCount: Number(e.target.value) }))}
+              className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
+            />
+            <div className="flex justify-between text-[11px] text-slate-400 font-mono">
+              <span>1 ילד</span>
+              <span>2</span>
+              <span>3</span>
+              <span>4</span>
+              <span className="text-teal-700 font-bold">5 (תקן דירה)</span>
+              <span>6 (חריג)</span>
+            </div>
           </div>
 
-          {/* Proposal Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {autonomousProposals.map((proposal) => {
-              const isApplied = appliedLeverIds.includes(proposal.id);
-
-              return (
-                <div
-                  key={proposal.id}
-                  className={`bg-white rounded-xl border transition-all p-4 space-y-3 flex flex-col justify-between ${
-                    isApplied
-                      ? 'border-emerald-300 ring-2 ring-emerald-500/10 shadow-xs'
-                      : 'border-slate-200 hover:border-teal-300 hover:shadow-xs'
-                  }`}
-                >
-                  <div className="space-y-2">
-                    {/* Top tags */}
-                    <div className="flex items-center justify-between gap-2">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                        proposal.actionDirection === 'BUNDLE'
-                          ? 'bg-purple-50 text-purple-800 border-purple-200 font-black'
-                          : proposal.actionDirection === 'ADD'
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                          : proposal.actionDirection === 'REDUCE'
-                          ? 'bg-sky-50 text-sky-800 border-sky-200'
-                          : 'bg-amber-50 text-amber-800 border-amber-200'
-                      }`}>
-                        {proposal.actionDirection === 'BUNDLE' ? '⭐ חבילה משולבת' : proposal.actionDirection === 'ADD' ? '+ הוספת הכנסה' : proposal.actionDirection === 'REDUCE' ? '- התייעלות רכש' : '⚙️ אופטימיזציית שעות'}
-                      </span>
-
-                      <div className="flex items-center gap-1 text-[11px] font-mono font-bold text-slate-600 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
-                        <span>התאמה:</span>
-                        <span className="text-teal-700">{proposal.feasibilityScore}%</span>
-                      </div>
-                    </div>
-
-                    {/* Title & Subtitle */}
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900 leading-snug">{proposal.title}</h4>
-                      <p className="text-[11px] text-slate-500 mt-0.5">{proposal.subtitle}</p>
-                    </div>
-
-                    {/* Financial impact box */}
-                    <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between font-mono text-xs">
-                      <div>
-                        <span className="text-slate-500 text-[10px] block font-sans">השפעה חודשית נטו:</span>
-                        <span className="font-bold text-emerald-700 text-sm">
-                          +₪{proposal.monthlyShekelDelta.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="text-left">
-                        <span className="text-slate-500 text-[10px] block font-sans">רווח נקי צפוי:</span>
-                        <span className="font-bold text-slate-800">
-                          {proposal.projectedNewProfitPercent}% <span className="text-[10px] text-emerald-600">({proposal.profitDeltaPercent >= 0 ? `+${proposal.profitDeltaPercent}%` : `${proposal.profitDeltaPercent}%`})</span>
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Regulatory badge */}
-                    <div className="flex items-center gap-1.5 text-[11px] text-teal-800 bg-teal-50/60 p-2 rounded-lg border border-teal-100">
-                      <ShieldCheck className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                      <span className="leading-tight font-medium">{proposal.regulatoryCompliance.details}</span>
-                    </div>
-
-                    {/* Rationale */}
-                    <p className="text-[11px] text-slate-600 leading-relaxed bg-slate-50/40 p-2 rounded-lg border border-slate-100">
-                      <span className="font-bold text-slate-700">היגיון ואיזון: </span>
-                      {proposal.balanceRationale}
-                    </p>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-                    <button
-                      onClick={() => handleApplyProposal(proposal)}
-                      disabled={isApplied}
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 ${
-                        isApplied
-                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 cursor-default'
-                          : 'bg-teal-600 hover:bg-teal-700 text-white shadow-2xs'
-                      }`}
-                    >
-                      {isApplied ? (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-                          <span>הוחל בסימולטור ✓</span>
-                        </>
-                      ) : (
-                        <>
-                          <ArrowUpRight className="w-3.5 h-3.5" />
-                          <span>החל בסימולטור (+₪{proposal.monthlyShekelDelta})</span>
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      onClick={() => handleRejectProposal(proposal)}
-                      title="דחיית הצעה זו (מלמד את האלגוריתם לא להציע כיוון זה)"
-                      className="p-2 rounded-lg bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition cursor-pointer"
-                    >
-                      <XCircle className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* =========================================================================
-              COLLAPSIBLE AUTONOMOUS LEARNING LOG (יומן המסקנות העצמיות)
-             ========================================================================= */}
-          {showConclusionsLog && (
-            <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                <div className="flex items-center gap-2">
-                  <History className="w-4 h-4 text-teal-600" />
-                  <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-                    יומן המסקנות העצמיות של האלגוריתם (הזיכרון המקומי ב-localStorage)
-                  </h4>
-                </div>
-                <span className="text-[11px] font-mono text-slate-500">
-                  {conclusions.length} מסקנות מתועדות
+          {/* Slider 2: Tuition per child */}
+          <div className="space-y-2 bg-slate-50/70 p-4 rounded-xl border border-slate-200/80">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-slate-700">
+                שכר לימוד חודשי לילד {params.isVatExempt ? '(ללא מע"מ)' : '(כולל מע"מ)'}
+              </label>
+              <div className="flex items-center gap-1">
+                <span className="text-lg font-black text-slate-900 font-mono bg-white px-3 py-0.5 rounded-lg border border-slate-200 shadow-2xs">
+                  ₪{tuition.toLocaleString()}
                 </span>
               </div>
-
-              <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
-                {conclusions.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`p-3 rounded-lg border text-xs space-y-1 transition ${
-                      item.action === 'ACCEPTED'
-                        ? 'bg-emerald-50/50 border-emerald-200'
-                        : 'bg-amber-50/50 border-amber-200'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 font-bold">
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${
-                          item.action === 'ACCEPTED'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {item.action === 'ACCEPTED' ? 'אושר והוחל' : 'נדחה ע"י הנהלה'}
-                        </span>
-                        <span className="text-slate-900">{item.leverTitle}</span>
-                      </div>
-                      <span className="text-[10px] text-slate-400 font-mono">{item.dateFormatted}</span>
-                    </div>
-
-                    <p className="text-slate-700 leading-relaxed font-sans">{item.learnedRule}</p>
-                    <div className="flex items-center gap-2 text-[11px] text-slate-500 font-mono pt-0.5 border-t border-slate-100">
-                      <span>התאמת אלגוריתם: {item.algorithmicAdjustment}</span>
-                      <span className="text-teal-700 font-bold">(משקל: {item.previousWeight} ➔ {item.newWeight})</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
-          )}
-        </div>
-      )}
-
-      {/* =========================================================================
-          SECTION 1: הנחות יסוד ופרמטרים של המודל (Model Assumptions)
-         ========================================================================= */}
-      {(activeSectionTab === 'all' || activeSectionTab === 'simulator') && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700">
-                <Sliders className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <span>1. הנחות יסוד ופרמטרים של המודל (Model Assumptions & Variables)</span>
-                </h3>
-                <p className="text-xs text-slate-500">
-                  כללי הבסיס עליהם בנוי המודל הפיננסי (שעות פעילות, מקדמים ושיעורי מס):
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowDetailedFormulas(!showDetailedFormulas)}
-              className="text-xs font-semibold text-teal-700 hover:text-teal-900 flex items-center gap-1 cursor-pointer"
-            >
-              <span>{showDetailedFormulas ? 'הסתר פירוט נוסחאות' : 'הצג פירוט נוסחאות'}</span>
-              {showDetailedFormulas ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </button>
-          </div>
-
-          {/* Quick Info Grid for Model Parameters */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-              <span className="text-slate-500 font-medium">ימי ושעות פעילות המעון:</span>
-              <p className="font-bold text-slate-800">ראשון–חמישי: 7:30–16:00</p>
-              <p className="font-bold text-slate-800">שישי: 7:20–12:00</p>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-              <span className="text-slate-500 font-medium">מקדם שעות שבועיות לחודש:</span>
-              <p className="font-bold text-slate-800 font-mono text-sm">4.33333</p>
-              <span className="text-[11px] text-slate-500">נוסחה: (52 שבועות ÷ 12 חודשים)</span>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-              <span className="text-slate-500 font-medium">עלות מעביד משוערת:</span>
-              <p className="font-bold text-teal-800 font-mono text-sm">{params.employerOverheadPercent}%</p>
-              <span className="text-[11px] text-slate-500">הפרשות סוציאליות, פנסיה וביטוח לאומי</span>
-            </div>
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-              <span className="text-slate-500 font-medium">שכר שעתי והשתתפות נסיעות:</span>
-              <p className="font-bold text-slate-800 font-mono text-sm">₪{wagePerHour} לשעה ברוטו</p>
-              <span className="text-[11px] text-slate-500">נסיעות: מקס' ₪200/חודש (₪64 לעובדת ג')</span>
+            <input
+              type="range"
+              min={2500}
+              max={5500}
+              step={50}
+              value={tuition}
+              onChange={(e) => setParams((p) => ({ ...p, monthlyTuition: Number(e.target.value) }))}
+              className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600"
+            />
+            <div className="flex justify-between text-[11px] text-slate-400 font-mono">
+              <span>₪2,500</span>
+              <span>₪3,000</span>
+              <span className="text-teal-700 font-bold">₪3,500 (בסיס רותם ומאיה)</span>
+              <span>₪4,200</span>
+              <span>₪5,000+</span>
             </div>
           </div>
 
-          {/* Interactive Sliders to adjust Model Parameters in real-time */}
-          <div className="pt-2 space-y-3">
-            <span className="text-xs font-bold text-slate-700 block">סימולטור אינטראקטיבי – התאמת משתני המודל בזמן אמת:</span>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <EyeFriendlySlider
-                label="מספר ילדים במעון:"
-                sublabel="במודל: 16 ילדים"
-                value={numChildren}
-                onChange={(val) => updateParam('childrenCount', val)}
-                min={1}
-                max={30}
-                suffix="ילדים"
-                accentColor="accent-teal-600"
-              />
-              <EyeFriendlySlider
-                label="שכר לימוד לילד (כולל מע''מ):"
-                sublabel="במודל: ₪3,500 לחודש"
-                value={tuition}
-                onChange={(val) => updateParam('tuitionPerChild', val)}
-                min={2000}
-                max={5500}
+          {/* Tax Status & VAT Toggle */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-700">סוג עוסק ברשות המסים</span>
+                <span className="text-[11px] text-slate-500">
+                  {params.isVatExempt ? 'עוסק פטור' : 'עוסק מורשה (18% מע"מ)'}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setParams((p) => ({ ...p, isVatExempt: false }))}
+                  className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                    !params.isVatExempt
+                      ? 'bg-teal-600 text-white border-teal-600 shadow-2xs'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  עוסק מורשה (18%)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setParams((p) => ({ ...p, isVatExempt: true }))}
+                  className={`flex-1 py-1.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                    params.isVatExempt
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                      : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  עוסק פטור (0% מע"מ)
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-500 pt-1">
+                {params.isVatExempt
+                  ? 'מתאים למחזור שנתי מתחת לכ-120,000 ₪ (חוסך 18% מע"מ).'
+                  : 'תקציב רותם ומאיה מחושב כעוסק מורשה לפי 18% מע"מ.'}
+              </p>
+            </div>
+
+            {/* Contingency Reserve & Backup Fund */}
+            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-700">קרן גיבוי / ממלאת מקום</span>
+                <span className="text-xs font-mono font-bold text-slate-800">₪{backupFundCost}</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={1500}
                 step={50}
-                prefix="₪"
-                accentColor="accent-teal-600"
+                value={backupFundCost}
+                onChange={(e) => setParams((p) => ({ ...p, backupStaffFund: Number(e.target.value) }))}
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
               />
-              <EyeFriendlySlider
-                label="שיעור מע''מ (%):"
-                sublabel="במודל: 18.0% (תקנות מס)"
-                value={params.vatRatePercent}
-                onChange={(val) => updateParam('vatRatePercent', val)}
-                min={0}
-                max={25}
-                step={0.5}
-                suffix="%"
-                accentColor="accent-teal-600"
-              />
-              <EyeFriendlySlider
-                label="שכר שעתי לבסיס עובדות הוראה/עזרה:"
-                sublabel="במודל: ₪45.00 ברוטו לשעה"
-                value={wagePerHour}
-                onChange={(val) => updateParam('hourlyWage', val)}
-                min={30}
-                max={80}
-                step={1}
-                prefix="₪"
-                accentColor="accent-sky-600"
-              />
-              <EyeFriendlySlider
-                label="שיעור עלות מעביד משוערת (%):"
-                sublabel="במודל: 17.0% משכר הברוטו"
-                value={params.employerOverheadPercent}
-                onChange={(val) => updateParam('employerOverheadPercent', val)}
-                min={10}
-                max={35}
-                step={0.5}
-                suffix="%"
-                accentColor="accent-sky-600"
-              />
-              <EyeFriendlySlider
-                label="הפרשה לבלת''מים (רזרבה %):"
-                sublabel="במודל: 10.0% מההכנסה נטו"
-                value={params.contingencyPercent}
-                onChange={(val) => updateParam('contingencyPercent', val)}
-                min={0}
-                max={25}
-                step={1}
-                suffix="%"
-                accentColor="accent-amber-600"
-              />
+              <div className="flex items-center justify-between text-[10px] text-slate-500">
+                <span>לימי מחלה, סידורים או שעות חופש</span>
+                <span className="font-mono">{backupRatio.toFixed(1)}% מהנטו</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Contingency Slider */}
+          <div className="space-y-2 bg-amber-50/50 p-4 rounded-xl border border-amber-200/70">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                <span>רזרבת חופשה שנתית ובלת״מים ({params.contingencyPercent}% מהנטו)</span>
+                <span className="text-[10px] text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-full">
+                  לכיסוי חודש אוגוסט / חגים
+                </span>
+              </label>
+              <span className="text-sm font-black text-amber-950 font-mono">
+                ₪{contingencyAmount.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={20}
+              step={0.5}
+              value={params.contingencyPercent}
+              onChange={(e) => setParams((p) => ({ ...p, contingencyPercent: Number(e.target.value) }))}
+              className="w-full h-2.5 bg-amber-200/80 rounded-lg appearance-none cursor-pointer accent-amber-700"
+            />
+            <div className="flex justify-between text-[11px] text-amber-800/80 font-mono">
+              <span>0% (ללא חיסכון)</span>
+              <span>5%</span>
+              <span className="font-bold text-amber-900">10% (ברירת מחדל מומלצת)</span>
+              <span>15%</span>
+              <span>20%</span>
             </div>
           </div>
         </div>
-      )}
 
-      {/* =========================================================================
-          SECTION 2: מפתח הכנסות והפרדת מע"מ (Revenue & Tax Breakdown)
-         ========================================================================= */}
-      {(activeSectionTab === 'all' || activeSectionTab === 'summary') && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
-          <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
-              <DollarSign className="w-4 h-4" />
+        {/* Right / Secondary Column: Visual Chart & Caregiver Income Summary (5 cols) */}
+        <div className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-6">
+          <div>
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-7 h-7 rounded-lg bg-teal-600 text-white flex items-center justify-center text-xs font-bold">
+                  2
+                </span>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    לאן הולך כל שקל מההכנסה נטו?
+                  </h3>
+                  <p className="text-xs text-slate-500">התפלגות תזרימית מדויקת בדירה</p>
+                </div>
+              </div>
+              <PieChartIcon className="w-4 h-4 text-teal-600" />
             </div>
+
+            {/* Recharts Pie Chart */}
+            <div className="h-48 w-full mt-2 relative flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={50}
+                    outerRadius={75}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(val: any) => [`₪${Number(val || 0).toLocaleString()}`, 'סכום']}
+                    contentStyle={{
+                      direction: 'rtl',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      border: '1px solid #e2e8f0',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+                <span className="text-[10px] text-slate-400 font-medium">רווח נטו</span>
+                <span className="text-sm font-black text-teal-800 font-mono">
+                  {profitMarginPercent.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+
+            {/* Breakdown Legend */}
+            <div className="space-y-2 text-xs pt-1">
+              {chartData.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between py-1.5 px-2.5 rounded-lg bg-slate-50/70 border border-slate-100"
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="w-3 h-3 rounded-full shrink-0"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="font-medium text-slate-700">{item.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2 font-mono">
+                    <span className="font-bold text-slate-900">₪{item.value.toLocaleString()}</span>
+                    <span className="text-slate-400 text-[10px]">
+                      ({monthlyNetIncome > 0 ? ((item.value / monthlyNetIncome) * 100).toFixed(1) : 0}%)
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Educational Trust & Value Card */}
+          <div className="p-3.5 bg-emerald-50/80 rounded-xl border border-emerald-200/80 text-emerald-950 text-xs space-y-1">
+            <div className="flex items-center gap-1.5 font-bold text-emerald-900">
+              <GraduationCap className="w-4 h-4 text-emerald-700" />
+              <span>יתרון חינוכי מובהק: תואר ראשון בחינוך</span>
+            </div>
+            <p className="text-[11px] text-emerald-800 leading-relaxed">
+              הורים מעריכים ומעדיפים לשלם שכר לימוד מלא (3,500 ₪) בידיעה שהמטפלת בעלת תואר אקדמי בחינוך (B.Ed.), בסביבה ביתית אינטימית ובטוחה של 5 פעוטות בלבד.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. RECOGNIZED HOME EXPENSES OF THE APARTMENT (7 DETAILED ITEMS + CUSTOM ADDITION) */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-2">
+            <span className="w-7 h-7 rounded-lg bg-sky-600 text-white flex items-center justify-center text-xs font-bold">
+              3
+            </span>
             <div>
               <h3 className="text-base font-bold text-slate-900">
-                2. מפתח הכנסות והפרדת מע"מ (Revenue & Tax Breakdown)
+                פירוט הוצאות הדירה והמשפחתון המוכרות במס
               </h3>
               <p className="text-xs text-slate-500">
-                הפרדה מדויקת בין הכנסה ברוטו, חבות מע"מ (18%) והכנסה תפעולית נטו:
+                הוצאות שוטפות המופחתות מההכנסה ומקטינות את חבות מס ההכנסה וביטוח לאומי
               </p>
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="w-full text-right text-xs">
-              <thead className="bg-slate-50 text-slate-700 border-b border-slate-200">
-                <tr>
-                  <th className="py-3 px-3.5 font-bold">סעיף</th>
-                  <th className="py-3 px-3.5 font-bold font-mono">סכום חודשי (₪)</th>
-                  <th className="py-3 px-3.5 font-bold">נוסחה / יחס חישובי</th>
-                  <th className="py-3 px-3.5 font-bold font-mono">אחוז מההכנסה נטו</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-mono">
-                <tr className="hover:bg-slate-50/80 transition">
-                  <td className="py-3 px-3.5 font-bold text-slate-800 font-sans">הכנסה חודשית ברוטו (כולל מע"מ)</td>
-                  <td className="py-3 px-3.5 text-base font-bold text-slate-900">₪{monthlyGrossIncome.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3.5 text-slate-600 font-sans">מספר ילדים ({numChildren}) × שכר לימוד (₪{tuition.toLocaleString()})</td>
-                  <td className="py-3 px-3.5 text-slate-400 font-sans">—</td>
-                </tr>
-                <tr className="hover:bg-amber-50/40 transition bg-amber-50/20">
-                  <td className="py-3 px-3.5 font-bold text-amber-900 font-sans">רכיב מע"מ ({params.vatRatePercent}%)</td>
-                  <td className="py-3 px-3.5 text-base font-bold text-amber-700">₪{monthlyVatAmount.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3.5 text-slate-600 font-sans">הכנסה ברוטו - (הכנסה ברוטו ÷ 1.18)</td>
-                  <td className="py-3 px-3.5 text-amber-800 font-bold">{vatPercentOfNet.toFixed(2)}% מתוך הנטו</td>
-                </tr>
-                <tr className="hover:bg-teal-50/50 transition bg-teal-50/30 border-t border-teal-200 font-sans">
-                  <td className="py-3 px-3.5 font-black text-teal-950">הכנסה חודשית נטו (ללא מע"מ)</td>
-                  <td className="py-3 px-3.5 text-base font-black text-teal-800 font-mono">₪{monthlyNetIncome.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3.5 text-teal-900 font-medium">הכנסה ברוטו ÷ 1.18 (בסיס התקציב)</td>
-                  <td className="py-3 px-3.5 text-teal-800 font-black font-mono">100.00%</td>
-                </tr>
-              </tbody>
-            </table>
+          <div className="flex items-center gap-2">
+            <div className="text-xs bg-sky-50 text-sky-800 border border-sky-200 font-mono font-bold px-3 py-1 rounded-xl">
+              סה״כ הוצאות: ₪{totalOperatingExpenses.toLocaleString()} לחודש
+            </div>
+            {!isAddingOpex && (
+              <button
+                type="button"
+                onClick={() => setIsAddingOpex(true)}
+                className="inline-flex items-center gap-1 px-3 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>הוסף סעיף</span>
+              </button>
+            )}
           </div>
         </div>
-      )}
 
-      {/* =========================================================================
-          SECTION 3: פירוט עלויות כוח אדם (Labor Cost Calculations)
-         ========================================================================= */}
-      {(activeSectionTab === 'all' || activeSectionTab === 'staff') && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-200 flex items-center justify-center text-sky-700">
-                <Users className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900">
-                  3. פירוט עלויות כוח אדם (Labor Cost Calculations)
-                </h3>
-                <p className="text-xs text-slate-500">
-                  טבלת שכר מפורטת ל-5 עובדות צוות: שעות, ברוטו, עלות מעסיק ({params.employerOverheadPercent}%) ונסיעות:
-                </p>
-              </div>
+        {/* Add new opex row */}
+        {isAddingOpex && (
+          <form
+            onSubmit={handleAddOpex}
+            className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row items-center gap-3 animate-fadeIn"
+          >
+            <input
+              type="text"
+              placeholder="שם ההוצאה (למשל: אינטרנט ביתי / חומרי ניקוי)"
+              value={newOpexName}
+              onChange={(e) => setNewOpexName(e.target.value)}
+              className="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+              required
+            />
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-slate-500">סכום חודשי:</span>
+              <input
+                type="number"
+                min={1}
+                value={newOpexAmount}
+                onChange={(e) => setNewOpexAmount(Number(e.target.value))}
+                className="w-24 px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-mono bg-white focus:outline-none focus:ring-2 focus:ring-sky-500"
+                required
+              />
+              <span className="text-xs text-slate-500">₪</span>
             </div>
-
-            <div className="text-left text-xs bg-sky-50 px-3 py-1.5 rounded-xl border border-sky-200">
-              <span className="text-slate-600">סה"כ שכר ומעסיק: </span>
-              <span className="font-bold font-mono text-sky-800 text-sm">₪{totalLaborCost.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="w-full text-right text-xs">
-              <thead className="bg-slate-50 text-slate-700 border-b border-slate-200">
-                <tr>
-                  <th className="py-3 px-3 font-bold">תפקיד / עובד</th>
-                  <th className="py-3 px-3 font-bold">ימי עבודה</th>
-                  <th className="py-3 px-3 font-bold font-mono">שעות שבועיות</th>
-                  <th className="py-3 px-3 font-bold font-mono">שעות חודשיות</th>
-                  <th className="py-3 px-3 font-bold font-mono">ברוטו חודשי (₪)</th>
-                  <th className="py-3 px-3 font-bold font-mono">עלות מעסיק {params.employerOverheadPercent}% (₪)</th>
-                  <th className="py-3 px-3 font-bold font-mono">נסיעות (₪)</th>
-                  <th className="py-3 px-3 font-bold font-mono text-sky-900 bg-sky-50/60">סה"כ עלות מעסיק (₪)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-mono">
-                {/* 1. מנהלת */}
-                <tr className="hover:bg-slate-50/80 transition">
-                  <td className="py-3 px-3 font-bold text-slate-900 font-sans">מנהלת</td>
-                  <td className="py-3 px-3 text-slate-600 font-sans">לפי סידור המעון</td>
-                  <td className="py-3 px-3 text-slate-400 font-sans">—</td>
-                  <td className="py-3 px-3 text-slate-400 font-sans">—</td>
-                  <td className="py-3 px-3 font-bold text-slate-800">₪{staff1_gross.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3 text-slate-700">₪{staff1_employer.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3 text-slate-700">₪{staff1_travel.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3 font-bold text-sky-900 bg-sky-50/40">₪{staff1_total.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                </tr>
-
-                {/* 2. מטפלת מוסמכת */}
-                <tr className="hover:bg-slate-50/80 transition">
-                  <td className="py-3 px-3 font-bold text-slate-900 font-sans">מטפלת מוסמכת</td>
-                  <td className="py-3 px-3 text-slate-600 font-sans">א'–ו' (שלישי 1 ל-3 בלימודים)</td>
-                  <td className="py-3 px-3 text-slate-400 font-sans">—</td>
-                  <td className="py-3 px-3 text-slate-400 font-sans">—</td>
-                  <td className="py-3 px-3 font-bold text-slate-800">₪{staff2_gross.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3 text-slate-700">₪{staff2_employer.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3 text-slate-700">₪{staff2_travel.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3 font-bold text-sky-900 bg-sky-50/40">₪{staff2_total.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                </tr>
-
-                {/* 3. עובדת א' */}
-                <tr className="hover:bg-slate-50/80 transition">
-                  <td className="py-3 px-3 font-bold text-slate-900 font-sans">עובדת א'</td>
-                  <td className="py-3 px-3 text-slate-600 font-sans">ראשון, רביעי</td>
-                  <td className="py-3 px-3 text-slate-700">{staff3_weeklyHours.toFixed(1)}</td>
-                  <td className="py-3 px-3 text-slate-700">{staff3_monthlyHours.toFixed(2)}</td>
-                  <td className="py-3 px-3 font-bold text-slate-800">₪{staff3_gross.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3 text-slate-700">₪{staff3_employer.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3 text-slate-700">₪{staff3_travel.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3 font-bold text-sky-900 bg-sky-50/40">₪{staff3_total.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                </tr>
-
-                {/* 4. עובדת ב' */}
-                <tr className="hover:bg-slate-50/80 transition">
-                  <td className="py-3 px-3 font-bold text-slate-900 font-sans">עובדת ב'</td>
-                  <td className="py-3 px-3 text-slate-600 font-sans">ראשון, חמישי, שישי</td>
-                  <td className="py-3 px-3 text-slate-700">{staff4_weeklyHours.toFixed(1)}</td>
-                  <td className="py-3 px-3 text-slate-700">{staff4_monthlyHours.toFixed(2)}</td>
-                  <td className="py-3 px-3 font-bold text-slate-800">₪{staff4_gross.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3 text-slate-700">₪{staff4_employer.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3 text-slate-700">₪{staff4_travel.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3 font-bold text-sky-900 bg-sky-50/40">₪{staff4_total.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                </tr>
-
-                {/* 5. עובדת ג' */}
-                <tr className="hover:bg-slate-50/80 transition">
-                  <td className="py-3 px-3 font-bold text-slate-900 font-sans">עובדת ג'</td>
-                  <td className="py-3 px-3 text-slate-600 font-sans">שלישי בלבד</td>
-                  <td className="py-3 px-3 text-slate-700">{staff5_weeklyHours.toFixed(1)}</td>
-                  <td className="py-3 px-3 text-slate-700">{staff5_monthlyHours.toFixed(2)}</td>
-                  <td className="py-3 px-3 font-bold text-slate-800">₪{staff5_gross.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3 text-slate-700">₪{staff5_employer.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3 text-slate-700">₪{staff5_travel.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3 font-bold text-sky-900 bg-sky-50/40">₪{staff5_total.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                </tr>
-
-                {/* TOTAL STAFF ROW */}
-                <tr className="bg-sky-50/80 font-bold border-t-2 border-sky-300">
-                  <td className="py-3.5 px-3 font-black text-sky-950 font-sans">סה"כ כוח אדם</td>
-                  <td className="py-3.5 px-3 text-slate-600 font-sans">—</td>
-                  <td className="py-3.5 px-3 text-sky-900">{totalWeeklyHourlyHours.toFixed(1)} ש"ש</td>
-                  <td className="py-3.5 px-3 text-sky-900">{totalMonthlyHourlyHours.toFixed(2)} שעות</td>
-                  <td className="py-3.5 px-3 text-sky-900">₪{totalStaffGross.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3.5 px-3 text-sky-900">₪{totalStaffEmployer.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3.5 px-3 text-sky-900">₪{totalStaffTravel.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3.5 px-3 text-base font-black text-sky-950 bg-sky-100/70">₪{totalLaborCost.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================================
-          SECTION 4: פירוט הוצאות תפעול שוטפות (Operating Expenses)
-         ========================================================================= */}
-      {(activeSectionTab === 'all' || activeSectionTab === 'opex') && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700">
-                <Building className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900">
-                  4. פירוט הוצאות תפעול שוטפות (Operating Expenses)
-                </h3>
-                <p className="text-xs text-slate-500">
-                  חלוקה מפורטת של 7 סעיפי התפעול החודשיים ואחוזיהם מההכנסה נטו:
-                </p>
-              </div>
-            </div>
-
-            <div className="text-left text-xs bg-teal-50 px-3 py-1.5 rounded-xl border border-teal-200">
-              <span className="text-slate-600">סה"כ הוצאות תפעול: </span>
-              <span className="font-bold font-mono text-teal-800 text-sm">₪{totalOperatingExpenses.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="w-full text-right text-xs">
-              <thead className="bg-slate-50 text-slate-700 border-b border-slate-200">
-                <tr>
-                  <th className="py-3 px-3.5 font-bold">סעיף הוצאה</th>
-                  <th className="py-3 px-3.5 font-bold font-mono">סכום חודשי (₪)</th>
-                  <th className="py-3 px-3.5 font-bold">פירוט / הערות</th>
-                  <th className="py-3 px-3.5 font-bold font-mono">אחוז מההכנסה נטו</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-mono">
-                {opexItems.map((item, idx) => {
-                  const percentOfNet = monthlyNetIncome > 0 ? (item.amount / monthlyNetIncome) * 100 : 0;
-                  return (
-                    <tr key={item.id} className={`hover:bg-slate-50/80 transition ${idx % 2 === 1 ? 'bg-slate-50/40' : ''}`}>
-                      <td className="py-3 px-3.5 font-bold text-slate-900 font-sans">{item.name}</td>
-                      <td className="py-3 px-3.5 font-bold text-slate-800">₪{item.amount.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td className="py-3 px-3.5 text-slate-600 font-sans">{item.desc}</td>
-                      <td className="py-3 px-3.5 text-teal-800 font-medium">{percentOfNet.toFixed(2)}%</td>
-                    </tr>
-                  );
-                })}
-
-                {/* TOTAL OPEX ROW */}
-                <tr className="bg-teal-50/80 font-bold border-t-2 border-teal-300">
-                  <td className="py-3.5 px-3.5 font-black text-teal-950 font-sans">סה"כ הוצאות תפעול</td>
-                  <td className="py-3.5 px-3.5 text-base font-black text-teal-900">₪{totalOperatingExpenses.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3.5 px-3.5 text-teal-900 font-sans">סיכום הוצאות תפעוליות שוטפות</td>
-                  <td className="py-3.5 px-3.5 text-base font-black text-teal-950">{opexRatioPercent.toFixed(2)}%</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* =========================================================================
-          SECTION 5: סיכום התקציב החודשי והיחסים הפיננסיים (Financial Overview)
-         ========================================================================= */}
-      {(activeSectionTab === 'all' || activeSectionTab === 'summary') && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
-                <TrendingUp className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-slate-900">
-                  5. סיכום התקציב החודשי והיחסים הפיננסיים (Financial Overview & Key Ratios)
-                </h3>
-                <p className="text-xs text-slate-500">
-                  מאזן חודשי כולל: הכנסות, כוח אדם, תפעול, בלת"ם ויתרת רווח:
-                </p>
-              </div>
-            </div>
-
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg">
-                יתרה לילד: ₪{balancePerChild.toFixed(2)}
-              </span>
+              <button
+                type="submit"
+                className="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-semibold rounded-lg shadow-xs cursor-pointer"
+              >
+                הוספה
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsAddingOpex(false)}
+                className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg cursor-pointer"
+              >
+                ביטול
+              </button>
             </div>
-          </div>
+          </form>
+        )}
 
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="w-full text-right text-xs">
-              <thead className="bg-slate-50 text-slate-700 border-b border-slate-200">
-                <tr>
-                  <th className="py-3 px-3.5 font-bold">סעיף בתקציב</th>
-                  <th className="py-3 px-3.5 font-bold font-mono">סכום חודשי (₪)</th>
-                  <th className="py-3 px-3.5 font-bold">נוסחה / חישוב</th>
-                  <th className="py-3 px-3.5 font-bold font-mono">אחוז מההכנסה נטו</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-mono">
-                <tr className="hover:bg-teal-50/30 transition bg-teal-50/20">
-                  <td className="py-3 px-3.5 font-bold text-teal-950 font-sans">הכנסה נטו (ללא מע"מ)</td>
-                  <td className="py-3 px-3.5 text-base font-black text-teal-800">₪{monthlyNetIncome.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3.5 text-slate-600 font-sans">בסיס התקציב התפעולי</td>
-                  <td className="py-3 px-3.5 font-bold text-teal-800">100.00%</td>
-                </tr>
-
-                <tr className="hover:bg-sky-50/30 transition">
-                  <td className="py-3 px-3.5 font-bold text-sky-900 font-sans">עלות כוח אדם</td>
-                  <td className="py-3 px-3.5 text-base font-bold text-sky-700">₪{totalLaborCost.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3.5 text-slate-600 font-sans">סך עלויות השכר והמעסיק (5 עובדות)</td>
-                  <td className="py-3 px-3.5 font-bold text-sky-700">{laborRatioPercent.toFixed(2)}%</td>
-                </tr>
-
-                <tr className="hover:bg-slate-50/60 transition">
-                  <td className="py-3 px-3.5 font-bold text-slate-800 font-sans">הוצאות תפעול</td>
-                  <td className="py-3 px-3.5 text-base font-bold text-slate-700">₪{totalOperatingExpenses.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3.5 text-slate-600 font-sans">סך הוצאות תפעוליות שוטפות</td>
-                  <td className="py-3 px-3.5 font-bold text-slate-700">{opexRatioPercent.toFixed(2)}%</td>
-                </tr>
-
-                <tr className="hover:bg-amber-50/30 transition">
-                  <td className="py-3 px-3.5 font-bold text-amber-900 font-sans">הפרשה לבלת״מים ({params.contingencyPercent}%)</td>
-                  <td className="py-3 px-3.5 text-base font-bold text-amber-700">₪{contingencyAmount.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3.5 text-slate-600 font-sans">₪{monthlyNetIncome.toLocaleString('he-IL', { maximumFractionDigits: 0 })} × {params.contingencyPercent}%</td>
-                  <td className="py-3 px-3.5 font-bold text-amber-700">{contingencyRatioPercent.toFixed(2)}%</td>
-                </tr>
-
-                <tr className="hover:bg-rose-50/30 transition bg-rose-50/20 border-t border-rose-200">
-                  <td className="py-3 px-3.5 font-black text-rose-900 font-sans">סה״כ הוצאות והפרשות</td>
-                  <td className="py-3 px-3.5 text-base font-black text-rose-700">₪{totalExpensesAndContingency.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3.5 text-slate-600 font-sans">כוח אדם + תפעול + בלת״מים</td>
-                  <td className="py-3 px-3.5 font-black text-rose-700">{totalExpensesRatioPercent.toFixed(2)}%</td>
-                </tr>
-
-                <tr className="hover:bg-emerald-50/50 transition bg-emerald-50/80 border-t-2 border-emerald-500">
-                  <td className="py-3.5 px-3.5 font-black text-emerald-950 text-sm font-sans">יתרה חודשית משוערת (רווח)</td>
-                  <td className={`py-3.5 px-3.5 text-lg font-black ${estimatedMonthlyBalance >= 0 ? 'text-emerald-900' : 'text-rose-700'}`}>
-                    ₪{estimatedMonthlyBalance.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </td>
-                  <td className="py-3.5 px-3.5 text-emerald-900 font-sans font-medium">הכנסה נטו - סה"כ הוצאות והפרשות</td>
-                  <td className="py-3.5 px-3.5 text-base font-black text-emerald-900">{netProfitMarginPercent.toFixed(2)}%</td>
-                </tr>
-
-                <tr className="hover:bg-emerald-50/30 transition bg-emerald-50/30">
-                  <td className="py-3 px-3.5 font-bold text-emerald-900 font-sans">יתרה ממוצעת לכל ילד</td>
-                  <td className="py-3 px-3.5 text-base font-black text-emerald-900">₪{balancePerChild.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="py-3 px-3.5 text-slate-600 font-sans">יתרה חודשית חלקי מספר ילדים ({numChildren})</td>
-                  <td className="py-3 px-3.5 text-slate-400 font-sans">—</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Notes and Disclaimers */}
-          <div className="p-3.5 bg-amber-50/90 rounded-xl border border-amber-200 text-xs text-amber-900 leading-relaxed flex items-start gap-2.5">
-            <Info className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold text-amber-900">הערת חישוב ותקנות מס: </span>
-              <span>
-                "ההכנסה חושבה בהנחה ששכר הלימוד 3,500 ₪ כולל מע״מ ושיעור המע״מ 18%. היתרה אינה רווח נקי חשבונאי סופי: לא נכללו שכירות, ביטוחים, ניקיון, עובדות חולות, הבראה. עלות המעביד היא אומדן של {params.employerOverheadPercent}%."
-              </span>
-            </div>
-          </div>
+        {/* Expenses Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-right text-xs">
+            <thead>
+              <tr className="border-b border-slate-200 text-slate-500 font-semibold bg-slate-50/80">
+                <th className="py-2.5 px-3">סעיף הוצאה בדירה</th>
+                <th className="py-2.5 px-3">פירוט והכרה בדירת מגורים</th>
+                <th className="py-2.5 px-3 text-center">הכרה מוערכת</th>
+                <th className="py-2.5 px-3 text-center">סכום חודשי (₪)</th>
+                <th className="py-2.5 px-3 text-center">% מהנטו</th>
+                <th className="py-2.5 px-3 text-center">פעולות</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {opexList.map((item) => {
+                const itemPercentOfNet = monthlyNetIncome > 0 ? (item.amount / monthlyNetIncome) * 100 : 0;
+                return (
+                  <tr key={item.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="py-3 px-3 font-bold text-slate-900 flex items-center gap-2">
+                      {item.id === 'food' && <Utensils className="w-3.5 h-3.5 text-amber-600" />}
+                      {item.id === 'utilities' && <Zap className="w-3.5 h-3.5 text-sky-600" />}
+                      {item.id === 'insurance' && <Shield className="w-3.5 h-3.5 text-emerald-600" />}
+                      {item.id === 'accountant' && <Briefcase className="w-3.5 h-3.5 text-indigo-600" />}
+                      {item.id === 'arnona' && <Building className="w-3.5 h-3.5 text-purple-600" />}
+                      {item.id === 'consumables' && <Layers className="w-3.5 h-3.5 text-rose-600" />}
+                      {item.id === 'equipment' && <BookOpen className="w-3.5 h-3.5 text-teal-600" />}
+                      <span>{item.name}</span>
+                    </td>
+                    <td className="py-3 px-3 text-slate-500 max-w-md">{item.desc}</td>
+                    <td className="py-3 px-3 text-center font-mono font-medium text-slate-600">
+                      {item.recognizedPercent}%
+                    </td>
+                    <td className="py-3 px-3 text-center font-mono">
+                      <div className="inline-flex items-center gap-1 bg-white border border-slate-200 rounded-lg px-2 py-0.5 shadow-2xs">
+                        <span className="text-slate-400">₪</span>
+                        <input
+                          type="number"
+                          min={0}
+                          value={item.amount}
+                          onChange={(e) => handleUpdateOpexAmount(item.id, Number(e.target.value))}
+                          className="w-16 font-bold text-slate-900 text-center focus:outline-none"
+                        />
+                      </div>
+                    </td>
+                    <td className="py-3 px-3 text-center font-mono text-slate-500">
+                      {itemPercentOfNet.toFixed(1)}%
+                    </td>
+                    <td className="py-3 px-3 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteOpex(item.id)}
+                        className="text-slate-300 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+                        title="מחיקת סעיף הוצאה"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="bg-slate-100/80 font-bold text-slate-900 border-t-2 border-slate-300">
+                <td className="py-3 px-3">סה״כ הוצאות שוטפות בדירה</td>
+                <td className="py-3 px-3 text-slate-600 font-normal">
+                  כלל ההוצאות מוכרות להפחתת מס הכנסה וביטוח לאומי לעצמאית
+                </td>
+                <td className="py-3 px-3 text-center font-mono">—</td>
+                <td className="py-3 px-3 text-center font-mono text-sm text-sky-800">
+                  ₪{totalOperatingExpenses.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
+                </td>
+                <td className="py-3 px-3 text-center font-mono text-sky-800">
+                  {opexRatio.toFixed(1)}%
+                </td>
+                <td className="py-3 px-3 text-center">—</td>
+              </tr>
+            </tfoot>
+          </table>
         </div>
-      )}
+      </div>
 
-      {/* VISUAL DISTRIBUTION BAR CHART */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
+      {/* 5. CAPACITY SCENARIOS & SENSITIVITY MATRIX (1 TO 6 CHILDREN) */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-2">
+            <span className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs font-bold">
+              4
+            </span>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">
+                מטריצת תרחישי תפוסה (1 עד 6 פעוטות בדירה)
+              </h3>
+              <p className="text-xs text-slate-500">
+                כמה שכר נטו נשאר ביד למטפלת בכל מצב תפוסה בדירה לפי שכר הלימוד הנוכחי (₪{tuition.toLocaleString()})
+              </p>
+            </div>
+          </div>
+          <span className="text-xs text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full font-semibold">
+            השורה המודגשת היא המצב הנוכחי שהזנתם
+          </span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-right text-xs">
+            <thead>
+              <tr className="border-b border-slate-200 text-slate-500 font-semibold bg-slate-50/80">
+                <th className="py-2.5 px-3">תרחיש תפוסה</th>
+                <th className="py-2.5 px-3 text-center">הכנסה ברוטו (₪)</th>
+                <th className="py-2.5 px-3 text-center">הכנסה נטו (₪)</th>
+                <th className="py-2.5 px-3 text-center">סך הוצאות + רזרבה (₪)</th>
+                <th className="py-2.5 px-3 text-center">שכר נטו למטפלת ביד (₪)</th>
+                <th className="py-2.5 px-3 text-center">שכר נקי ממוצע לילד</th>
+                <th className="py-2.5 px-3 text-center">שולי רווח מהנטו</th>
+                <th className="py-2.5 px-3 text-center">בחירת תרחיש</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 font-mono">
+              {scenarioMatrix.map((sc) => (
+                <tr
+                  key={sc.count}
+                  className={`transition-colors ${
+                    sc.isCurrent
+                      ? 'bg-teal-50/80 font-bold border-r-4 border-r-teal-600 text-teal-950'
+                      : 'hover:bg-slate-50/60 text-slate-700'
+                  }`}
+                >
+                  <td className="py-3 px-3 font-sans font-bold flex items-center gap-2">
+                    <span>{sc.count} פעוטות</span>
+                    {sc.isCapacityCap && (
+                      <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-semibold">
+                        תקן מותר ✓
+                      </span>
+                    )}
+                    {sc.isOverCapacity && (
+                      <span className="text-[10px] bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full font-semibold">
+                        חריג בדירה
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-3 px-3 text-center">₪{sc.gross.toLocaleString()}</td>
+                  <td className="py-3 px-3 text-center">₪{sc.net.toLocaleString('he-IL', { maximumFractionDigits: 0 })}</td>
+                  <td className="py-3 px-3 text-center text-slate-500">
+                    ₪{sc.totalExp.toLocaleString('he-IL', { maximumFractionDigits: 0 })}
+                  </td>
+                  <td className="py-3 px-3 text-center font-bold text-sm text-teal-800">
+                    ₪{sc.caregiverNet.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </td>
+                  <td className="py-3 px-3 text-center font-medium">
+                    ₪{sc.perChild.toLocaleString('he-IL', { maximumFractionDigits: 0 })}
+                  </td>
+                  <td className="py-3 px-3 text-center font-bold">
+                    {sc.margin.toFixed(1)}%
+                  </td>
+                  <td className="py-3 px-3 text-center font-sans">
+                    {sc.isCurrent ? (
+                      <span className="inline-flex items-center gap-1 text-teal-700 font-bold text-xs">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-teal-600" />
+                        <span>נבחר כעת</span>
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setParams((p) => ({ ...p, childrenCount: sc.count }))}
+                        className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-300 hover:border-teal-500 hover:bg-teal-50 hover:text-teal-800 transition-colors cursor-pointer"
+                      >
+                        בחר {sc.count}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 6. COMPLETE FINANCIAL STATEMENT SUMMARY TABLE (PRINT-READY) */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-teal-600" />
-            <h3 className="text-sm font-bold text-slate-900">פילוח ההכנסה נטו (₪{Math.round(monthlyNetIncome).toLocaleString()}) לפי סעיפי המודל</h3>
+            <span className="w-7 h-7 rounded-lg bg-teal-800 text-white flex items-center justify-center text-xs font-bold">
+              5
+            </span>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">
+                דוח מאזן חודשי מסכם · {monthLabel}
+              </h3>
+              <p className="text-xs text-slate-500">
+                סיכום תמציתי ומדויק לשימוש פרטי, לרואה החשבון ולתכנון המשפחתי
+              </p>
+            </div>
           </div>
-          <span className="text-[11px] font-mono text-teal-800 font-bold bg-teal-50 px-2 py-0.5 rounded border border-teal-200">100% מהמחזור הנטו</span>
+          <span className="text-xs font-mono font-semibold text-slate-500">
+            תאריך הפקה: {new Date().toLocaleDateString('he-IL')}
+          </span>
         </div>
 
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={costDistributionData} layout="vertical" margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-              <XAxis type="number" stroke="#94a3b8" tick={{ fontSize: 10, fill: '#64748b' }} tickFormatter={(val) => `₪${(val / 1000).toFixed(0)}k`} />
-              <YAxis dataKey="name" type="category" stroke="#94a3b8" tick={{ fontSize: 11, fill: '#334155' }} width={145} />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '0.75rem', color: '#0f172a', fontSize: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                formatter={(val: any, name: any, item: any) => [`₪${Number(val).toLocaleString()} (${item.payload.percent})`, 'סכום ואחוז']}
-              />
-              <Bar dataKey="value" name="סכום (₪)" radius={[0, 6, 6, 0]}>
-                {costDistributionData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+          {/* Revenue and Gross */}
+          <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-2.5">
+            <h4 className="font-bold text-slate-800 text-sm border-b border-slate-200 pb-1.5 flex items-center gap-1.5">
+              <span>הכנסות ומחזור</span>
+            </h4>
+            <div className="flex justify-between py-1 border-b border-slate-100">
+              <span className="text-slate-600">מספר פעוטות בדירה:</span>
+              <span className="font-mono font-bold text-slate-900">{numChildren} ילדים</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-slate-100">
+              <span className="text-slate-600">שכר לימוד חודשי לפעוט:</span>
+              <span className="font-mono font-bold text-slate-900">₪{tuition.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-slate-100">
+              <span className="text-slate-600">סך מחזור ברוטו (כולל מע"מ):</span>
+              <span className="font-mono font-bold text-slate-900">
+                ₪{monthlyGrossIncome.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-slate-100">
+              <span className="text-slate-600">רכיב מע"מ (18%):</span>
+              <span className="font-mono text-slate-700">
+                ₪{monthlyVatAmount.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div className="flex justify-between py-1.5 bg-emerald-50 px-2 rounded-lg font-bold text-emerald-950">
+              <span>הכנסה חודשית נטו (בסיס הפעילות):</span>
+              <span className="font-mono">
+                ₪{monthlyNetIncome.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+          </div>
+
+          {/* Deductions and Net Take-Home */}
+          <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 space-y-2.5">
+            <h4 className="font-bold text-slate-800 text-sm border-b border-slate-200 pb-1.5 flex items-center gap-1.5">
+              <span>הוצאות, רזרבות ושכר המטפלת</span>
+            </h4>
+            <div className="flex justify-between py-1 border-b border-slate-100">
+              <span className="text-slate-600">הוצאות תפעול מוכרות בדירה:</span>
+              <span className="font-mono text-slate-900 font-bold">
+                ₪{totalOperatingExpenses.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-slate-100">
+              <span className="text-slate-600">קרן גיבוי / ממלאת מקום לימי מחלה:</span>
+              <span className="font-mono text-slate-700">
+                ₪{backupFundCost.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-slate-100">
+              <span className="text-slate-600">רזרבת חופשה שנתית ובלת״מים (10%):</span>
+              <span className="font-mono text-amber-800 font-bold">
+                ₪{contingencyAmount.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-slate-100">
+              <span className="text-slate-600">סה״כ ניכויים והוצאות בדירה:</span>
+              <span className="font-mono font-bold text-slate-800">
+                ₪{totalDeductions.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div className="flex justify-between py-1.5 bg-teal-100/80 px-2 rounded-lg font-black text-teal-950 text-sm">
+              <span>שכר נטו נשאר ביד למטפלת (B.Ed.):</span>
+              <span className="font-mono">
+                ₪{soleCaregiverTakeHomeSalary.toLocaleString('he-IL', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer info note */}
+        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-500 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Info className="w-4 h-4 text-slate-400 shrink-0" />
+            <span>
+              הנתונים נשמרים באופן מקומי בדפדפן הפרטי שלך ואינם משותפים עם שום גורם חיצוני.
+            </span>
+          </div>
+          <span className="font-semibold text-slate-700">מערכת פרטית לשימוש אישי</span>
         </div>
       </div>
     </div>

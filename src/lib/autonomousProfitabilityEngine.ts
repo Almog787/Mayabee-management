@@ -1,18 +1,16 @@
 /**
- * Autonomous Local Profitability & Combinatorial Action Engine (Zero-AI, 100% Client-Side)
- * ----------------------------------------------------------------------------------------
- * An executable action pipeline that sweeps across ALL data and options entered on the site:
- * - Children count, tuition, and extra fees
- * - All 5 staff members (hours, wage, employer overhead, travel allowances)
- * - All 7 operating expense items (food, accountant, utilities, municipal tax, consumables, maintenance, equipment)
- * - Tax rates & contingency reserves
- *
- * Explores the combinatorial space of levers, validates Israeli daycare regulations (Child Supervision Law 1:6 ratio,
- * minimum wage, nutritional standards), scores proposals using locally-learned reinforcement weights, builds a dynamic
- * suggestion system for the site, and records self-learning conclusions in a transparent, extensible format.
+ * Autonomous Local Profitability & Combinatorial Action Engine (Home Daycare / Mishpachton Sole Proprietor)
+ * ---------------------------------------------------------------------------------------------------------
+ * Calibrated specifically for a single-person business operating a home-based daycare (משפחתון ביתי של אדם יחיד):
+ * - Max legal capacity for a single caregiver at home: 5 children (Child Supervision Regulations).
+ * - No hired salaried staff (no 17% employer overhead for assistants); the caregiver's take-home pay IS the business net profit!
+ * - Optional backup fund for substitute caregiver during sick/vacation days.
+ * - Tax-deductible home operational expenses (food, electricity, water, municipal tax, daycare insurance, accountant, consumables).
+ * - Combinatorial sensitivity exploration tailored to home daycare levers.
+ * - Local reinforcement learning (Zero-AI, 100% Client-Side) persisting to localStorage.
  */
 
-export type ProfitabilityActionType = 'ADD_INCOME' | 'CUT_OPEX' | 'OPTIMIZE_STAFF' | 'ADJUST_BUFFER' | 'SYNERGISTIC_BUNDLE';
+export type ProfitabilityActionType = 'ADD_INCOME' | 'CUT_OPEX' | 'OPTIMIZE_HOURS' | 'ADJUST_BUFFER' | 'SYNERGISTIC_BUNDLE';
 
 export interface RegulatoryComplianceCheck {
   isCompliant: boolean;
@@ -44,8 +42,8 @@ export interface ProfitabilityProposal {
     foodCostDelta?: number;
     utilitiesCostDelta?: number;
     consumablesCostDelta?: number;
-    maintenanceCostDelta?: number;
-    staffHoursDeltaWorkerB?: number;
+    insuranceCostDelta?: number;
+    backupFundDelta?: number;
     contingencyPercentDelta?: number;
     extraMonthlyIncomeNet?: number;
   };
@@ -69,7 +67,7 @@ export interface SiteModelInputs {
   childrenCount: number;
   tuitionPerChild: number;
   vatRatePercent: number;
-  staffCost: number;
+  backupStaffCost: number; // קרן גיבוי / ממלאת מקום לימי מחלה
   operatingExpenses: number;
   contingencyPercent: number;
   // Specific expense breakdowns
@@ -77,31 +75,22 @@ export interface SiteModelInputs {
   accountantCost?: number;
   utilitiesCost?: number;
   arnonaCost?: number;
+  insuranceCost?: number;
   consumablesCost?: number;
   maintenanceCost?: number;
-  fixedEquipmentCost?: number;
-  // Staff parameters
-  staff_workerBWeeklyHours?: number;
-  staff_workerAWeeklyHours?: number;
-  staff_workerCWeeklyHours?: number;
-  staff_directorGross?: number;
-  staff_certifiedGross?: number;
-  hourlyWage?: number;
-  employerOverheadPercent?: number;
 }
 
-const WEIGHTS_STORAGE_KEY = 'daycare_local_optimizer_weights_v2';
-const CONCLUSIONS_STORAGE_KEY = 'daycare_local_optimizer_conclusions_v2';
+const WEIGHTS_STORAGE_KEY = 'home_daycare_local_optimizer_weights_v3';
+const CONCLUSIONS_STORAGE_KEY = 'home_daycare_local_optimizer_conclusions_v3';
 
 export const DEFAULT_CATEGORY_WEIGHTS: Record<string, number> = {
-  capacity: 1.0, // הגדלת תפוסת ילדים
-  enrichment: 1.0, // חוגי העשרה וצהרון מועשר
-  food: 1.0, // התייעלות רכש מזון
-  utilities: 1.0, // בקרת אנרגיה ומזגנים
-  consumables: 1.0, // רכש מתכלה מרוכז
-  staffSchedule: 1.0, // דיוק שעות עובדות ומשמרות שישי
-  contingencyBuffer: 1.0, // ניהול דינמי של רזרבת בלת"ם
-  synergisticBundle: 1.1, // חבילת ייצוב רווחיות משולבת
+  capacity: 1.2, // הגעה לתפוסה מלאה (עד 5 ילדים)
+  afternoonHours: 1.0, // צהרון מוארך / שעות נוספות
+  food: 1.0, // רכש חכם ותפריט שבועי
+  homeExpenses: 1.0, // מיצוי הוצאות בית מוכרות במס
+  insuranceAndFees: 1.0, // דמי רישום וביטוח שנתיים
+  contingencyBuffer: 1.0, // רזרבת ימי חופשה ומחלה
+  synergisticBundle: 1.2, // חבילת ייצוב רווחיות משולבת למשפחתון
 };
 
 /**
@@ -110,9 +99,7 @@ export const DEFAULT_CATEGORY_WEIGHTS: Record<string, number> = {
 export function getLearnedWeights(): Record<string, number> {
   try {
     const raw = localStorage.getItem(WEIGHTS_STORAGE_KEY);
-    if (raw) {
-      return { ...DEFAULT_CATEGORY_WEIGHTS, ...JSON.parse(raw) };
-    }
+    if (raw) return { ...DEFAULT_CATEGORY_WEIGHTS, ...JSON.parse(raw) };
   } catch (e) {
     console.error('Failed to load learned weights', e);
   }
@@ -136,9 +123,7 @@ export function saveLearnedWeights(weights: Record<string, number>): void {
 export function getLearningConclusions(): AlgorithmicConclusion[] {
   try {
     const raw = localStorage.getItem(CONCLUSIONS_STORAGE_KEY);
-    if (raw) {
-      return JSON.parse(raw);
-    }
+    if (raw) return JSON.parse(raw);
   } catch (e) {
     console.error('Failed to load learning conclusions', e);
   }
@@ -146,28 +131,28 @@ export function getLearningConclusions(): AlgorithmicConclusion[] {
     {
       id: 'init-1',
       timestamp: new Date().toISOString(),
-      dateFormatted: 'מסקנת בסיס ראשונית',
-      leverId: 'baseline-analysis',
-      leverTitle: 'כיול נקודת איזון ורגולציה ראשונית',
+      dateFormatted: 'מסקנת בסיס – משפחתון ביתי',
+      leverId: 'home-capacity-rule',
+      leverTitle: 'תקן תפוסה חוקי למטפלת יחידה בבית',
       action: 'ACCEPTED',
       categoryKey: 'capacity',
       previousWeight: 1.0,
-      newWeight: 1.0,
-      learnedRule: 'האלגוריתם זיהה כי צוות של 5 נשות חינוך (47.5 ש"ש סייעות) מאפשר קליטת ילד/ה נוסף/ת (17 ילדים) תוך שמירה מלאה על יחס 1:5.66 כחוק.',
-      algorithmicAdjustment: 'תעדוף מנוף הגדלת תפוסה שולית כמנוף בעל התשואה הגבוהה ביותר ללא תוספת עלות שכר.',
+      newWeight: 1.2,
+      learnedRule: 'במשפחתון ביתי של אדם יחיד, התקן המרבי לפי חוק הפיקוח הוא עד 5 ילדים. תפוסה מלאה של 5 ילדים מפיקה שכר נטו יעד של כ-10,000–12,000 ₪ למטפלת.',
+      algorithmicAdjustment: 'הגבלת כל הצעות התפוסה לרף חוקי מרבי של 5 ילדים בדיוק, ותעדוף מילוי מקום פנוי כמנוף המשתלם ביותר.',
     },
     {
       id: 'init-2',
       timestamp: new Date().toISOString(),
-      dateFormatted: 'מסקנת בסיס ראשונית',
-      leverId: 'opex-baseline',
-      leverTitle: 'הגנת איכות המזון והבטיחות',
+      dateFormatted: 'מסקנת בסיס – הוצאות בית מוכרות',
+      leverId: 'home-tax-baseline',
+      leverTitle: 'הכרה בהוצאות משק בית לצורכי מס',
       action: 'ACCEPTED',
-      categoryKey: 'food',
+      categoryKey: 'homeExpenses',
       previousWeight: 1.0,
       newWeight: 1.0,
-      learnedRule: 'נקבע אילוץ קשיח: קיצוץ בהזנה לא יעלה על 10% ויתבצע רק באמצעות רכש ספקים ישיר, ללא פגיעה במנות הילדים.',
-      algorithmicAdjustment: 'הגבלת כל הצעת חיסכון ברכש מזון עד לתקרה בטוחה של ₪380/חודש בלבד.',
+      learnedRule: 'עסק ביתי מאפשר הכרה בחלק יחסי (25%-30%) של חשמל, מים, ארנונה ואינטרנט. זהו חיסכון מס ישיר המעלה את הרווח הפנוי של המטפלת.',
+      algorithmicAdjustment: 'שמירה על סעיפי התפעול כהוצאות מוכרות המפחיתות את מקדמות מס הכנסה וביטוח לאומי לעצמאית.',
     },
   ];
 }
@@ -203,16 +188,14 @@ export function recordProposalFeedback(
     delta = 0.20;
     const newWeight = Math.min(2.5, +(currentWeight + delta).toFixed(2));
     weights[proposal.categoryKey] = newWeight;
-
-    learnedRule = `המנהלת אישרה את ההצעה "${proposal.title}". האלגוריתם למד כי כיוון פעולה זה תואם את מדיניות הגן ואת רצון ההנהלה, והעלה את ציון האמינות של תחום זה מ-${currentWeight} ל-${newWeight}.`;
-    algorithmicAdjustment = `הגברת תדירות ההצעות בתחום "${proposal.categoryKey}" ודירוגן בעדיפות ראשונה בסימולציות עתידיות.`;
+    learnedRule = `המטפלת אישרה את ההצעה "${proposal.title}". האלגוריתם למד כי כיוון פעולה זה מתאים לשגרת המשפחתון בבית, והעלה את ציון האמינות מ-${currentWeight} ל-${newWeight}.`;
+    algorithmicAdjustment = `הגברת תדירות הצעות בתחום "${proposal.categoryKey}" ותעדוף ראשון בסימולציות.`;
   } else {
     delta = -0.25;
     const newWeight = Math.max(0.15, +(currentWeight + delta).toFixed(2));
     weights[proposal.categoryKey] = newWeight;
-
-    learnedRule = `המנהלת דחתה את ההצעה "${proposal.title}". האלגוריתם למד כי קיים מחסום או חוסר התאמה למדיניות הגן בתחום זה, והוריד את ציון המשקל מ-${currentWeight} ל-${newWeight}.`;
-    algorithmicAdjustment = `הפחתת הצעות דומות בתחום "${proposal.categoryKey}" והסטת הדגש למנופי רווחיות חלופיים שאינם מעוררים התנגדות.`;
+    learnedRule = `המטפלת דחתה את ההצעה "${proposal.title}". האלגוריתם למד כי ישנה התנגדות לשינוי בתחום זה במשפחתון, והוריד את ציון המשקל מ-${currentWeight} ל-${newWeight}.`;
+    algorithmicAdjustment = `הפחתת הצעות בתחום "${proposal.categoryKey}" והסטת הדגש למנופי רווחיות חלופיים.`;
   }
 
   saveLearnedWeights(weights);
@@ -234,112 +217,109 @@ export function recordProposalFeedback(
     algorithmicAdjustment,
   };
 
-  const updatedConclusions = [newConclusion, ...conclusions];
-  saveLearningConclusions(updatedConclusions);
-
+  saveLearningConclusions([newConclusion, ...conclusions]);
   return { updatedWeights: weights, newConclusion };
 }
 
-/**
- * Resets weights and conclusions back to factory baseline
- */
-export function resetOptimizerMemory(): { weights: Record<string, number>; conclusions: AlgorithmicConclusion[] } {
+export function resetOptimizerMemory() {
   localStorage.removeItem(WEIGHTS_STORAGE_KEY);
   localStorage.removeItem(CONCLUSIONS_STORAGE_KEY);
-  const weights = { ...DEFAULT_CATEGORY_WEIGHTS };
-  const conclusions = getLearningConclusions();
-  return { weights, conclusions };
+  return { weights: { ...DEFAULT_CATEGORY_WEIGHTS }, conclusions: getLearningConclusions() };
 }
 
 /**
- * Combinatorial Action: Sweeps across ALL data and options entered on the site
- * and synthesizes a tailored dynamic proposal system in real time.
+ * Combinatorial Action for Home Daycare (Single Person):
+ * Sweeps across ALL data and options entered on the site and generates
+ * tailored proposals for a home daycare of 1 to 5 children.
  */
 export function generateProfitabilityProposals(currentParams: SiteModelInputs): ProfitabilityProposal[] {
   const weights = getLearnedWeights();
-
-  const numChildren = Math.max(1, currentParams.childrenCount || 16);
+  const numChildren = Math.max(1, Math.min(6, currentParams.childrenCount || 5));
   const tuition = currentParams.tuitionPerChild || 3500;
   const vatRate = (currentParams.vatRatePercent || 18) / 100;
 
   const currentGross = numChildren * tuition;
   const currentNet = currentGross / (1 + vatRate);
-  const currentStaffCost = currentParams.staffCost || 32761.10;
-  const currentOpex = currentParams.operatingExpenses || 7150.0;
+  const currentBackupCost = currentParams.backupStaffCost ?? 500.0;
+  const currentOpex = currentParams.operatingExpenses || 2800.0;
   const contingencyPercent = currentParams.contingencyPercent || 10;
   const contingencyAmount = currentNet * (contingencyPercent / 100);
-  const currentTotalExpenses = currentStaffCost + currentOpex + contingencyAmount;
-  const currentProfit = currentNet - currentTotalExpenses;
+  const currentTotalExpenses = currentBackupCost + currentOpex + contingencyAmount;
+  const currentProfit = currentNet - currentTotalExpenses; // Caregiver's net take-home earnings
   const currentProfitPercent = currentNet > 0 ? (currentProfit / currentNet) * 100 : 0;
 
-  const foodCost = currentParams.foodCost ?? 4000.0;
-  const utilitiesCost = currentParams.utilitiesCost ?? 800.0;
-  const consumablesCost = currentParams.consumablesCost ?? 350.0;
-  const workerBHours = currentParams.staff_workerBWeeklyHours ?? 22.0;
+  const foodCost = currentParams.foodCost ?? 1250.0;
+  const utilitiesCost = currentParams.utilitiesCost ?? 350.0;
 
   const proposals: ProfitabilityProposal[] = [];
 
   // =========================================================================
-  // OPTION 1: תפוסת ילדים (Capacity Variations Sweep)
+  // OPTION 1: הגעה לתפוסה מלאה (5 ילדים למטפלת יחידה)
   // =========================================================================
-  if (numChildren <= 18) {
+  if (numChildren < 5) {
     const extraGross = tuition;
     const extraNet = extraGross / (1 + vatRate);
     const extraContingency = extraNet * (contingencyPercent / 100);
-    const marginalFoodCost = numChildren > 0 ? (foodCost / numChildren) : 250.0;
-    const netProfitGain = extraNet - extraContingency - marginalFoodCost;
+    const marginalFoodCost = 250.0; // food for 1 extra child
+    const netGain = extraNet - extraContingency - marginalFoodCost;
 
-    const projectedProfit = currentProfit + netProfitGain;
+    const projectedProfit = currentProfit + netGain;
     const projectedNet = currentNet + extraNet;
     const projectedProfitPercent = (projectedProfit / projectedNet) * 100;
-    const weight = weights.capacity ?? 1.0;
+    const weight = weights.capacity ?? 1.2;
 
     proposals.push({
-      id: `lever-capacity-${numChildren + 1}`,
+      id: `lever-capacity-full-5`,
       type: 'ADD_INCOME',
       categoryKey: 'capacity',
-      title: `קליטת ילד/ה נוסף/ת לתפוסה של ${numChildren + 1} ילדים`,
-      subtitle: `מנוף הכנסה שולי ישיר: תוספת נטו של ₪${Math.round(netProfitGain)}/חודש`,
+      title: `קליטת ילד/ה נוסף/ת לתפוסה מלאה של ${numChildren + 1} ילדים`,
+      subtitle: `מילוי מקום פנוי מקפיץ את שכר המטפלת ב-₪${Math.round(netGain)} נטו לחודש!`,
       actionDirection: 'ADD',
-      monthlyShekelDelta: Math.round(netProfitGain),
+      monthlyShekelDelta: Math.round(netGain),
       costToImplement: Math.round(marginalFoodCost),
       projectedNewProfit: Math.round(projectedProfit),
       projectedNewProfitPercent: +projectedProfitPercent.toFixed(2),
       profitDeltaPercent: +(projectedProfitPercent - currentProfitPercent).toFixed(2),
-      feasibilityScore: Math.min(100, Math.round(92 * weight)),
+      feasibilityScore: Math.min(100, Math.round(96 * weight)),
       learnedWeight: weight,
       status: 'PENDING',
       regulatoryCompliance: {
         isCompliant: true,
-        ruleName: `חוק הפיקוח על מעונות (יחס 1:${((numChildren + 1) / 3).toFixed(2)})`,
-        details: `עם 3 עובדות נוכחות בו-זמנית בשעות השיא, ${numChildren + 1} ילדים עומדים בתקן המחמיר לפעוטות (עד 1:6) עם מרווח ביטחון.`,
-        badgeText: 'עומד בתקן חוק הפיקוח ✓',
+        ruleName: `תקן משפחתון ביתי (עד 5 ילדים)`,
+        details: `תפוסה של ${numChildren + 1} ילדים עומדת בדיוק בתקן החוקי המרבי למטפלת יחידה בבית ללא צורך בסייעת שכירה.`,
+        badgeText: 'תואם תקן משפחתון ביתי ✓',
       },
-      balanceRationale: 'מעל 81% משכר הלימוד הנוסף הופך לרווח נקי ישיר, שכן הוצאות השכירות, הניהול ועלות הצוות כבר מכוסות במלואן.',
+      balanceRationale: 'זהו המנוף המשמעותי ביותר במשפחתון ביתי: כל הוצאות הבית, הביטוח והרו"ח כבר משולמות, כך ש-85% משכר הלימוד הנוסף עובר ישירות לכיס המטפלת.',
       suggestedChanges: {
         childrenCountDelta: 1,
-        foodCostDelta: Math.round(marginalFoodCost),
+        foodCostDelta: 250,
       },
     });
   }
 
   // =========================================================================
-  // OPTION 2: סריקת סעיפי תפעול – רכש מזון ישיר (Food Opex Sweep)
+  // OPTION 2: צהרון מוארך / שעות נוספות אחה"צ (16:00 עד 16:30/17:00)
   // =========================================================================
-  if (foodCost >= 1000) {
-    const foodSavings = Math.round(foodCost * 0.0875); // ~8.75%
-    const projectedProfit = currentProfit + foodSavings;
-    const projectedProfitPercent = (projectedProfit / currentNet) * 100;
-    const weight = weights.food ?? 1.0;
+  {
+    const feePerChild = 200.0; // תוספת ₪200 לילד עבור חצי שעה - שעה ביום
+    const extraGross = numChildren * feePerChild;
+    const extraNet = extraGross / (1 + vatRate);
+    const extraContingency = extraNet * (contingencyPercent / 100);
+    const netGain = Math.round(extraNet - extraContingency);
+
+    const projectedProfit = currentProfit + netGain;
+    const projectedNet = currentNet + extraNet;
+    const projectedProfitPercent = (projectedProfit / projectedNet) * 100;
+    const weight = weights.afternoonHours ?? 1.0;
 
     proposals.push({
-      id: 'lever-food-procurement',
-      type: 'CUT_OPEX',
-      categoryKey: 'food',
-      title: 'התייעלות רכש מזון ישיר מספקים סיטונאיים',
-      subtitle: `חיסכון של ₪${foodSavings}/חודש ברכישה מרוכזת ללא שינוי בתפריט`,
-      actionDirection: 'REDUCE',
-      monthlyShekelDelta: foodSavings,
+      id: 'lever-extended-hours',
+      type: 'ADD_INCOME',
+      categoryKey: 'afternoonHours',
+      title: 'הפעלת צהרון מוארך / שעת השגחה נוספת אחה"צ',
+      subtitle: `תוספת נטו של ₪${netGain}/חודש להכנסת המטפלת עבור הארכת שעות מבוקשת`,
+      actionDirection: 'ADD',
+      monthlyShekelDelta: netGain,
       costToImplement: 0,
       projectedNewProfit: Math.round(projectedProfit),
       projectedNewProfitPercent: +projectedProfitPercent.toFixed(2),
@@ -349,83 +329,35 @@ export function generateProfitabilityProposals(currentParams: SiteModelInputs): 
       status: 'PENDING',
       regulatoryCompliance: {
         isCompliant: true,
-        ruleName: 'הנחיות תזונה משרד הבריאות',
-        details: 'החיסכון מושג מהנחת כמות והסכם שבועי עם ספק פירות וירקות. תפריט המעון נשמר 100% ללא שינוי ברכיבים או במנות.',
-        badgeText: 'תזונה מאושרת כחוק ✓',
+        ruleName: 'הסכם שעות התקשרות עם הורים',
+        details: 'שירות מבוקש מאוד להורים עובדים. מוגדר כתוספת בחירה בהסכם ההתקשרות השנתי.',
+        badgeText: 'הסכם שעות מסודר ✓',
       },
-      balanceRationale: 'ההזנה מהווה כ-56% מסך הוצאות התפעול. דיוק של פחות מ-9% בעלויות הרכש מייצר חיסכון שנתי של מעל ₪4,000 ישירות לרווח.',
+      balanceRationale: 'תוספת הכנסה ישירה ללא שום הוצאות תפעול חדשות – מתבצע באותו חלל ביתי קיים.',
       suggestedChanges: {
-        foodCostDelta: -foodSavings,
+        extraMonthlyIncomeNet: netGain,
       },
     });
   }
 
   // =========================================================================
-  // OPTION 3: דיוק שעות עובדת ב' בימי שישי (Staff Hours Alignment Sweep)
+  // OPTION 3: רכש שבועי מרוכז של מזון טרי וביתי (הזנה)
   // =========================================================================
-  if (workerBHours >= 21) {
-    const hoursSavedMonthly = 1 * (52 / 12); // 4.33 שעות
-    const wageRate = currentParams.hourlyWage || 45;
-    const overheadRate = (currentParams.employerOverheadPercent || 17) / 100;
-    const grossSaved = hoursSavedMonthly * wageRate;
-    const employerCostSaved = grossSaved * overheadRate;
-    const totalStaffSaved = Math.round(grossSaved + employerCostSaved);
-
-    const projectedProfit = currentProfit + totalStaffSaved;
+  if (foodCost >= 800) {
+    const foodSavings = 150.0; // חיסכון של ₪150/חודש בתכנון שבועי
+    const projectedProfit = currentProfit + foodSavings;
     const projectedProfitPercent = (projectedProfit / currentNet) * 100;
-    const weight = weights.staffSchedule ?? 1.0;
+    const weight = weights.food ?? 1.0;
 
     proposals.push({
-      id: 'lever-staff-friday-hours',
-      type: 'OPTIMIZE_STAFF',
-      categoryKey: 'staffSchedule',
-      title: 'דיוק שעות עובדת ב\' בימי שישי (מעבר ל-21 ש"ש)',
-      subtitle: `חיסכון של ₪${totalStaffSaved}/חודש בהתאמה מדויקת לסגירה ב-12:00`,
-      actionDirection: 'OPTIMIZE',
-      monthlyShekelDelta: totalStaffSaved,
+      id: 'lever-home-food-planning',
+      type: 'CUT_OPEX',
+      categoryKey: 'food',
+      title: 'תכנון תפריט שבועי מרוכז וקנייה ישירה בשוק/סיטונאות',
+      subtitle: `חיסכון של ₪${foodSavings}/חודש בהוצאות המזון ללא שום שינוי באיכות המנות`,
+      actionDirection: 'REDUCE',
+      monthlyShekelDelta: foodSavings,
       costToImplement: 0,
-      projectedNewProfit: Math.round(projectedProfit),
-      projectedNewProfitPercent: +projectedProfitPercent.toFixed(2),
-      profitDeltaPercent: +(projectedProfitPercent - currentProfitPercent).toFixed(2),
-      feasibilityScore: Math.min(100, Math.round(83 * weight)),
-      learnedWeight: weight,
-      status: 'PENDING',
-      regulatoryCompliance: {
-        isCompliant: true,
-        ruleName: 'דיני עבודה ושעות פתיחה בשישי',
-        details: 'בימי שישי הפעילות מסתיימת ב-12:00. דיוק שעת נוכחות עודפת שומר על שכר מלא כחוק עבור שעות העבודה בפועל.',
-        badgeText: 'תואם דיני עבודה ✓',
-      },
-      balanceRationale: 'מניעת שהייה בלתי אפקטיבית לאחר איסוף הילדים בימי שישי, ללא פגיעה ביחס ההשגחה במהלך שעות הפעילות.',
-      suggestedChanges: {
-        staffHoursDeltaWorkerB: -1,
-      },
-    });
-  }
-
-  // =========================================================================
-  // OPTION 4: סדנאות העשרה וחוגי תנועה אחה"צ (Enrichment Income Sweep)
-  // =========================================================================
-  {
-    const grossAdded = numChildren * 120; // ₪120 לילד
-    const netAdded = grossAdded / (1 + vatRate);
-    const instructorCost = 900.0;
-    const netMarginGain = Math.round(netAdded - instructorCost);
-
-    const projectedProfit = currentProfit + netMarginGain;
-    const projectedNet = currentNet + netAdded;
-    const projectedProfitPercent = (projectedProfit / projectedNet) * 100;
-    const weight = weights.enrichment ?? 1.0;
-
-    proposals.push({
-      id: 'lever-enrichment-workshops',
-      type: 'ADD_INCOME',
-      categoryKey: 'enrichment',
-      title: 'הפעלת סדנאות העשרה וחוגי תנועה אחה"צ',
-      subtitle: `הכנסה נטו נוספת של ₪${netMarginGain}/חודש מפעילות מבוקשת`,
-      actionDirection: 'ADD',
-      monthlyShekelDelta: netMarginGain,
-      costToImplement: instructorCost,
       projectedNewProfit: Math.round(projectedProfit),
       projectedNewProfitPercent: +projectedProfitPercent.toFixed(2),
       profitDeltaPercent: +(projectedProfitPercent - currentProfitPercent).toFixed(2),
@@ -434,141 +366,136 @@ export function generateProfitabilityProposals(currentParams: SiteModelInputs): 
       status: 'PENDING',
       regulatoryCompliance: {
         isCompliant: true,
-        ruleName: 'חוזר מנכ"ל העשרת פעוטות',
-        details: 'מפעיל עם תעודת יושר והסמכה פדגוגית. שומר על תוכנית חינוכית מעשירה המשדרגת את תדמית המעון באריאל.',
-        badgeText: 'העשרה פדגוגית מאושרת ✓',
+        ruleName: 'תזונת פעוטות ביתית ומאוזנת',
+        details: 'כל הארוחות מבושלות טריות בבית (פירות, ירקות, בשר וקטניות). החיסכון מושג מתכנון מוקדם ומניעת פחת מזון.',
+        badgeText: 'מזון ביתי איכותי ומאושר ✓',
       },
-      balanceRationale: 'ההורים מקבלים ערך מוסף איכותי, והמעון מייצר רווח נקי נוסף על בסיס התשתית הקיימת.',
+      balanceRationale: 'הזנת 5 ילדים בבית מאפשרת גמישות ובישול טרי יומיומי בעלות נמוכה בהרבה מרשתות קמעונאיות יקרות.',
       suggestedChanges: {
-        extraMonthlyIncomeNet: netMarginGain,
+        foodCostDelta: -foodSavings,
       },
     });
   }
 
   // =========================================================================
-  // OPTION 5: בקרת אנרגיה במזגנים (Energy Utilities Sweep)
+  // OPTION 4: מיצוי הוצאות בית מוכרות במס (חשמל, גז וארנונה)
   // =========================================================================
-  if (utilitiesCost >= 500) {
-    const energySavings = Math.round(utilitiesCost * 0.15); // 15% חיסכון
-    const projectedProfit = currentProfit + energySavings;
+  {
+    const taxSavingNet = 200.0; // חיסכון מס חודשי מוערך ממיצוי הכרה
+    const projectedProfit = currentProfit + taxSavingNet;
     const projectedProfitPercent = (projectedProfit / currentNet) * 100;
-    const weight = weights.utilities ?? 1.0;
+    const weight = weights.homeExpenses ?? 1.0;
 
     proposals.push({
-      id: 'lever-smart-ac-energy',
-      type: 'CUT_OPEX',
-      categoryKey: 'utilities',
-      title: 'טיימרים ובקרת טמפרטורה במזגנים (13:00–15:00)',
-      subtitle: `חיסכון של ₪${energySavings}/חודש בחשמל בשעות מנוחה וסגירה`,
-      actionDirection: 'REDUCE',
-      monthlyShekelDelta: energySavings,
-      costToImplement: 0,
-      projectedNewProfit: Math.round(projectedProfit),
-      projectedNewProfitPercent: +projectedProfitPercent.toFixed(2),
-      profitDeltaPercent: +(projectedProfitPercent - currentProfitPercent).toFixed(2),
-      feasibilityScore: Math.min(100, Math.round(80 * weight)),
-      learnedWeight: weight,
-      status: 'PENDING',
-      regulatoryCompliance: {
-        isCompliant: true,
-        ruleName: 'תקן אקלים ובטיחות פעוטות',
-        details: 'שמירה על טמפרטורת תקן נוחה (22-24 מעלות) וכיבוי אוטומטי של מזגני חללים ריקים לאחר עזיבת הילדים.',
-        badgeText: 'טמפרטורת תקן מבוקרת ✓',
-      },
-      balanceRationale: 'חיסכון תפעולי פסיבי 100% ללא כל ויתור על איכות החיים או הבטיחות.',
-      suggestedChanges: {
-        utilitiesCostDelta: -energySavings,
-      },
-    });
-  }
-
-  // =========================================================================
-  // OPTION 6: מודל רזרבת בלת"ם מדורגת (Contingency Buffer Sweep)
-  // =========================================================================
-  if (contingencyPercent >= 9.5) {
-    const contingencySavings = Math.round(currentNet * 0.015); // 1.5% מההכנסה נטו = ~₪711
-    const projectedProfit = currentProfit + contingencySavings;
-    const projectedProfitPercent = (projectedProfit / currentNet) * 100;
-    const weight = weights.contingencyBuffer ?? 1.0;
-
-    proposals.push({
-      id: 'lever-graduated-buffer',
-      type: 'ADJUST_BUFFER',
-      categoryKey: 'contingencyBuffer',
-      title: 'איזון רזרבת בלת"ם ל-8.5% (כאשר נצברה כרית 3 חודשים)',
-      subtitle: `שחרור תזרימי של ₪${contingencySavings}/חודש לרווח שוטף`,
+      id: 'lever-home-tax-optimization',
+      type: 'OPTIMIZE_HOURS',
+      categoryKey: 'homeExpenses',
+      title: 'הגדלת יחס ההכרה בהוצאות הבית לצורכי מס (מ-20% ל-30%)',
+      subtitle: `חיסכון מס מוערך של ₪${taxSavingNet}/חודש במקדמות מס הכנסה וביטוח לאומי`,
       actionDirection: 'OPTIMIZE',
-      monthlyShekelDelta: contingencySavings,
+      monthlyShekelDelta: taxSavingNet,
       costToImplement: 0,
       projectedNewProfit: Math.round(projectedProfit),
       projectedNewProfitPercent: +projectedProfitPercent.toFixed(2),
       profitDeltaPercent: +(projectedProfitPercent - currentProfitPercent).toFixed(2),
-      feasibilityScore: Math.min(100, Math.round(75 * weight)),
+      feasibilityScore: Math.min(100, Math.round(82 * weight)),
       learnedWeight: weight,
       status: 'PENDING',
       regulatoryCompliance: {
         isCompliant: true,
-        ruleName: 'ניהול סיכונים ועמידה ביעדי חירום',
-        details: 'מותנה בקיומה של כרית חירום של לפחות ₪100,000 בחשבון המעון. 8.5% עדיין מהווים מעל ₪4,000 בחודש להוצאות בלתי צפויות.',
-        badgeText: 'בטיחות פיננסית מוגנת ✓',
+        ruleName: 'פקודת מס הכנסה – הוצאות בית בעסק',
+        details: 'החוק מתיר לנכות חלק יחסי משטח הבית המשמש למשפחתון (חשמל, מים, ארנונה, אינטרנט וחומרי ניקיון).',
+        badgeText: 'הכרה במס כחוק ✓',
       },
-      balanceRationale: 'מונע צבירת יתר של מזומנים בלתי מנוצלים ומעביר את הערך ישירות לרווח השוטף של המנהלות.',
+      balanceRationale: 'ניצול מקלט מס לגיטימי של עסק מהבית המשאיר יותר כסף נטו בידי המטפלת ללא השקעה כספית.',
       suggestedChanges: {
-        contingencyPercentDelta: -1.5,
+        extraMonthlyIncomeNet: taxSavingNet,
       },
     });
   }
 
   // =========================================================================
-  // OPTION 7: חבילת ייצוב רווחיות משולבת (Combinatorial Synergistic Package)
+  // OPTION 5: דמי רישום וביטוח שנתיים ייעודיים
   // =========================================================================
-  // Combines: +1 child + food wholesale + Friday hours alignment
-  if (numChildren <= 18 && foodCost >= 1000) {
-    const extraGross = tuition;
-    const extraNet = extraGross / (1 + vatRate);
-    const extraContingency = extraNet * (contingencyPercent / 100);
-    const marginalFoodCost = numChildren > 0 ? (foodCost / numChildren) : 250.0;
-    const capacityGain = extraNet - extraContingency - marginalFoodCost;
-    const foodSavings = Math.round(foodCost * 0.0875);
-    const hoursSavedGross = (1 * (52 / 12)) * (currentParams.hourlyWage || 45);
-    const hoursStaffSaved = Math.round(hoursSavedGross * (1 + ((currentParams.employerOverheadPercent || 17) / 100)));
+  {
+    // דמי רישום וביטוח של ₪600 לילד לשנה (מחולק ל-12 חודשים = ₪50 לילד/חודש)
+    const monthlyNetAdded = Math.round((numChildren * 50) / (1 + vatRate));
+    const projectedProfit = currentProfit + monthlyNetAdded;
+    const projectedNet = currentNet + monthlyNetAdded;
+    const projectedProfitPercent = (projectedProfit / projectedNet) * 100;
+    const weight = weights.insuranceAndFees ?? 1.0;
 
-    const bundleDelta = Math.round(capacityGain + foodSavings + hoursStaffSaved);
-    const bundleNewProfit = Math.round(currentProfit + bundleDelta);
-    const bundleNewNet = currentNet + extraNet;
+    proposals.push({
+      id: 'lever-annual-registration-fee',
+      type: 'ADD_INCOME',
+      categoryKey: 'insuranceAndFees',
+      title: 'הסדרת דמי רישום וביטוח שנתיים (₪600 לילד לשנה)',
+      subtitle: `תוספת חודשית נטו של ₪${monthlyNetAdded}/חודש לכיסוי מלא של פוליסת הביטוח`,
+      actionDirection: 'ADD',
+      monthlyShekelDelta: monthlyNetAdded,
+      costToImplement: 0,
+      projectedNewProfit: Math.round(projectedProfit),
+      projectedNewProfitPercent: +projectedProfitPercent.toFixed(2),
+      profitDeltaPercent: +(projectedProfitPercent - currentProfitPercent).toFixed(2),
+      feasibilityScore: Math.min(100, Math.round(84 * weight)),
+      learnedWeight: weight,
+      status: 'PENDING',
+      regulatoryCompliance: {
+        isCompliant: true,
+        ruleName: 'נוהג משפחתונים פרטיים',
+        details: 'גבייה חד-פעמית מקובלת בתחילת שנה לכיסוי פוליסת ביטוח תאונות אישיות וציוד פתיחת שנה.',
+        badgeText: 'נוהג מקובל כחוק ✓',
+      },
+      balanceRationale: 'מבטיח כי עלות הביטוח המקצועי של הילדים מכוסה ישירות ע"י דמי הרישום ולא נגרעת מהרווח החודשי השוטף.',
+      suggestedChanges: {
+        extraMonthlyIncomeNet: monthlyNetAdded,
+      },
+    });
+  }
+
+  // =========================================================================
+  // OPTION 6: חבילת ייצוב רווחיות משולבת למשפחתון ביתי (Synergistic Bundle)
+  // =========================================================================
+  {
+    const capacityDelta = numChildren < 5 ? (tuition / (1 + vatRate)) * 0.85 : 0;
+    const hoursDelta = (numChildren * 200) / (1 + vatRate) * 0.9;
+    const foodSavings = 150.0;
+    const totalBundleDelta = Math.round(capacityDelta + hoursDelta + foodSavings);
+
+    const bundleNewProfit = Math.round(currentProfit + totalBundleDelta);
+    const bundleNewNet = currentNet + (numChildren < 5 ? (tuition / (1 + vatRate)) : 0) + ((numChildren * 200) / (1 + vatRate));
     const bundleProfitPercent = (bundleNewProfit / bundleNewNet) * 100;
-    const weight = weights.synergisticBundle ?? 1.1;
+    const weight = weights.synergisticBundle ?? 1.2;
 
     proposals.unshift({
-      id: 'lever-synergistic-bundle-prime',
+      id: 'lever-home-bundle-prime',
       type: 'SYNERGISTIC_BUNDLE',
       categoryKey: 'synergisticBundle',
-      title: '⭐ חבילת ייצוב רווחיות משולבת (3 צעדים מאוזנים יחד)',
-      subtitle: `הגדלת תפוסה ל-${numChildren + 1} + רכש מזון ישיר + דיוק שעות שישי: זינוק ל-${bundleProfitPercent.toFixed(1)}% רווח`,
+      title: '⭐ חבילת שגשוג משפחתון ביתי (תפוסה 5 + צהרון + רכש חכם)',
+      subtitle: `שילוב מנצח: מזניק את שכר המטפלת ל-₪${bundleNewProfit.toLocaleString()} נטו בחודש!`,
       actionDirection: 'BUNDLE',
-      monthlyShekelDelta: bundleDelta,
-      costToImplement: Math.round(marginalFoodCost),
+      monthlyShekelDelta: totalBundleDelta,
+      costToImplement: numChildren < 5 ? 250 : 0,
       projectedNewProfit: bundleNewProfit,
       projectedNewProfitPercent: +bundleProfitPercent.toFixed(2),
       profitDeltaPercent: +(bundleProfitPercent - currentProfitPercent).toFixed(2),
-      feasibilityScore: Math.min(100, Math.round(95 * weight)),
+      feasibilityScore: Math.min(100, Math.round(97 * weight)),
       learnedWeight: weight,
       status: 'PENDING',
       regulatoryCompliance: {
         isCompliant: true,
-        ruleName: 'שילוב רגולטורי מלא (חוק הפיקוח + בריאות + דיני עבודה)',
-        details: 'שלושת הצעדים נבדקו ונמצאו בטוחים ותואמים לחלוטין לכל התקנות ללא שום פשרה באיכות החינוך.',
-        badgeText: 'חבילה מאוזנת ומאושרת ✓',
+        ruleName: 'מודל משפחתון ביתי מנצח כחוק',
+        details: 'כל הצעדים תואמים ב-100% לחוק הפיקוח (5 ילדים למטפלת יחידה בביתה) ולכללי מס הכנסה.',
+        badgeText: 'מודל ביתי מושלם ומאושר ✓',
       },
-      balanceRationale: 'במקום לבצע קיצוץ עמוק וכואב בסעיף יחיד, החבילה מחלקת את השיפור בין הכנסה שולית, רכש חכם ודיוק שעות, ומביאה את המעון בבת אחת למסדרון רווחיות יציב.',
+      balanceRationale: 'ממצה את פוטנציאל ההכנסה של המשפחתון מבלי להזדקק לסייעת שכירה או להשכרת מבנה יקר – משאיר מקסימום רווח נקי בידי המטפלת.',
       suggestedChanges: {
-        childrenCountDelta: 1,
-        foodCostDelta: -foodSavings,
-        staffHoursDeltaWorkerB: -1,
+        childrenCountDelta: numChildren < 5 ? 1 : 0,
+        foodCostDelta: -150,
+        extraMonthlyIncomeNet: Math.round(hoursDelta),
       },
     });
   }
 
-  // Sort by feasibility score (weighted by learned user preferences)
   return proposals.sort((a, b) => b.feasibilityScore - a.feasibilityScore);
 }
