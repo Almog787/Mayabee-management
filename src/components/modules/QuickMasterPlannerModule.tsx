@@ -11,15 +11,20 @@ import {
   BarChart3,
   Activity,
   Info,
-  Clock,
   Building,
   TrendingUp,
-  Percent,
-  Check,
-  Calendar,
   Briefcase,
   ChevronDown,
   ChevronUp,
+  Brain,
+  Sparkles,
+  Scale,
+  ShieldCheck,
+  ArrowUpRight,
+  ArrowDownRight,
+  History,
+  XCircle,
+  Award,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -33,6 +38,15 @@ import {
 } from 'recharts';
 import { DaycareSettings } from '../../types';
 import { exportToGoogleSheetsXlsx } from '../../lib/googleSheetsExporter';
+import {
+  generateProfitabilityProposals,
+  recordProposalFeedback,
+  getLearningConclusions,
+  getLearnedWeights,
+  resetOptimizerMemory,
+  ProfitabilityProposal,
+  AlgorithmicConclusion,
+} from '../../lib/autonomousProfitabilityEngine';
 
 interface QuickMasterPlannerProps {
   settings: DaycareSettings | null;
@@ -140,8 +154,15 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
   settings,
 }) => {
   const [resetSuccessMessage, setResetSuccessMessage] = useState<boolean>(false);
-  const [activeSectionTab, setActiveSectionTab] = useState<'all' | 'summary' | 'staff' | 'opex' | 'simulator'>('all');
-  const [showDetailedFormulas, setShowDetailedFormulas] = useState<boolean>(true);
+  const [activeSectionTab, setActiveSectionTab] = useState<'all' | 'optimizer' | 'summary' | 'staff' | 'opex' | 'simulator'>('all');
+  const [showDetailedFormulas, setShowDetailedFormulas] = useState<boolean>(false);
+
+  // Autonomous Optimizer State
+  const [optimizerToast, setOptimizerToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
+  const [appliedLeverIds, setAppliedLeverIds] = useState<string[]>([]);
+  const [conclusions, setConclusions] = useState<AlgorithmicConclusion[]>(() => getLearningConclusions());
+  const [learnedWeights, setLearnedWeights] = useState<Record<string, number>>(() => getLearnedWeights());
+  const [showConclusionsLog, setShowConclusionsLog] = useState<boolean>(true);
 
   // Target Month
   const [selectedMonth, setSelectedMonth] = useState<string>(() => {
@@ -177,6 +198,7 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
 
   const handleResetToTableDefaults = () => {
     setParams({ ...DEFAULT_MODEL_PARAMS });
+    setAppliedLeverIds([]);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_MODEL_PARAMS));
     } catch (e) {
@@ -278,14 +300,11 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
   // =========================================================================
   // 5. סיכום התקציב החודשי והיחסים הפיננסיים (Financial Overview & Summary)
   // =========================================================================
-  // הפרשה לבלת"מים (10% מההכנסה ללא מע"מ)
   const contingencyRate = (params.contingencyPercent || 10) / 100;
   const contingencyAmount = monthlyNetIncome * contingencyRate; // ₪4,745.76
 
-  // סה"כ הוצאות והפרשות
   const totalExpensesAndContingency = totalLaborCost + totalOperatingExpenses + contingencyAmount; // ₪44,656.88 (44,656.90)
 
-  // יתרה חודשית משוערת (רווח)
   const estimatedMonthlyBalance = monthlyNetIncome - totalExpensesAndContingency; // ₪2,800.75 (2,800.74)
   const balancePerChild = numChildren > 0 ? (estimatedMonthlyBalance / numChildren) : 0; // ₪175.05
 
@@ -297,6 +316,83 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
   const opexRatioPercent = monthlyNetIncome > 0 ? (totalOperatingExpenses / monthlyNetIncome) * 100 : 15.07; // 15.07%
   const contingencyRatioPercent = params.contingencyPercent || 10.0; // 10.00%
   const totalExpensesRatioPercent = monthlyNetIncome > 0 ? (totalExpensesAndContingency / monthlyNetIncome) * 100 : 94.10; // 94.10%
+
+  // =========================================================================
+  // AUTONOMOUS LOCAL PROFITABILITY ENGINE & REAL-TIME PROPOSALS (ZERO-AI)
+  // =========================================================================
+  const autonomousProposals = useMemo(() => {
+    return generateProfitabilityProposals({
+      childrenCount: numChildren,
+      tuitionPerChild: tuition,
+      vatRatePercent: params.vatRatePercent,
+      staffCost: totalLaborCost,
+      operatingExpenses: totalOperatingExpenses,
+      contingencyPercent: params.contingencyPercent,
+      foodCost: params.opex_food,
+      utilitiesCost: params.opex_utilities,
+      consumablesCost: params.opex_consumables,
+    });
+  }, [numChildren, tuition, params, totalLaborCost, totalOperatingExpenses, learnedWeights]);
+
+  // Handle applying a proposal to the live budget simulator
+  const handleApplyProposal = (proposal: ProfitabilityProposal) => {
+    setParams((prev) => {
+      const next = { ...prev };
+      if (proposal.suggestedChanges.childrenCountDelta) {
+        next.childrenCount = Math.max(1, next.childrenCount + proposal.suggestedChanges.childrenCountDelta);
+      }
+      if (proposal.suggestedChanges.foodCostDelta) {
+        next.opex_food = Math.max(500, next.opex_food + proposal.suggestedChanges.foodCostDelta);
+      }
+      if (proposal.suggestedChanges.utilitiesCostDelta) {
+        next.opex_utilities = Math.max(100, next.opex_utilities + proposal.suggestedChanges.utilitiesCostDelta);
+      }
+      if (proposal.suggestedChanges.staffHoursDeltaWorkerB) {
+        next.staff_workerBWeeklyHours = Math.max(10, next.staff_workerBWeeklyHours + proposal.suggestedChanges.staffHoursDeltaWorkerB);
+      }
+      if (proposal.suggestedChanges.contingencyPercentDelta) {
+        next.contingencyPercent = Math.max(5, next.contingencyPercent + proposal.suggestedChanges.contingencyPercentDelta);
+      }
+      return next;
+    });
+
+    setAppliedLeverIds((prev) => [...prev, proposal.id]);
+    const { updatedWeights, newConclusion } = recordProposalFeedback(proposal, 'ACCEPTED');
+    setLearnedWeights(updatedWeights);
+    setConclusions((prev) => [newConclusion, ...prev]);
+
+    setOptimizerToast({
+      message: `ההצעה "${proposal.title}" הוחלה בסימולטור! האלגוריתם העלה את משקל ההעדפה ורשם מסקנה חדשה.`,
+      type: 'success',
+    });
+    setTimeout(() => setOptimizerToast(null), 4500);
+  };
+
+  // Handle rejecting a proposal (algorithm learns not to push this direction)
+  const handleRejectProposal = (proposal: ProfitabilityProposal) => {
+    const { updatedWeights, newConclusion } = recordProposalFeedback(proposal, 'REJECTED');
+    setLearnedWeights(updatedWeights);
+    setConclusions((prev) => [newConclusion, ...prev]);
+
+    setOptimizerToast({
+      message: `ההצעה "${proposal.title}" נדחתה. האלגוריתם הוריד את משקל התחום ורשם מסקנה עצמית כדי להתאים הצעות עתידיות.`,
+      type: 'info',
+    });
+    setTimeout(() => setOptimizerToast(null), 4500);
+  };
+
+  // Handle resetting the optimizer's memory & conclusions
+  const handleResetOptimizerMemory = () => {
+    const { weights, conclusions: defaultConclusions } = resetOptimizerMemory();
+    setLearnedWeights(weights);
+    setConclusions(defaultConclusions);
+    setAppliedLeverIds([]);
+    setOptimizerToast({
+      message: 'זיכרון הלמידה והמסקנות של האלגוריתם אופסו לערכי ברירת המחדל.',
+      type: 'info',
+    });
+    setTimeout(() => setOptimizerToast(null), 3500);
+  };
 
   // Visual Chart Data
   const costDistributionData = useMemo(() => {
@@ -490,12 +586,15 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
             <span>המודל התקציבי החודשי – הבית של רותם ומאיה 🐝</span>
           </div>
 
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 leading-tight">
-            מחשבון תקציב מלא, מאזן ו-KPIs 📊
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 leading-tight flex items-center gap-2">
+            <span>מחשבון תקציב מלא, מאזן ומנוע אופטימיזציה</span>
+            <span className="text-xs bg-teal-100 text-teal-800 font-normal px-2.5 py-0.5 rounded-full border border-teal-200">
+              Zero-AI Local Engine
+            </span>
           </h2>
 
           <p className="text-xs text-slate-600 leading-relaxed">
-            מודל תקציבי מקיף על בסיס 16 ילדים, 18% מע"מ, עלות מעביד 17%, שכר שעתי ₪45, 5 עובדות, ₪7,150 תפעול, 10% בלת"ם.
+            מודל תקציבי מקיף (16 ילדים, 18% מע"מ, עלות מעביד 17%, שכר שעתי ₪45) עם מנוע אופטימיזציה ולמידה מקומית ללא AI.
           </p>
         </div>
 
@@ -542,8 +641,21 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            כל הסעיפים והמודל (1-6)
+            כל הסעיפים והמודל
           </button>
+
+          <button
+            onClick={() => setActiveSectionTab('optimizer')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition cursor-pointer whitespace-nowrap ${
+              activeSectionTab === 'optimizer'
+                ? 'bg-teal-700 text-white shadow-xs font-bold'
+                : 'text-teal-800 hover:bg-teal-50'
+            }`}
+          >
+            <Brain className="w-3.5 h-3.5" />
+            <span>מנוע רווחיות ולמידה אוטונומי 🧠</span>
+          </button>
+
           <button
             onClick={() => setActiveSectionTab('summary')}
             className={`px-3 py-1.5 rounded-lg transition cursor-pointer whitespace-nowrap ${
@@ -604,6 +716,21 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
         </div>
       </div>
 
+      {/* NOTIFICATION TOAST */}
+      {optimizerToast && (
+        <div className={`p-4 rounded-xl border text-xs font-medium flex items-center justify-between gap-3 shadow-xs transition-all ${
+          optimizerToast.type === 'success'
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+            : 'bg-teal-50 border-teal-200 text-teal-900'
+        }`}>
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{optimizerToast.message}</span>
+          </div>
+          <button onClick={() => setOptimizerToast(null)} className="text-slate-400 hover:text-slate-600">✕</button>
+        </div>
+      )}
+
       {/* =========================================================================
           SECTION 6: מדדים מרכזיים (Key Performance Indicators - KPIs)
          ========================================================================= */}
@@ -612,8 +739,11 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
         <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
           <span className="text-[11px] font-medium text-slate-500 block truncate">שיעור רווח נקי (נטו)</span>
           <div className="flex items-baseline gap-1">
-            <span className={`text-xl font-bold font-mono ${netProfitMarginPercent >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+            <span className={`text-xl font-bold font-mono ${netProfitMarginPercent >= 10 ? 'text-emerald-700' : netProfitMarginPercent >= 5 ? 'text-teal-700' : 'text-amber-700'}`}>
               {netProfitMarginPercent.toFixed(2)}%
+            </span>
+            <span className="text-[10px] text-slate-400 font-sans">
+              {netProfitMarginPercent >= 10 ? '(יעד הושג ✓)' : '(מסדרון יעד: 10%-15%)'}
             </span>
           </div>
           <span className="text-[10px] text-slate-500 block truncate">₪{estimatedMonthlyBalance.toLocaleString('he-IL', { maximumFractionDigits: 0 })} רווח חודשי</span>
@@ -665,6 +795,238 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
           <span className="text-[10px] text-slate-500 block truncate">{totalMonthlyHourlyHours.toFixed(1)} שעות/חודש</span>
         </div>
       </div>
+
+      {/* =========================================================================
+          AUTONOMOUS LOCAL PROFITABILITY & LEARNING ENGINE SECTION (ZERO-AI)
+         ========================================================================= */}
+      {(activeSectionTab === 'all' || activeSectionTab === 'optimizer') && (
+        <div className="bg-gradient-to-br from-teal-50/70 via-white to-slate-50 border border-teal-200 rounded-2xl p-5 sm:p-6 shadow-xs space-y-5">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-teal-100 pb-4">
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                <Brain className="w-5 h-5" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900">
+                    מנוע רווחיות אוטונומי ולמידה מקומית (ללא AI) ⚙️🧠
+                  </h3>
+                  <span className="text-[10px] bg-teal-100 text-teal-800 font-bold px-2 py-0.5 rounded-full border border-teal-200 font-mono">
+                    Local Reinforcement
+                  </span>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  המערכת מנתחת את הנתונים בזמן אמת, מציעה מנופים מאוזנים (מה להוסיף ומה להוריד) להגעה למסדרון רווחיות בריא (10%–15%), שומרת על חוק הפיקוח והבטיחות, ורושמת לעצמה מסקנות לשיפור האלגוריתם בעקבות כל אישור או דחייה.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setShowConclusionsLog(!showConclusionsLog)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-teal-800 text-xs font-bold transition border border-teal-200 shadow-2xs cursor-pointer"
+              >
+                <History className="w-3.5 h-3.5 text-teal-600" />
+                <span>{showConclusionsLog ? 'הסתר יומן מסקנות' : `יומן מסקנות האלגוריתם (${conclusions.length})`}</span>
+              </button>
+
+              <button
+                onClick={handleResetOptimizerMemory}
+                className="text-[11px] text-slate-500 hover:text-slate-800 px-2 py-1 underline cursor-pointer"
+                title="איפוס הזיכרון המקומי של האלגוריתם לברירת המחדל"
+              >
+                איפוס זיכרון מקומי
+              </button>
+            </div>
+          </div>
+
+          {/* Current Status Health Banner */}
+          <div className="p-3.5 bg-white rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2.5">
+              <Scale className="w-4 h-4 text-teal-600 shrink-0" />
+              <div>
+                <span className="font-bold text-slate-900">סטטוס רווחיות נוכחי: </span>
+                <span className="font-mono font-bold text-teal-800">
+                  {netProfitMarginPercent.toFixed(2)}% (₪{Math.round(estimatedMonthlyBalance).toLocaleString()}/חודש)
+                </span>
+                <span className="text-slate-500 mx-2">·</span>
+                <span className="text-slate-600">
+                  {netProfitMarginPercent < 8
+                    ? 'מומלץ להפעיל 1–2 מנופים להגעה למסדרון רווחיות יציב (₪4,800–₪7,200 בחודש).'
+                    : 'המעון נמצא במסדרון רווחיות בריא ומוגן כחוק!'}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-[11px] font-medium text-slate-500">משקלי העדפה פעילים:</span>
+              <span className="font-mono text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 font-bold">
+                תפוסה: {learnedWeights.capacity?.toFixed(1) || '1.0'} | רכש: {learnedWeights.food?.toFixed(1) || '1.0'} | שעות: {learnedWeights.staffSchedule?.toFixed(1) || '1.0'}
+              </span>
+            </div>
+          </div>
+
+          {/* Proposal Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {autonomousProposals.map((proposal) => {
+              const isApplied = appliedLeverIds.includes(proposal.id);
+
+              return (
+                <div
+                  key={proposal.id}
+                  className={`bg-white rounded-xl border transition-all p-4 space-y-3 flex flex-col justify-between ${
+                    isApplied
+                      ? 'border-emerald-300 ring-2 ring-emerald-500/10 shadow-xs'
+                      : 'border-slate-200 hover:border-teal-300 hover:shadow-xs'
+                  }`}
+                >
+                  <div className="space-y-2">
+                    {/* Top tags */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                        proposal.actionDirection === 'BUNDLE'
+                          ? 'bg-purple-50 text-purple-800 border-purple-200 font-black'
+                          : proposal.actionDirection === 'ADD'
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                          : proposal.actionDirection === 'REDUCE'
+                          ? 'bg-sky-50 text-sky-800 border-sky-200'
+                          : 'bg-amber-50 text-amber-800 border-amber-200'
+                      }`}>
+                        {proposal.actionDirection === 'BUNDLE' ? '⭐ חבילה משולבת' : proposal.actionDirection === 'ADD' ? '+ הוספת הכנסה' : proposal.actionDirection === 'REDUCE' ? '- התייעלות רכש' : '⚙️ אופטימיזציית שעות'}
+                      </span>
+
+                      <div className="flex items-center gap-1 text-[11px] font-mono font-bold text-slate-600 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
+                        <span>התאמה:</span>
+                        <span className="text-teal-700">{proposal.feasibilityScore}%</span>
+                      </div>
+                    </div>
+
+                    {/* Title & Subtitle */}
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900 leading-snug">{proposal.title}</h4>
+                      <p className="text-[11px] text-slate-500 mt-0.5">{proposal.subtitle}</p>
+                    </div>
+
+                    {/* Financial impact box */}
+                    <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between font-mono text-xs">
+                      <div>
+                        <span className="text-slate-500 text-[10px] block font-sans">השפעה חודשית נטו:</span>
+                        <span className="font-bold text-emerald-700 text-sm">
+                          +₪{proposal.monthlyShekelDelta.toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="text-left">
+                        <span className="text-slate-500 text-[10px] block font-sans">רווח נקי צפוי:</span>
+                        <span className="font-bold text-slate-800">
+                          {proposal.projectedNewProfitPercent}% <span className="text-[10px] text-emerald-600">({proposal.profitDeltaPercent >= 0 ? `+${proposal.profitDeltaPercent}%` : `${proposal.profitDeltaPercent}%`})</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Regulatory badge */}
+                    <div className="flex items-center gap-1.5 text-[11px] text-teal-800 bg-teal-50/60 p-2 rounded-lg border border-teal-100">
+                      <ShieldCheck className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                      <span className="leading-tight font-medium">{proposal.regulatoryCompliance.details}</span>
+                    </div>
+
+                    {/* Rationale */}
+                    <p className="text-[11px] text-slate-600 leading-relaxed bg-slate-50/40 p-2 rounded-lg border border-slate-100">
+                      <span className="font-bold text-slate-700">היגיון ואיזון: </span>
+                      {proposal.balanceRationale}
+                    </p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => handleApplyProposal(proposal)}
+                      disabled={isApplied}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold transition cursor-pointer active:scale-95 ${
+                        isApplied
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 cursor-default'
+                          : 'bg-teal-600 hover:bg-teal-700 text-white shadow-2xs'
+                      }`}
+                    >
+                      {isApplied ? (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>הוחל בסימולטור ✓</span>
+                        </>
+                      ) : (
+                        <>
+                          <ArrowUpRight className="w-3.5 h-3.5" />
+                          <span>החל בסימולטור (+₪{proposal.monthlyShekelDelta})</span>
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => handleRejectProposal(proposal)}
+                      title="דחיית הצעה זו (מלמד את האלגוריתם לא להציע כיוון זה)"
+                      className="p-2 rounded-lg bg-slate-50 hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition cursor-pointer"
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* =========================================================================
+              COLLAPSIBLE AUTONOMOUS LEARNING LOG (יומן המסקנות העצמיות)
+             ========================================================================= */}
+          {showConclusionsLog && (
+            <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <History className="w-4 h-4 text-teal-600" />
+                  <h4 className="text-xs sm:text-sm font-bold text-slate-900">
+                    יומן המסקנות העצמיות של האלגוריתם (הזיכרון המקומי ב-localStorage)
+                  </h4>
+                </div>
+                <span className="text-[11px] font-mono text-slate-500">
+                  {conclusions.length} מסקנות מתועדות
+                </span>
+              </div>
+
+              <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                {conclusions.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`p-3 rounded-lg border text-xs space-y-1 transition ${
+                      item.action === 'ACCEPTED'
+                        ? 'bg-emerald-50/50 border-emerald-200'
+                        : 'bg-amber-50/50 border-amber-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 font-bold">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono ${
+                          item.action === 'ACCEPTED'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          {item.action === 'ACCEPTED' ? 'אושר והוחל' : 'נדחה ע"י הנהלה'}
+                        </span>
+                        <span className="text-slate-900">{item.leverTitle}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-400 font-mono">{item.dateFormatted}</span>
+                    </div>
+
+                    <p className="text-slate-700 leading-relaxed font-sans">{item.learnedRule}</p>
+                    <div className="flex items-center gap-2 text-[11px] text-slate-500 font-mono pt-0.5 border-t border-slate-100">
+                      <span>התאמת אלגוריתם: {item.algorithmicAdjustment}</span>
+                      <span className="text-teal-700 font-bold">(משקל: {item.previousWeight} ➔ {item.newWeight})</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* =========================================================================
           SECTION 1: הנחות יסוד ופרמטרים של המודל (Model Assumptions)
@@ -870,17 +1232,6 @@ export const QuickMasterPlannerModule: React.FC<QuickMasterPlannerProps> = ({
             <div className="text-left text-xs bg-sky-50 px-3 py-1.5 rounded-xl border border-sky-200">
               <span className="text-slate-600">סה"כ שכר ומעסיק: </span>
               <span className="font-bold font-mono text-sky-800 text-sm">₪{totalLaborCost.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-          </div>
-
-          {/* Formulas summary */}
-          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-700 space-y-1">
-            <span className="font-bold text-slate-900 block">נוסחאות חישוב לקראת עלות כוללת:</span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-[11px] text-slate-600 font-mono">
-              <div>• שעות חודשיות = שעות שבועיות × 4.33333</div>
-              <div>• ברוטו שעתי = שעות חודשיות × ₪{wagePerHour}</div>
-              <div>• עלות מעסיק = ברוטו חודשי × {params.employerOverheadPercent}%</div>
-              <div>• עלות כוללת = ברוטו + עלות מעסיק + נסיעות</div>
             </div>
           </div>
 
